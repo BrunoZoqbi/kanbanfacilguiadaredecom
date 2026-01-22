@@ -23,6 +23,15 @@ export interface Tag {
   created_at: string;
 }
 
+export interface TaskTypeRecord {
+  id: string;
+  name: string;
+  label: string;
+  color: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface Task {
   id: string;
   title: string;

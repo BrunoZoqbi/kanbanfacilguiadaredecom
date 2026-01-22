@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
 import UserManagement from '@/components/admin/UserManagement';
 import ActivityLogs from '@/components/admin/ActivityLogs';
@@ -27,8 +27,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Users, Tags, Loader2, Plus, Trash2, Save, Activity } from 'lucide-react';
+import { Settings, Users, Tags, Loader2, Plus, Trash2, Save, Activity, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
+import { TaskTypeRecord } from '@/types/database';
 
 const AdminPage: React.FC = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -45,6 +46,26 @@ const AdminPage: React.FC = () => {
   const [newTagColor, setNewTagColor] = useState('#A7E000');
   const [editingTag, setEditingTag] = useState<{ id: string; name: string; color: string } | null>(null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+
+  // Task type management state
+  const [newTypeName, setNewTypeName] = useState('');
+  const [newTypeLabel, setNewTypeLabel] = useState('');
+  const [newTypeColor, setNewTypeColor] = useState('#6366f1');
+  const [isCreatingType, setIsCreatingType] = useState(false);
+
+  // Fetch task types
+  const { data: taskTypes = [] } = useQuery({
+    queryKey: ['task_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('task_types')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data as TaskTypeRecord[];
+    },
+    enabled: !!user,
+  });
 
   if (authLoading) {
     return (
@@ -162,6 +183,65 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // Task type management functions
+  const handleCreateTaskType = async () => {
+    if (!newTypeName.trim() || !newTypeLabel.trim()) {
+      toast.error('Nome e label são obrigatórios');
+      return;
+    }
+
+    setIsCreatingType(true);
+    try {
+      const { error } = await supabase
+        .from('task_types')
+        .insert([{ name: newTypeName.trim(), label: newTypeLabel.trim(), color: newTypeColor }]);
+
+      if (error) throw error;
+
+      toast.success('Tipo de tarefa criado!');
+      setNewTypeName('');
+      setNewTypeLabel('');
+      setNewTypeColor('#6366f1');
+      queryClient.invalidateQueries({ queryKey: ['task_types'] });
+    } catch (error: any) {
+      toast.error('Erro ao criar tipo: ' + error.message);
+    } finally {
+      setIsCreatingType(false);
+    }
+  };
+
+  const handleDeleteTaskType = async (typeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('task_types')
+        .delete()
+        .eq('id', typeId);
+
+      if (error) throw error;
+
+      toast.success('Tipo de tarefa excluído!');
+      queryClient.invalidateQueries({ queryKey: ['task_types'] });
+    } catch (error: any) {
+      toast.error('Erro ao excluir: ' + error.message);
+    }
+  };
+
+  const handleToggleTaskTypeActive = async (typeId: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('task_types')
+        .update({ is_active: !isActive })
+        .eq('id', typeId);
+
+      if (error) throw error;
+
+      toast.success(isActive ? 'Tipo desativado!' : 'Tipo ativado!');
+      queryClient.invalidateQueries({ queryKey: ['task_types'] });
+    } catch (error: any) {
+      toast.error('Erro ao atualizar: ' + error.message);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -186,6 +266,10 @@ const AdminPage: React.FC = () => {
             <TabsTrigger value="tags" className="flex items-center gap-2">
               <Tags className="h-4 w-4" />
               Tags
+            </TabsTrigger>
+            <TabsTrigger value="task-types" className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4" />
+              Tipos de Tarefa
             </TabsTrigger>
             <TabsTrigger value="logs" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
@@ -357,6 +441,101 @@ const AdminPage: React.FC = () => {
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Task Types Management */}
+          <TabsContent value="task-types" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Gerenciar Tipos de Tarefa</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Create new task type */}
+                <div className="flex items-end gap-3 flex-wrap">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nome (identificador)</label>
+                    <Input
+                      value={newTypeName}
+                      onChange={(e) => setNewTypeName(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                      placeholder="weekly"
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Label (exibição)</label>
+                    <Input
+                      value={newTypeLabel}
+                      onChange={(e) => setNewTypeLabel(e.target.value)}
+                      placeholder="Semanal"
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Cor</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newTypeColor}
+                        onChange={(e) => setNewTypeColor(e.target.value)}
+                        className="h-10 w-12 rounded border cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleCreateTaskType} disabled={isCreatingType}>
+                    {isCreatingType ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Criar Tipo
+                  </Button>
+                </div>
+
+                {/* Existing task types */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Tipos existentes</h4>
+                  <div className="border rounded-lg divide-y">
+                    {taskTypes.map((type) => (
+                      <div
+                        key={type.id}
+                        className="flex items-center justify-between gap-4 p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="h-4 w-4 rounded-full"
+                            style={{ backgroundColor: type.color }}
+                          />
+                          <div>
+                            <span className="font-medium">{type.label}</span>
+                            <span className="text-xs text-muted-foreground ml-2">({type.name})</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={type.is_active ? 'default' : 'secondary'}>
+                            {type.is_active ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleTaskTypeActive(type.id, type.is_active)}
+                          >
+                            {type.is_active ? 'Desativar' : 'Ativar'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteTaskType(type.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
