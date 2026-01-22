@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivityLog } from '@/hooks/useActivityLog';
+import CreateUserForm from './CreateUserForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { Loader2, Shield, ShieldOff, User, Phone, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -171,14 +173,21 @@ const UserManagement: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Gerenciar Usuários
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      {/* Create User Form */}
+      <CreateUserForm />
+
+      <Separator />
+
+      {/* User List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Usuários Cadastrados
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -269,8 +278,9 @@ const UserManagement: React.FC = () => {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
