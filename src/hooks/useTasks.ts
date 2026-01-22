@@ -3,16 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskWithRelations } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivityLog } from '@/hooks/useActivityLog';
-import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import { toast } from 'sonner';
 
 export const useTasks = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLog();
-  
-  // Enable realtime updates
-  useRealtimeTasks();
 
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks', user?.id, isAdmin],

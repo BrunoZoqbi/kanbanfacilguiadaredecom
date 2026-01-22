@@ -12,6 +12,7 @@ import {
 } from '@dnd-kit/core';
 import { TaskWithRelations, TaskStatus } from '@/types/database';
 import { useTasks } from '@/hooks/useTasks';
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import KanbanColumn from './KanbanColumn';
 import TaskCard from './TaskCard';
@@ -28,6 +29,10 @@ const columns: { id: TaskStatus; title: string }[] = [
 const KanbanBoard: React.FC = () => {
   const { tasks, profiles, tags, updateTaskStatus, isLoading } = useTasks();
   const { user, isAdmin } = useAuth();
+  
+  // Enable realtime updates only in the Kanban board
+  useRealtimeTasks();
+  
   const [activeTask, setActiveTask] = useState<TaskWithRelations | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [filters, setFilters] = useState<TaskFiltersState>({
