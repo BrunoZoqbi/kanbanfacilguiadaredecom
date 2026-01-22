@@ -139,13 +139,11 @@ const CreateTaskForm: React.FC = () => {
                         <FormLabel>Responsável</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
-                          defaultValue={field.value}
+                          value={field.value || undefined}
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                          </FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
                           <SelectContent>
                             {profiles.map((profile) => (
                               <SelectItem key={profile.id} value={profile.id}>
@@ -169,13 +167,11 @@ const CreateTaskForm: React.FC = () => {
                       <FormLabel>Tipo</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        value={field.value}
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="one_time">Pontual</SelectItem>
                           <SelectItem value="daily">Diária</SelectItem>
@@ -195,13 +191,11 @@ const CreateTaskForm: React.FC = () => {
                       <FormLabel>Prioridade</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        value={field.value}
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="low">Baixa</SelectItem>
                           <SelectItem value="medium">Média</SelectItem>
