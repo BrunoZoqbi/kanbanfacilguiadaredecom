@@ -70,12 +70,12 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
         </div>
 
         {/* Assignee */}
-        <Select value={filters.assignee} onValueChange={(v) => updateFilter('assignee', v)}>
+        <Select value={filters.assignee || 'all'} onValueChange={(v) => updateFilter('assignee', v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Responsável" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {profiles.map((profile) => (
               <SelectItem key={profile.id} value={profile.id}>
                 {profile.full_name}
@@ -85,12 +85,12 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
         </Select>
 
         {/* Priority */}
-        <Select value={filters.priority} onValueChange={(v) => updateFilter('priority', v)}>
+        <Select value={filters.priority || 'all'} onValueChange={(v) => updateFilter('priority', v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Prioridade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="low">Baixa</SelectItem>
             <SelectItem value="medium">Média</SelectItem>
             <SelectItem value="high">Alta</SelectItem>
@@ -99,24 +99,24 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
         </Select>
 
         {/* Type */}
-        <Select value={filters.type} onValueChange={(v) => updateFilter('type', v)}>
+        <Select value={filters.type || 'all'} onValueChange={(v) => updateFilter('type', v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="daily">Diária</SelectItem>
             <SelectItem value="one_time">Pontual</SelectItem>
           </SelectContent>
         </Select>
 
         {/* Date Filter */}
-        <Select value={filters.dateFilter} onValueChange={(v) => updateFilter('dateFilter', v)}>
+        <Select value={filters.dateFilter || 'all'} onValueChange={(v) => updateFilter('dateFilter', v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Prazo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="today">Vence hoje</SelectItem>
             <SelectItem value="overdue">Atrasadas</SelectItem>
             <SelectItem value="upcoming">Próximas 48h</SelectItem>
