@@ -89,15 +89,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-3">
-            <img 
-              src={fibrontecLogo} 
-              alt="Fibrontec" 
-              className="h-8 object-contain"
-            />
-          </Link>
+        {/* Header */}
+        <div className="h-16 flex items-center justify-end px-4 border-b border-sidebar-border">
           <button
             className="lg:hidden text-sidebar-foreground/80 hover:text-sidebar-foreground"
             onClick={() => setSidebarOpen(false)}
@@ -171,9 +164,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                       {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-medium">
-                    {profile?.full_name || 'Usuário'}
-                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
