@@ -157,20 +157,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, profiles = [] }) => 
           )}
         </div>
 
-        {task.assignee_id && (
-          <div className="flex items-center gap-1.5">
-            <Avatar className="h-6 w-6">
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                {assignee?.full_name?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            {assignee && (
-              <span className="text-xs text-muted-foreground truncate max-w-[80px]">
+        <div className="flex items-center gap-1.5">
+          {task.assignee_id && assignee ? (
+            <>
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  {assignee.full_name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium text-foreground truncate max-w-[100px]">
                 {assignee.full_name.split(' ')[0]}
               </span>
-            )}
-          </div>
-        )}
+            </>
+          ) : (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <User className="h-3.5 w-3.5" />
+              <span>Sem responsável</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
