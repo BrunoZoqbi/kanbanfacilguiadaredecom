@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { TaskWithRelations, TaskStatus } from '@/types/database';
+import { TaskWithRelations, TaskStatus, Profile } from '@/types/database';
 import TaskCard from './TaskCard';
 import { cn } from '@/lib/utils';
 import { Circle, PlayCircle, CheckCircle2 } from 'lucide-react';
@@ -10,6 +10,7 @@ interface KanbanColumnProps {
   id: TaskStatus;
   title: string;
   tasks: TaskWithRelations[];
+  profiles: Profile[];
   onTaskClick: (task: TaskWithRelations) => void;
 }
 
@@ -19,7 +20,7 @@ const columnConfig: Record<TaskStatus, { icon: React.ElementType; bgClass: strin
   done: { icon: CheckCircle2, bgClass: 'bg-column-done' },
 };
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, onTaskClick }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, profiles, onTaskClick }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   const config = columnConfig[id];
   const Icon = config.icon;
@@ -54,7 +55,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, onTaskCli
       <div ref={setNodeRef} className="space-y-3 min-h-[200px]">
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+            <TaskCard key={task.id} task={task} profiles={profiles} onClick={() => onTaskClick(task)} />
           ))}
         </SortableContext>
         

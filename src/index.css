@@ -68,10 +68,10 @@
     --deadline-overdue: 4 90% 58%;
     --deadline-completed: 78 100% 44%;
 
-    /* Kanban column backgrounds */
-    --column-todo: 0 0% 97%;
-    --column-doing: 207 30% 96%;
-    --column-done: 78 30% 96%;
+    /* Kanban column backgrounds - subtle status colors */
+    --column-todo: 0 70% 97%;
+    --column-doing: 45 80% 96%;
+    --column-done: 120 50% 96%;
 
     /* Sidebar - Dark theme */
     --sidebar-background: 0 0% 12%;
@@ -113,9 +113,9 @@
     --input: 0 0% 20%;
     --ring: 78 100% 44%;
 
-    --column-todo: 0 0% 12%;
-    --column-doing: 207 20% 14%;
-    --column-done: 78 15% 14%;
+    --column-todo: 0 30% 12%;
+    --column-doing: 45 30% 13%;
+    --column-done: 120 20% 13%;
 
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 92%;
