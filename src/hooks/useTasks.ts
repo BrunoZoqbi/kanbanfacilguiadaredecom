@@ -2,11 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskWithRelations } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActivityLog } from '@/hooks/useActivityLog';
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import { toast } from 'sonner';
 
 export const useTasks = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const { logActivity } = useActivityLog();
+  
+  // Enable realtime updates
+  useRealtimeTasks();
 
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks', user?.id, isAdmin],
@@ -106,8 +112,14 @@ export const useTasks = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      logActivity({
+        action: 'create',
+        entityType: 'task',
+        entityId: data.id,
+        details: { title: data.title },
+      });
       toast.success('Tarefa criada com sucesso!');
     },
     onError: (error) => {
@@ -142,8 +154,14 @@ export const useTasks = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      logActivity({
+        action: 'update',
+        entityType: 'task',
+        entityId: data.id,
+        details: { title: data.title },
+      });
       toast.success('Tarefa atualizada!');
     },
     onError: (error) => {
@@ -181,9 +199,15 @@ export const useTasks = () => {
         .eq('id', id);
 
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      logActivity({
+        action: 'delete',
+        entityType: 'task',
+        entityId: id,
+      });
       toast.success('Tarefa excluída!');
     },
     onError: (error) => {

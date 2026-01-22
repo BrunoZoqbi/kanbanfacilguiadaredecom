@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
+import UserManagement from '@/components/admin/UserManagement';
+import ActivityLogs from '@/components/admin/ActivityLogs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,9 +27,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Users, Tags, Loader2, Plus, Trash2, Save } from 'lucide-react';
+import { Settings, Users, Tags, Loader2, Plus, Trash2, Save, Activity } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 const AdminPage: React.FC = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -172,17 +173,30 @@ const AdminPage: React.FC = () => {
           <p className="text-muted-foreground">Ferramentas administrativas</p>
         </div>
 
-        <Tabs defaultValue="reassign">
-          <TabsList>
-            <TabsTrigger value="reassign" className="flex items-center gap-2">
+        <Tabs defaultValue="users">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
+              Usuários
+            </TabsTrigger>
+            <TabsTrigger value="reassign" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
               Reatribuir em Massa
             </TabsTrigger>
             <TabsTrigger value="tags" className="flex items-center gap-2">
               <Tags className="h-4 w-4" />
-              Gerenciar Tags
+              Tags
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Logs
             </TabsTrigger>
           </TabsList>
+
+          {/* User Management */}
+          <TabsContent value="users" className="mt-6">
+            <UserManagement />
+          </TabsContent>
 
           {/* Bulk Reassignment */}
           <TabsContent value="reassign" className="mt-6">
@@ -349,6 +363,11 @@ const AdminPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Activity Logs */}
+          <TabsContent value="logs" className="mt-6">
+            <ActivityLogs />
           </TabsContent>
         </Tabs>
 
