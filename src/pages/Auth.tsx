@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LayoutDashboard, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
+import fibrontecLogo from '@/assets/fibrontec-logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -116,12 +117,14 @@ const Auth: React.FC = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-              <LayoutDashboard className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <img 
+              src={fibrontecLogo} 
+              alt="Fibrontec" 
+              className="h-12 object-contain"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Fibron</CardTitle>
-          <CardDescription>Kanban Operacional</CardDescription>
+          <CardTitle className="text-2xl font-bold font-display">Kanban Operacional</CardTitle>
+          <CardDescription>Tecnologia para o seu dia</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -161,7 +164,7 @@ const Auth: React.FC = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -220,7 +223,7 @@ const Auth: React.FC = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full font-semibold" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />

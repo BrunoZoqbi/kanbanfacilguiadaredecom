@@ -1,113 +1,130 @@
+@import '@fontsource/montserrat/500.css';
+@import '@fontsource/montserrat/600.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Fibron brand - Industrial blue-teal palette */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    /* Fibrontec Brand Colors - from Brandbook */
+    --fibron-green: 78 100% 44%;
+    --fibron-gray: 0 0% 30%;
+    --fibron-light-gray: 0 0% 95%;
+    
+    /* UI Functional Colors */
+    --ui-success: 78 100% 44%;
+    --ui-warning: 36 100% 50%;
+    --ui-error: 4 90% 58%;
+    --ui-info: 207 90% 54%;
+
+    /* Theme Colors */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 0 0% 15%;
 
-    --primary: 199 89% 38%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 78 100% 44%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 210 15% 93%;
-    --secondary-foreground: 215 25% 25%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 25%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 199 75% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 78 80% 50%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 199 89% 38%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 78 100% 44%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
     /* Task priority colors */
     --priority-low: 142 71% 45%;
-    --priority-medium: 38 92% 50%;
+    --priority-medium: 36 100% 50%;
     --priority-high: 25 95% 53%;
-    --priority-critical: 0 72% 51%;
+    --priority-critical: 4 90% 58%;
 
     /* Task status colors */
-    --status-todo: 215 20% 65%;
-    --status-doing: 199 89% 48%;
-    --status-done: 142 71% 45%;
+    --status-todo: 0 0% 55%;
+    --status-doing: 207 90% 54%;
+    --status-done: 78 100% 44%;
 
     /* Deadline indicator colors */
-    --deadline-new: 199 89% 48%;
-    --deadline-soon: 38 92% 50%;
-    --deadline-overdue: 0 72% 51%;
-    --deadline-completed: 142 71% 45%;
+    --deadline-new: 207 90% 54%;
+    --deadline-soon: 36 100% 50%;
+    --deadline-overdue: 4 90% 58%;
+    --deadline-completed: 78 100% 44%;
 
     /* Kanban column backgrounds */
-    --column-todo: 215 30% 96%;
-    --column-doing: 199 40% 95%;
-    --column-done: 142 30% 95%;
+    --column-todo: 0 0% 97%;
+    --column-doing: 207 30% 96%;
+    --column-done: 78 30% 96%;
 
-    --sidebar-background: 215 25% 12%;
-    --sidebar-foreground: 210 20% 92%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 18%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 215 20% 22%;
-    --sidebar-ring: 199 89% 48%;
+    /* Sidebar - Dark theme */
+    --sidebar-background: 0 0% 12%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 78 100% 44%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 78 100% 44%;
   }
 
   .dark {
-    --background: 215 25% 10%;
-    --foreground: 210 20% 95%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 215 25% 13%;
-    --card-foreground: 210 20% 95%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 215 25% 13%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 78 100% 44%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 215 20% 20%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 215 20% 18%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 199 75% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 78 80% 50%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62% 45%;
+    --destructive: 4 75% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 22%;
-    --input: 215 20% 22%;
-    --ring: 199 89% 48%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 78 100% 44%;
 
-    --column-todo: 215 25% 15%;
-    --column-doing: 199 30% 15%;
-    --column-done: 142 20% 15%;
+    --column-todo: 0 0% 12%;
+    --column-doing: 207 20% 14%;
+    --column-done: 78 15% 14%;
 
-    --sidebar-background: 215 25% 8%;
-    --sidebar-foreground: 210 20% 92%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 14%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 215 20% 18%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 78 100% 44%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 78 100% 44%;
   }
 }
 
@@ -116,18 +133,35 @@
     @apply border-border;
   }
 
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-weight: 600;
   }
 }
 
 @layer utilities {
+  .font-display {
+    font-family: 'Montserrat', system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
   .priority-low {
     @apply bg-green-500/10 text-green-700 border-green-500/30;
   }
   
   .priority-medium {
-    @apply bg-yellow-500/10 text-yellow-700 border-yellow-500/30;
+    @apply bg-amber-500/10 text-amber-700 border-amber-500/30;
   }
   
   .priority-high {
@@ -139,11 +173,11 @@
   }
 
   .deadline-new {
-    @apply ring-2 ring-primary/50 bg-primary/5;
+    @apply ring-2 ring-blue-500/50 bg-blue-500/5;
   }
 
   .deadline-soon {
-    @apply ring-2 ring-yellow-500/50 bg-yellow-500/10;
+    @apply ring-2 ring-amber-500/50 bg-amber-500/10;
   }
 
   .deadline-overdue {
@@ -151,7 +185,7 @@
   }
 
   .deadline-completed {
-    @apply ring-2 ring-green-500/50 bg-green-500/10;
+    @apply ring-2 ring-primary/50 bg-primary/10;
   }
 
   .kanban-column {
@@ -164,6 +198,14 @@
 
   .task-card-dragging {
     @apply shadow-xl rotate-2 opacity-90;
+  }
+
+  .text-fibron-green {
+    color: hsl(var(--fibron-green));
+  }
+
+  .bg-fibron-green {
+    background-color: hsl(var(--fibron-green));
   }
 }
 
@@ -195,13 +237,13 @@
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4);
   }
   70% {
-    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    box-shadow: 0 0 0 8px hsl(var(--destructive) / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    box-shadow: 0 0 0 0 hsl(var(--destructive) / 0);
   }
 }
 

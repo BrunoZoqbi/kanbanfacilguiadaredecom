@@ -23,7 +23,8 @@ export const useTasks = () => {
           task_comments(
             *,
             profiles:user_id(*)
-          )
+          ),
+          task_attachments(*)
         `)
         .order('position', { ascending: true });
 
@@ -40,6 +41,7 @@ export const useTasks = () => {
           ...c,
           user: c.profiles
         })) || [],
+        attachments: task.task_attachments || [],
       })) as TaskWithRelations[];
     },
     enabled: !!user,
