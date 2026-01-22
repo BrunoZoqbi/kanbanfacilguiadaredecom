@@ -3,15 +3,16 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format, isPast, differenceInHours, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TaskWithRelations, TaskPriority } from '@/types/database';
+import { TaskWithRelations, TaskPriority, Profile } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, MapPin, CheckCircle2, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Calendar, MapPin, CheckCircle2, MessageSquare, AlertTriangle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TaskCardProps {
   task: TaskWithRelations;
   onClick?: () => void;
+  profiles?: Profile[];
 }
 
 const priorityConfig: Record<TaskPriority, { label: string; className: string }> = {
@@ -36,7 +37,7 @@ const getDeadlineStatus = (task: TaskWithRelations) => {
   return 'normal';
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, profiles = [] }) => {
   const {
     attributes,
     listeners,
@@ -56,6 +57,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
   const completedItems = task.checklist_items?.filter((i) => i.is_completed).length || 0;
   const totalItems = task.checklist_items?.length || 0;
   const commentCount = task.comments?.length || 0;
+  const assignee = profiles.find((p) => p.id === task.assignee_id);
 
   return (
     <div
@@ -156,12 +158,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
         </div>
 
         {task.assignee_id && (
-          <Avatar className="h-6 w-6">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
-              {/* Would need to fetch assignee name */}
-              T
-            </AvatarFallback>
-          </Avatar>
+          <div className="flex items-center gap-1.5">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                {assignee?.full_name?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {assignee && (
+              <span className="text-xs text-muted-foreground truncate max-w-[80px]">
+                {assignee.full_name.split(' ')[0]}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>

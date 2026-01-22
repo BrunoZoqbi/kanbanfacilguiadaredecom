@@ -211,13 +211,14 @@ const KanbanBoard: React.FC = () => {
               id={column.id}
               title={column.title}
               tasks={tasksByStatus[column.id]}
+              profiles={profiles}
               onTaskClick={handleTaskClick}
             />
           ))}
         </div>
 
         <DragOverlay>
-          {activeTask && <TaskCard task={activeTask} />}
+          {activeTask && <TaskCard task={activeTask} profiles={profiles} />}
         </DragOverlay>
       </DndContext>
 
