@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  LayoutDashboard,
   KanbanSquare,
   ListTodo,
   BarChart3,
@@ -19,9 +18,9 @@ import {
   Menu,
   X,
   LogOut,
-  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import fibrontecLogo from '@/assets/fibrontec-logo.png';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -82,11 +81,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <LayoutDashboard className="h-5 w-5 text-sidebar-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg text-sidebar-foreground">Fibron</span>
+          <Link to="/" className="flex items-center gap-3">
+            <img 
+              src={fibrontecLogo} 
+              alt="Fibrontec" 
+              className="h-8 object-contain"
+            />
           </Link>
           <button
             className="lg:hidden text-sidebar-foreground/80 hover:text-sidebar-foreground"
@@ -110,7 +110,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               setSidebarOpen(false);
               navigate('/create-task');
             }}
-            className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
+            className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground font-semibold"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nova Tarefa
@@ -130,8 +130,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </button>
 
           <div className="hidden lg:block">
-            <h1 className="text-lg font-semibold">
-              {navigation.find((n) => n.href === location.pathname)?.name || 'Fibron'}
+            <h1 className="text-lg font-semibold font-display">
+              {navigation.find((n) => n.href === location.pathname)?.name || 'Fibrontec'}
             </h1>
           </div>
 
@@ -140,7 +140,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 px-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                       {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>

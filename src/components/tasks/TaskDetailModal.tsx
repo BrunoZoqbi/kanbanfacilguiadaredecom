@@ -4,6 +4,8 @@ import { ptBR } from 'date-fns/locale';
 import { TaskWithRelations, TaskPriority, TaskStatus } from '@/types/database';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -29,8 +31,12 @@ import {
   Plus,
   Send,
   Trash2,
+  Paperclip,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import FileUploadZone, { AttachmentItem } from './FileUploadZone';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { toast } from 'sonner';
 
 interface TaskDetailModalProps {
   task: TaskWithRelations | null;
@@ -54,8 +60,11 @@ const statusConfig: Record<TaskStatus, { label: string; icon: React.ElementType 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }) => {
   const { user, isAdmin } = useAuth();
   const { addComment, toggleChecklistItem, addChecklistItem, deleteTask, updateTask } = useTasks();
+  const { deleteFile } = useFileUpload();
+  const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [showUploadZone, setShowUploadZone] = useState(false);
 
   if (!task) return null;
 
@@ -93,6 +102,28 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
     updateTask.mutate({ id: task.id, status: newStatus });
   };
 
+  const handleDeleteAttachment = async (attachmentId: string, fileUrl: string) => {
+    if (!canEdit) return;
+    
+    try {
+      // Delete from storage
+      await deleteFile(fileUrl);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('task_attachments')
+        .delete()
+        .eq('id', attachmentId);
+
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Anexo removido!');
+    } catch (error: any) {
+      toast.error('Erro ao remover anexo: ' + error.message);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -115,7 +146,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
                   </Badge>
                 )}
               </div>
-              <DialogTitle className="text-xl">{task.title}</DialogTitle>
+              <DialogTitle className="text-xl font-display">{task.title}</DialogTitle>
             </div>
           </div>
         </DialogHeader>
@@ -151,7 +182,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
           {/* Description */}
           {task.description && (
             <div>
-              <h3 className="text-sm font-medium mb-2">Descrição</h3>
+              <h3 className="text-sm font-medium mb-2 font-display">Descrição</h3>
               <p className="text-muted-foreground">{task.description}</p>
             </div>
           )}
@@ -183,7 +214,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
           {/* Tags */}
           {task.tags && task.tags.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2">Tags</h3>
+              <h3 className="text-sm font-medium mb-2 font-display">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {task.tags.map((tag) => (
                   <span
@@ -203,9 +234,63 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
 
           <Separator />
 
+          {/* Attachments */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium font-display flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Anexos ({task.attachments?.length || 0})
+              </h3>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUploadZone(!showUploadZone)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar
+                </Button>
+              )}
+            </div>
+
+            {showUploadZone && canEdit && (
+              <div className="mb-4">
+                <FileUploadZone
+                  taskId={task.id}
+                  onUploadComplete={() => setShowUploadZone(false)}
+                  compact
+                />
+              </div>
+            )}
+
+            {task.attachments && task.attachments.length > 0 ? (
+              <div className="space-y-2">
+                {task.attachments.map((attachment) => (
+                  <AttachmentItem
+                    key={attachment.id}
+                    attachment={{
+                      id: attachment.id,
+                      fileName: attachment.file_name,
+                      fileUrl: attachment.file_url,
+                      fileType: attachment.file_type,
+                    }}
+                    canDelete={canEdit}
+                    onDelete={() => handleDeleteAttachment(attachment.id, attachment.file_url)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum anexo
+              </p>
+            )}
+          </div>
+
+          <Separator />
+
           {/* Checklist */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Checklist</h3>
+            <h3 className="text-sm font-medium mb-3 font-display">Checklist</h3>
             <div className="space-y-2">
               {task.checklist_items?.map((item) => (
                 <div key={item.id} className="flex items-center gap-2">
@@ -246,12 +331,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
 
           {/* Comments */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Comentários</h3>
+            <h3 className="text-sm font-medium mb-3 font-display">Comentários</h3>
             <div className="space-y-3 max-h-48 overflow-y-auto">
               {task.comments?.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
                   <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
                       {comment.user?.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>

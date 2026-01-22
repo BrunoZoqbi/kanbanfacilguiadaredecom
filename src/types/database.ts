@@ -47,6 +47,7 @@ export interface TaskWithRelations extends Task {
   tags?: Tag[];
   checklist_items?: ChecklistItem[];
   comments?: Comment[];
+  attachments?: TaskAttachment[];
 }
 
 export interface TaskTag {
