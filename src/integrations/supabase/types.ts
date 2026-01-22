@@ -230,6 +230,33 @@ export type Database = {
           },
         ]
       }
+      task_types: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          name?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assignee_id: string | null
