@@ -4,12 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
-import fibrontecLogo from '@/assets/fibrontec-logo.png';
+import fibrontecLogo from '@/assets/fibrontec-logo-horizontal.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -120,11 +120,10 @@ const Auth: React.FC = () => {
             <img 
               src={fibrontecLogo} 
               alt="Fibrontec" 
-              className="h-12 object-contain"
+              className="h-10 object-contain"
             />
           </div>
-          <CardTitle className="text-2xl font-bold font-display">Kanban Operacional</CardTitle>
-          <CardDescription>Tecnologia para o seu dia</CardDescription>
+          <CardTitle className="text-2xl font-bold font-display">Kanban - Gestão Inteligente</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>

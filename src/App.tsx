@@ -9,6 +9,8 @@ import Auth from "./pages/Auth";
 import MyTasks from "./pages/MyTasks";
 import Dashboard from "./pages/Dashboard";
 import CreateTask from "./pages/CreateTask";
+import Calendar from "./pages/Calendar";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/my-tasks" element={<MyTasks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create-task" element={<CreateTask />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
