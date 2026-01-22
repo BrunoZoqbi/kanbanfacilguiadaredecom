@@ -42,11 +42,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const navigation = [
+    ...(isAdmin ? [
+      { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    ] : []),
     { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
     { name: 'Calendário', href: '/calendar', icon: CalendarDays },
     ...(isAdmin ? [
-      { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
   ];
@@ -104,15 +106,23 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navigation.map((item) => (
-            <NavLink key={item.name} item={item} />
-          ))}
-        </nav>
-
-        {/* Create Task Button */}
-        <div className="p-4 border-t border-sidebar-border">
+        {/* User info + Create Task Button */}
+        <div className="p-4 border-b border-sidebar-border space-y-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {profile?.full_name || 'Usuário'}
+              </p>
+              <p className="text-xs text-sidebar-foreground/60">
+                {isAdmin ? 'Administrador' : 'Usuário'}
+              </p>
+            </div>
+          </div>
           <Button
             onClick={() => {
               setSidebarOpen(false);
@@ -124,6 +134,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             Nova Tarefa
           </Button>
         </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          {navigation.map((item) => (
+            <NavLink key={item.name} item={item} />
+          ))}
+        </nav>
       </aside>
 
       {/* Main content */}

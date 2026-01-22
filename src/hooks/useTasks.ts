@@ -22,10 +22,7 @@ export const useTasks = () => {
             tags(*)
           ),
           task_checklist_items(*),
-          task_comments(
-            *,
-            profiles:user_id(*)
-          ),
+          task_comments(*),
           task_attachments(*)
         `)
         .order('position', { ascending: true });
@@ -39,10 +36,7 @@ export const useTasks = () => {
         ...task,
         tags: task.task_tags?.map((tt: any) => tt.tags).filter(Boolean) || [],
         checklist_items: task.task_checklist_items || [],
-        comments: task.task_comments?.map((c: any) => ({
-          ...c,
-          user: c.profiles
-        })) || [],
+        comments: task.task_comments || [],
         attachments: task.task_attachments || [],
       })) as TaskWithRelations[];
     },
