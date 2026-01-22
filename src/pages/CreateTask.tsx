@@ -2,10 +2,10 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import KanbanBoard from '@/components/kanban/KanbanBoard';
+import CreateTaskForm from '@/components/tasks/CreateTaskForm';
 import { Loader2 } from 'lucide-react';
 
-const Index: React.FC = () => {
+const CreateTask: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -22,9 +22,9 @@ const Index: React.FC = () => {
 
   return (
     <AppLayout>
-      <KanbanBoard />
+      <CreateTaskForm />
     </AppLayout>
   );
 };
 
-export default Index;
+export default CreateTask;
