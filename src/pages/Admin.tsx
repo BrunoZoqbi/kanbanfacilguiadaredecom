@@ -52,6 +52,7 @@ const AdminPage: React.FC = () => {
   const [newTypeLabel, setNewTypeLabel] = useState('');
   const [newTypeColor, setNewTypeColor] = useState('#6366f1');
   const [isCreatingType, setIsCreatingType] = useState(false);
+  const [editingType, setEditingType] = useState<{ id: string; name: string; label: string; color: string } | null>(null);
 
   // Fetch task types
   const { data: taskTypes = [] } = useQuery({
@@ -236,6 +237,25 @@ const AdminPage: React.FC = () => {
       if (error) throw error;
 
       toast.success(isActive ? 'Tipo desativado!' : 'Tipo ativado!');
+      queryClient.invalidateQueries({ queryKey: ['task_types'] });
+    } catch (error: any) {
+      toast.error('Erro ao atualizar: ' + error.message);
+    }
+  };
+
+  const handleUpdateTaskType = async () => {
+    if (!editingType) return;
+
+    try {
+      const { error } = await supabase
+        .from('task_types')
+        .update({ name: editingType.name, label: editingType.label, color: editingType.color })
+        .eq('id', editingType.id);
+
+      if (error) throw error;
+
+      toast.success('Tipo de tarefa atualizado!');
+      setEditingType(null);
       queryClient.invalidateQueries({ queryKey: ['task_types'] });
     } catch (error: any) {
       toast.error('Erro ao atualizar: ' + error.message);
@@ -530,6 +550,14 @@ const AdminPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setEditingType({ id: type.id, name: type.name, label: type.label, color: type.color })}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => handleDeleteTaskType(type.id)}
                           >
@@ -594,6 +622,65 @@ const AdminPage: React.FC = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdateTag}>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Edit Task Type Dialog */}
+        <Dialog open={!!editingType} onOpenChange={() => setEditingType(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Tipo de Tarefa</DialogTitle>
+            </DialogHeader>
+            {editingType && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome (identificador)</label>
+                  <Input
+                    value={editingType.name}
+                    onChange={(e) =>
+                      setEditingType({ ...editingType, name: e.target.value.toLowerCase().replace(/\s+/g, '_') })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Label (exibição)</label>
+                  <Input
+                    value={editingType.label}
+                    onChange={(e) =>
+                      setEditingType({ ...editingType, label: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Cor</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={editingType.color}
+                      onChange={(e) =>
+                        setEditingType({ ...editingType, color: e.target.value })
+                      }
+                      className="h-10 w-12 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={editingType.color}
+                      onChange={(e) =>
+                        setEditingType({ ...editingType, color: e.target.value })
+                      }
+                      className="w-24"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingType(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateTaskType}>
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
               </Button>

@@ -57,6 +57,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        column: {
+          todo: "hsl(var(--column-todo))",
+          doing: "hsl(var(--column-doing))",
+          done: "hsl(var(--column-done))",
+        },
+        status: {
+          todo: "hsl(var(--status-todo))",
+          doing: "hsl(var(--status-doing))",
+          done: "hsl(var(--status-done))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
