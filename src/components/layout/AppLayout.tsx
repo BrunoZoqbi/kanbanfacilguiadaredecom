@@ -14,13 +14,17 @@ import {
   KanbanSquare,
   ListTodo,
   BarChart3,
+  CalendarDays,
   Plus,
   Menu,
   X,
   LogOut,
+  Bell,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import fibrontecLogo from '@/assets/fibrontec-logo.png';
+import fibrontecLogo from '@/assets/fibrontec-logo-horizontal.png';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -40,7 +44,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
-    ...(isAdmin ? [{ name: 'Dashboard', href: '/dashboard', icon: BarChart3 }] : []),
+    { name: 'Calendário', href: '/calendar', icon: CalendarDays },
+    ...(isAdmin ? [
+      { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+      { name: 'Gerenciar', href: '/admin', icon: Settings },
+    ] : []),
   ];
 
   const NavLink = ({ item }: { item: typeof navigation[0] }) => {
@@ -136,6 +144,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-3">
+            <NotificationBell />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 px-2">
