@@ -2,11 +2,11 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import KanbanBoard from '@/components/kanban/KanbanBoard';
+import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import { Loader2 } from 'lucide-react';
 
-const Index: React.FC = () => {
-  const { user, isLoading } = useAuth();
+const Dashboard: React.FC = () => {
+  const { user, isAdmin, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -20,11 +20,15 @@ const Index: React.FC = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <AppLayout>
-      <KanbanBoard />
+      <AdminDashboard />
     </AppLayout>
   );
 };
 
-export default Index;
+export default Dashboard;
