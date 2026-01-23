@@ -46,16 +46,20 @@ export const useFileUpload = () => {
         throw error;
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
+      // Get signed URL (bucket is private for security)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('task-attachments')
-        .getPublicUrl(data.path);
+        .createSignedUrl(data.path, 3600 * 24 * 7); // 7 days expiry
+
+      if (urlError || !urlData?.signedUrl) {
+        throw new Error('Failed to generate signed URL');
+      }
 
       setUploadProgress(100);
 
       return {
         fileName: file.name,
-        fileUrl: urlData.publicUrl,
+        fileUrl: urlData.signedUrl,
         fileType: file.type,
       };
     } catch (error: any) {
