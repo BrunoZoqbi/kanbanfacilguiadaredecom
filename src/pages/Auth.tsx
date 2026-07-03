@@ -6,7 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import fibrontecLogo from '@/assets/fibrontec-logo-horizontal.png';
 
@@ -15,15 +24,25 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
 
+const forgotSchema = z.object({
+  email: z.string().email('Email inválido'),
+});
+
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { user, signIn, isLoading: authLoading } = useAuth();
+  const { user, signIn, resetPasswordForEmail, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+
+  // Forgot password dialog
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -55,6 +74,33 @@ const Auth: React.FC = () => {
         setError(error.message);
       }
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+
+    try {
+      forgotSchema.parse({ email: forgotEmail });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setForgotError(err.errors[0].message);
+        return;
+      }
+    }
+
+    setIsSendingReset(true);
+    const { error } = await resetPasswordForEmail(forgotEmail);
+    setIsSendingReset(false);
+
+    if (error) {
+      setForgotError(error.message);
+      return;
+    }
+
+    toast.success('Se esse e-mail estiver cadastrado, enviamos um link de recuperação.');
+    setForgotOpen(false);
+    setForgotEmail('');
   };
 
   if (authLoading) {
@@ -122,9 +168,66 @@ const Auth: React.FC = () => {
                 'Entrar'
               )}
             </Button>
+            <Button
+              type="button"
+              variant="link"
+              className="w-full"
+              onClick={() => {
+                setForgotEmail(loginEmail);
+                setForgotError(null);
+                setForgotOpen(true);
+              }}
+            >
+              Esqueci minha senha
+            </Button>
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recuperar senha</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail cadastrado. Vamos enviar um link para você definir uma nova senha.
+            </DialogDescription>
+          </DialogHeader>
+
+          {forgotError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{forgotError}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleForgotPassword} className="space-y-4" autoComplete="off">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="seu@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={isSendingReset} className="w-full sm:w-auto">
+                {isSendingReset ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar link de recuperação'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
