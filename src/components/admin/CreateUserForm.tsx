@@ -28,6 +28,8 @@ const CreateUserForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isGestorTecnico, setIsGestorTecnico] = useState(false);
+  const [isGestorComercial, setIsGestorComercial] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,34 @@ const CreateUserForm: React.FC = () => {
     setPassword('');
     setPhone('');
     setIsAdmin(false);
+    setIsGestorTecnico(false);
+    setIsGestorComercial(false);
     setError(null);
+  };
+
+  // Admin, Gestor Técnico and Gestor Comercial are mutually exclusive.
+  const handleToggleAdmin = (checked: boolean) => {
+    setIsAdmin(checked);
+    if (checked) {
+      setIsGestorTecnico(false);
+      setIsGestorComercial(false);
+    }
+  };
+
+  const handleToggleGestorTecnico = (checked: boolean) => {
+    setIsGestorTecnico(checked);
+    if (checked) {
+      setIsAdmin(false);
+      setIsGestorComercial(false);
+    }
+  };
+
+  const handleToggleGestorComercial = (checked: boolean) => {
+    setIsGestorComercial(checked);
+    if (checked) {
+      setIsAdmin(false);
+      setIsGestorTecnico(false);
+    }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -64,64 +93,41 @@ const CreateUserForm: React.FC = () => {
     setIsCreating(true);
 
     try {
-      // Use Supabase Auth to create user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-          },
-        },
+      // Create the user via the create-admin-user edge function, which uses
+      // the service role to create the auth user, profile and role in one
+      // go (avoids the client-side signUp rate limit / confirmation email).
+      const { data, error: invokeError } = await supabase.functions.invoke('create-admin-user', {
+        body: { email, password, fullName, isAdmin, isGestorTecnico, isGestorComercial },
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('Erro ao criar usuário');
+      if (invokeError) {
+        throw new Error(invokeError.message || 'Erro ao criar usuário');
       }
 
-      // Wait a bit for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao criar usuário');
+      }
 
-      // Update phone if provided
+      const userId = data.user.id;
+
+      // Update phone if provided (not handled by the edge function)
       if (phone) {
         await supabase
           .from('profiles')
           .update({ phone_whatsapp: phone })
-          .eq('id', authData.user.id);
-      }
-
-      // Set admin role if needed
-      if (isAdmin) {
-        // Check if role already exists
-        const { data: existingRole } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('user_id', authData.user.id)
-          .single();
-
-        if (existingRole) {
-          await supabase
-            .from('user_roles')
-            .update({ role: 'admin' })
-            .eq('user_id', authData.user.id);
-        } else {
-          await supabase
-            .from('user_roles')
-            .insert({ user_id: authData.user.id, role: 'admin' });
-        }
+          .eq('id', userId);
       }
 
       await logActivity({
         action: 'create',
         entityType: 'user',
-        entityId: authData.user.id,
+        entityId: userId,
         details: {
           user_name: fullName,
           email: email,
           is_admin: isAdmin,
+          is_gestor_tecnico: isGestorTecnico,
+          is_gestor_comercial: isGestorComercial,
         },
       });
 
@@ -129,7 +135,7 @@ const CreateUserForm: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       resetForm();
     } catch (error: any) {
-      if (error.message.includes('already registered')) {
+      if (error.message.includes('already registered') || error.message.includes('already been registered')) {
         setError('Este email já está cadastrado');
       } else {
         setError(error.message);
@@ -219,16 +225,38 @@ const CreateUserForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-3">
-              <Switch
-                id="isAdmin"
-                checked={isAdmin}
-                onCheckedChange={setIsAdmin}
-              />
-              <Label htmlFor="isAdmin" className="cursor-pointer">
-                Cadastrar como Administrador
-              </Label>
+          <div className="flex items-center justify-between pt-2 flex-wrap gap-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="isAdmin"
+                  checked={isAdmin}
+                  onCheckedChange={handleToggleAdmin}
+                />
+                <Label htmlFor="isAdmin" className="cursor-pointer">
+                  Cadastrar como Administrador
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="isGestorTecnico"
+                  checked={isGestorTecnico}
+                  onCheckedChange={handleToggleGestorTecnico}
+                />
+                <Label htmlFor="isGestorTecnico" className="cursor-pointer">
+                  Cadastrar como Gestor Técnico
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="isGestorComercial"
+                  checked={isGestorComercial}
+                  onCheckedChange={handleToggleGestorComercial}
+                />
+                <Label htmlFor="isGestorComercial" className="cursor-pointer">
+                  Cadastrar como Gestor Comercial
+                </Label>
+              </div>
             </div>
 
             <Button type="submit" disabled={isCreating}>

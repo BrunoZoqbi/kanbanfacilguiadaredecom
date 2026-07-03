@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import CreateTask from "./pages/CreateTask";
 import Calendar from "./pages/Calendar";
 import Admin from "./pages/Admin";
+import Estoque from "./pages/Estoque";
+import Prospeccao from "./pages/Prospeccao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/create-task" element={<CreateTask />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/estoque" element={<Estoque />} />
+            <Route path="/prospeccao" element={<Prospeccao />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

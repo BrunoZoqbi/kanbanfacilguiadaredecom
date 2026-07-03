@@ -1,0 +1,127 @@
+import { Profile } from './database';
+
+export type TipoEstoque = 'geral' | 'tecnico';
+export type CondicaoItem = 'novo' | 'usado' | 'recondicionado';
+export type StatusItem =
+  | 'disponivel'
+  | 'com_tecnico'
+  | 'instalado_cliente'
+  | 'analise_defeito'
+  | 'baixado';
+export type TipoMovimentoEstoque =
+  | 'entrada_compra'
+  | 'retirada_tecnico'
+  | 'instalacao'
+  | 'recolhimento'
+  | 'devolucao_sede'
+  | 'baixa_defeito'
+  | 'descarte';
+
+export interface Produto {
+  id: string;
+  nome: string;
+  categoria: string;
+  controla_serial: boolean;
+  unidade_medida: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Estoque {
+  id: string;
+  nome: string;
+  tipo: TipoEstoque;
+  responsavel_id: string | null;
+  created_at: string;
+}
+
+export interface ItemSerializado {
+  id: string;
+  produto_id: string;
+  numero_serie: string | null;
+  mac_address: string | null;
+  patrimonio: string | null;
+  fabricante: string | null;
+  modelo: string | null;
+  fornecedor: string | null;
+  nota_fiscal: string | null;
+  valor_aquisicao: number | null;
+  data_entrada: string;
+  garantia_ate: string | null;
+  condicao: CondicaoItem;
+  status: StatusItem;
+  estoque_atual_id: string | null;
+  tecnico_atual_id: string | null;
+  cliente_vinculado: string | null;
+  os_vinculada: string | null;
+  local_instalacao: string | null;
+  observacoes: string | null;
+  ultima_movimentacao_em: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ItemSerializadoWithRelations extends ItemSerializado {
+  produto?: Produto;
+  tecnico_atual?: Profile | null;
+}
+
+export interface EstoqueSaldo {
+  id: string;
+  estoque_id: string;
+  produto_id: string;
+  quantidade: number;
+  updated_at: string;
+}
+
+export interface EstoqueSaldoWithProduto extends EstoqueSaldo {
+  produto?: Produto;
+}
+
+export interface MovimentacaoEstoque {
+  id: string;
+  produto_id: string;
+  item_serializado_id: string | null;
+  tipo_movimento: TipoMovimentoEstoque;
+  estoque_origem_id: string | null;
+  estoque_destino_id: string | null;
+  tecnico_id: string | null;
+  cliente_vinculado: string | null;
+  os_vinculada: string | null;
+  quantidade: number;
+  usuario_responsavel_id: string;
+  observacao: string | null;
+  created_at: string;
+}
+
+// Categorias de produto disponíveis no cadastro (lista curada, não livre,
+// para que a regra de exibição do campo MAC abaixo seja previsível).
+export const CATEGORIAS_PRODUTO = [
+  { value: 'roteador', label: 'Roteador' },
+  { value: 'onu', label: 'ONU' },
+  { value: 'radio', label: 'Rádio' },
+  { value: 'switch', label: 'Switch' },
+  { value: 'cabo', label: 'Cabo' },
+  { value: 'conector', label: 'Conector' },
+  { value: 'splitter', label: 'Splitter' },
+  { value: 'fonte', label: 'Fonte' },
+  { value: 'ferramenta', label: 'Ferramenta' },
+  { value: 'outro', label: 'Outro' },
+];
+
+// Categorias de produto que exibem o campo MAC address no cadastro do item.
+export const CATEGORIAS_COM_MAC = ['roteador', 'onu', 'radio'];
+
+export const CONDICAO_LABELS: Record<CondicaoItem, string> = {
+  novo: 'Novo',
+  usado: 'Usado',
+  recondicionado: 'Recondicionado',
+};
+
+export const STATUS_ITEM_LABELS: Record<StatusItem, string> = {
+  disponivel: 'Disponível',
+  com_tecnico: 'Com técnico',
+  instalado_cliente: 'Instalado no cliente',
+  analise_defeito: 'Em análise (defeito)',
+  baixado: 'Baixado',
+};

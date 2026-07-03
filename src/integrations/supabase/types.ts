@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -44,6 +44,269 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque_saldo: {
+        Row: {
+          estoque_id: string
+          id: string
+          produto_id: string
+          quantidade: number
+          updated_at: string
+        }
+        Insert: {
+          estoque_id: string
+          id?: string
+          produto_id: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Update: {
+          estoque_id?: string
+          id?: string
+          produto_id?: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_saldo_estoque_id_fkey"
+            columns: ["estoque_id"]
+            isOneToOne: false
+            referencedRelation: "estoques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_saldo_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estoques: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          responsavel_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_estoque"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          responsavel_id?: string | null
+          tipo: Database["public"]["Enums"]["tipo_estoque"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_estoque"]
+        }
+        Relationships: []
+      }
+      itens_serializados: {
+        Row: {
+          cliente_vinculado: string | null
+          condicao: Database["public"]["Enums"]["condicao_item"]
+          created_at: string
+          data_entrada: string
+          estoque_atual_id: string | null
+          fabricante: string | null
+          fornecedor: string | null
+          garantia_ate: string | null
+          id: string
+          local_instalacao: string | null
+          mac_address: string | null
+          modelo: string | null
+          nota_fiscal: string | null
+          numero_serie: string | null
+          observacoes: string | null
+          os_vinculada: string | null
+          patrimonio: string | null
+          produto_id: string
+          status: Database["public"]["Enums"]["status_item"]
+          tecnico_atual_id: string | null
+          ultima_movimentacao_em: string
+          updated_at: string
+          valor_aquisicao: number | null
+        }
+        Insert: {
+          cliente_vinculado?: string | null
+          condicao?: Database["public"]["Enums"]["condicao_item"]
+          created_at?: string
+          data_entrada?: string
+          estoque_atual_id?: string | null
+          fabricante?: string | null
+          fornecedor?: string | null
+          garantia_ate?: string | null
+          id?: string
+          local_instalacao?: string | null
+          mac_address?: string | null
+          modelo?: string | null
+          nota_fiscal?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          os_vinculada?: string | null
+          patrimonio?: string | null
+          produto_id: string
+          status?: Database["public"]["Enums"]["status_item"]
+          tecnico_atual_id?: string | null
+          ultima_movimentacao_em?: string
+          updated_at?: string
+          valor_aquisicao?: number | null
+        }
+        Update: {
+          cliente_vinculado?: string | null
+          condicao?: Database["public"]["Enums"]["condicao_item"]
+          created_at?: string
+          data_entrada?: string
+          estoque_atual_id?: string | null
+          fabricante?: string | null
+          fornecedor?: string | null
+          garantia_ate?: string | null
+          id?: string
+          local_instalacao?: string | null
+          mac_address?: string | null
+          modelo?: string | null
+          nota_fiscal?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          os_vinculada?: string | null
+          patrimonio?: string | null
+          produto_id?: string
+          status?: Database["public"]["Enums"]["status_item"]
+          tecnico_atual_id?: string | null
+          ultima_movimentacao_em?: string
+          updated_at?: string
+          valor_aquisicao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itens_serializados_estoque_atual_id_fkey"
+            columns: ["estoque_atual_id"]
+            isOneToOne: false
+            referencedRelation: "estoques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_serializados_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movimentacoes_estoque: {
+        Row: {
+          cliente_vinculado: string | null
+          created_at: string
+          estoque_destino_id: string | null
+          estoque_origem_id: string | null
+          id: string
+          item_serializado_id: string | null
+          observacao: string | null
+          os_vinculada: string | null
+          produto_id: string
+          quantidade: number
+          tecnico_id: string | null
+          tipo_movimento: Database["public"]["Enums"]["tipo_movimento_estoque"]
+          usuario_responsavel_id: string
+        }
+        Insert: {
+          cliente_vinculado?: string | null
+          created_at?: string
+          estoque_destino_id?: string | null
+          estoque_origem_id?: string | null
+          id?: string
+          item_serializado_id?: string | null
+          observacao?: string | null
+          os_vinculada?: string | null
+          produto_id: string
+          quantidade?: number
+          tecnico_id?: string | null
+          tipo_movimento: Database["public"]["Enums"]["tipo_movimento_estoque"]
+          usuario_responsavel_id: string
+        }
+        Update: {
+          cliente_vinculado?: string | null
+          created_at?: string
+          estoque_destino_id?: string | null
+          estoque_origem_id?: string | null
+          id?: string
+          item_serializado_id?: string | null
+          observacao?: string | null
+          os_vinculada?: string | null
+          produto_id?: string
+          quantidade?: number
+          tecnico_id?: string | null
+          tipo_movimento?: Database["public"]["Enums"]["tipo_movimento_estoque"]
+          usuario_responsavel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_estoque_estoque_destino_id_fkey"
+            columns: ["estoque_destino_id"]
+            isOneToOne: false
+            referencedRelation: "estoques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_estoque_estoque_origem_id_fkey"
+            columns: ["estoque_origem_id"]
+            isOneToOne: false
+            referencedRelation: "estoques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_estoque_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_estoque_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos: {
+        Row: {
+          categoria: string
+          controla_serial: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          nome: string
+          unidade_medida: string | null
+        }
+        Insert: {
+          categoria: string
+          controla_serial?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          nome: string
+          unidade_medida?: string | null
+        }
+        Update: {
+          categoria?: string
+          controla_serial?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          nome?: string
+          unidade_medida?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -71,6 +334,92 @@ export type Database = {
         }
         Relationships: []
       }
+      prospeccoes: {
+        Row: {
+          classificacao: Database["public"]["Enums"]["classificacao_prospeccao"]
+          created_at: string
+          data_contato: string
+          data_retorno_prevista: string | null
+          endereco: string | null
+          id: string
+          nome_contato: string
+          observacoes: string | null
+          pontuacao_total: number
+          provedor_atual: string | null
+          status: Database["public"]["Enums"]["status_prospeccao"]
+          telefone_whatsapp: string
+          tipo_contato: Database["public"]["Enums"]["tipo_contato_prospeccao"]
+          updated_at: string
+          vendedor_responsavel_id: string
+        }
+        Insert: {
+          classificacao?: Database["public"]["Enums"]["classificacao_prospeccao"]
+          created_at?: string
+          data_contato?: string
+          data_retorno_prevista?: string | null
+          endereco?: string | null
+          id?: string
+          nome_contato: string
+          observacoes?: string | null
+          pontuacao_total?: number
+          provedor_atual?: string | null
+          status?: Database["public"]["Enums"]["status_prospeccao"]
+          telefone_whatsapp: string
+          tipo_contato?: Database["public"]["Enums"]["tipo_contato_prospeccao"]
+          updated_at?: string
+          vendedor_responsavel_id: string
+        }
+        Update: {
+          classificacao?: Database["public"]["Enums"]["classificacao_prospeccao"]
+          created_at?: string
+          data_contato?: string
+          data_retorno_prevista?: string | null
+          endereco?: string | null
+          id?: string
+          nome_contato?: string
+          observacoes?: string | null
+          pontuacao_total?: number
+          provedor_atual?: string | null
+          status?: Database["public"]["Enums"]["status_prospeccao"]
+          telefone_whatsapp?: string
+          tipo_contato?: Database["public"]["Enums"]["tipo_contato_prospeccao"]
+          updated_at?: string
+          vendedor_responsavel_id?: string
+        }
+        Relationships: []
+      }
+      prospeccoes_respostas: {
+        Row: {
+          id: string
+          pergunta: string
+          pontos: number
+          prospeccao_id: string
+          resposta_selecionada: string
+        }
+        Insert: {
+          id?: string
+          pergunta: string
+          pontos?: number
+          prospeccao_id: string
+          resposta_selecionada: string
+        }
+        Update: {
+          id?: string
+          pergunta?: string
+          pontos?: number
+          prospeccao_id?: string
+          resposta_selecionada?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospeccoes_respostas_prospeccao_id_fkey"
+            columns: ["prospeccao_id"]
+            isOneToOne: false
+            referencedRelation: "prospeccoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           color: string | null
@@ -96,8 +445,8 @@ export type Database = {
         Row: {
           created_at: string
           file_name: string
+          file_path: string
           file_type: string | null
-          file_url: string
           id: string
           task_id: string
           uploaded_by_id: string
@@ -105,8 +454,8 @@ export type Database = {
         Insert: {
           created_at?: string
           file_name: string
+          file_path: string
           file_type?: string | null
-          file_url: string
           id?: string
           task_id: string
           uploaded_by_id: string
@@ -114,8 +463,8 @@ export type Database = {
         Update: {
           created_at?: string
           file_name?: string
+          file_path?: string
           file_type?: string | null
-          file_url?: string
           id?: string
           task_id?: string
           uploaded_by_id?: string
@@ -266,6 +615,7 @@ export type Database = {
           description: string | null
           due_date: string
           id: string
+          item_serializado_id: string | null
           location: string | null
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
@@ -283,6 +633,7 @@ export type Database = {
           description?: string | null
           due_date: string
           id?: string
+          item_serializado_id?: string | null
           location?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
@@ -300,6 +651,7 @@ export type Database = {
           description?: string | null
           due_date?: string
           id?: string
+          item_serializado_id?: string | null
           location?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
@@ -309,7 +661,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_item_serializado_id_fkey"
+            columns: ["item_serializado_id"]
+            isOneToOne: false
+            referencedRelation: "itens_serializados"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -334,6 +694,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      devolver_sede: {
+        Args: { p_item_id: string; p_observacao?: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -341,13 +705,58 @@ export type Database = {
         }
         Returns: boolean
       }
+      instalar_item: {
+        Args: {
+          p_cliente_vinculado: string
+          p_item_id: string
+          p_local_instalacao: string
+          p_os_vinculada: string
+        }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
+      is_gestor_comercial: { Args: never; Returns: boolean }
+      is_gestor_tecnico: { Args: never; Returns: boolean }
+      lancar_tarefa_recolhimento: {
+        Args: {
+          p_descricao: string
+          p_due_date: string
+          p_item_id: string
+          p_location?: string
+          p_tecnico_id: string
+          p_titulo: string
+        }
+        Returns: string
+      }
+      retirar_para_tecnico: {
+        Args: { p_item_id: string; p_observacao?: string; p_tecnico_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "gestor_tecnico" | "gestor_comercial"
+      classificacao_prospeccao: "baixa" | "media" | "alta"
+      condicao_item: "novo" | "usado" | "recondicionado"
+      status_item:
+        | "disponivel"
+        | "com_tecnico"
+        | "instalado_cliente"
+        | "analise_defeito"
+        | "baixado"
+      status_prospeccao: "novo" | "em_negociacao" | "convertido" | "perdido"
       task_priority: "low" | "medium" | "high" | "critical"
       task_status: "todo" | "doing" | "done"
       task_type: "daily" | "one_time"
+      tipo_contato_prospeccao: "visita" | "ligacao"
+      tipo_estoque: "geral" | "tecnico"
+      tipo_movimento_estoque:
+        | "entrada_compra"
+        | "retirada_tecnico"
+        | "instalacao"
+        | "recolhimento"
+        | "devolucao_sede"
+        | "baixa_defeito"
+        | "descarte"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -475,10 +884,31 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "gestor_tecnico", "gestor_comercial"],
+      classificacao_prospeccao: ["baixa", "media", "alta"],
+      condicao_item: ["novo", "usado", "recondicionado"],
+      status_item: [
+        "disponivel",
+        "com_tecnico",
+        "instalado_cliente",
+        "analise_defeito",
+        "baixado",
+      ],
+      status_prospeccao: ["novo", "em_negociacao", "convertido", "perdido"],
       task_priority: ["low", "medium", "high", "critical"],
       task_status: ["todo", "doing", "done"],
       task_type: ["daily", "one_time"],
+      tipo_contato_prospeccao: ["visita", "ligacao"],
+      tipo_estoque: ["geral", "tecnico"],
+      tipo_movimento_estoque: [
+        "entrada_compra",
+        "retirada_tecnico",
+        "instalacao",
+        "recolhimento",
+        "devolucao_sede",
+        "baixa_defeito",
+        "descarte",
+      ],
     },
   },
 } as const

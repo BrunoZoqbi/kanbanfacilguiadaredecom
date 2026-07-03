@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Shield, ShieldOff, User, Phone, Search } from 'lucide-react';
+import { Loader2, Shield, ShieldOff, User, Phone, Search, Wrench, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
+import { AppRole } from '@/types/database';
 
 interface UserWithRole {
   id: string;
@@ -18,8 +19,15 @@ interface UserWithRole {
   is_active: boolean;
   phone_whatsapp: string | null;
   created_at: string;
-  role: 'admin' | 'user';
+  role: AppRole;
 }
+
+const roleLabels: Record<AppRole, string> = {
+  admin: 'Admin',
+  gestor_tecnico: 'Gestor Técnico',
+  gestor_comercial: 'Gestor Comercial',
+  user: 'Usuário',
+};
 
 const UserManagement: React.FC = () => {
   const queryClient = useQueryClient();
@@ -99,47 +107,43 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const toggleAdminRole = async (user: UserWithRole) => {
+  // Admin, Gestor Técnico and Gestor Comercial are mutually exclusive, and
+  // user_roles only enforces UNIQUE(user_id, role) — not one row per user —
+  // so any existing role rows are cleared before inserting the new one (or
+  // left cleared to fall back to plain 'user').
+  const setUserRole = async (
+    user: UserWithRole,
+    targetRole: 'admin' | 'gestor_tecnico' | 'gestor_comercial'
+  ) => {
     setUserUpdating(user.id, true);
     try {
-      const newRole = user.role === 'admin' ? 'user' : 'admin';
-      
-      // Check if user already has a role entry
-      const { data: existingRole } = await supabase
+      const newRole: AppRole = user.role === targetRole ? 'user' : targetRole;
+
+      const { error: deleteError } = await supabase
         .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+        .delete()
+        .eq('user_id', user.id);
+      if (deleteError) throw deleteError;
 
-      if (existingRole) {
-        // Update existing role
-        const { error } = await supabase
-          .from('user_roles')
-          .update({ role: newRole })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new role
-        const { error } = await supabase
+      if (newRole !== 'user') {
+        const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role: newRole });
-
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
 
       await logActivity({
         action: 'role_change',
         entityType: 'user',
         entityId: user.id,
-        details: { 
+        details: {
           user_name: user.full_name,
           old_role: user.role,
           new_role: newRole,
         },
       });
 
-      toast.success(`Função alterada para ${newRole === 'admin' ? 'Administrador' : 'Usuário'}!`);
+      toast.success(`Função alterada para ${roleLabels[newRole]}!`);
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     } catch (error: any) {
       toast.error('Erro: ' + error.message);
@@ -212,8 +216,8 @@ const UserManagement: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium">{user.full_name}</p>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                      <Badge variant={user.role === 'user' ? 'secondary' : 'default'}>
+                        {roleLabels[user.role]}
                       </Badge>
                       {!user.is_active && (
                         <Badge variant="destructive">Inativo</Badge>
@@ -249,7 +253,7 @@ const UserManagement: React.FC = () => {
                     <Button
                       variant={user.role === 'admin' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => toggleAdminRole(user)}
+                      onClick={() => setUserRole(user, 'admin')}
                       disabled={isUpdating}
                     >
                       {isUpdating ? (
@@ -263,6 +267,40 @@ const UserManagement: React.FC = () => {
                         <>
                           <ShieldOff className="h-4 w-4 mr-1" />
                           Tornar Admin
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Gestor Técnico toggle */}
+                    <Button
+                      variant={user.role === 'gestor_tecnico' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setUserRole(user, 'gestor_tecnico')}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Wrench className="h-4 w-4 mr-1" />
+                          {user.role === 'gestor_tecnico' ? 'Gestor Técnico' : 'Tornar Gestor Técnico'}
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Gestor Comercial toggle */}
+                    <Button
+                      variant={user.role === 'gestor_comercial' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setUserRole(user, 'gestor_comercial')}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Briefcase className="h-4 w-4 mr-1" />
+                          {user.role === 'gestor_comercial' ? 'Gestor Comercial' : 'Tornar Gestor Comercial'}
                         </>
                       )}
                     </Button>

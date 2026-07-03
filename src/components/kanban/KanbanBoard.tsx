@@ -204,16 +204,20 @@ const KanbanBoard: React.FC = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-1 md:grid-cols-3">
           {columns.map((column) => (
-            <KanbanColumn
+            <div
               key={column.id}
-              id={column.id}
-              title={column.title}
-              tasks={tasksByStatus[column.id]}
-              profiles={profiles}
-              onTaskClick={handleTaskClick}
-            />
+              className="w-[85vw] max-w-sm shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink"
+            >
+              <KanbanColumn
+                id={column.id}
+                title={column.title}
+                tasks={tasksByStatus[column.id]}
+                profiles={profiles}
+                onTaskClick={handleTaskClick}
+              />
+            </div>
           ))}
         </div>
 

@@ -102,12 +102,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
     updateTask.mutate({ id: task.id, status: newStatus });
   };
 
-  const handleDeleteAttachment = async (attachmentId: string, fileUrl: string) => {
+  const handleDeleteAttachment = async (attachmentId: string, filePath: string) => {
     if (!canEdit) return;
-    
+
     try {
       // Delete from storage
-      await deleteFile(fileUrl);
+      await deleteFile(filePath);
       
       // Delete from database
       const { error } = await supabase
@@ -154,7 +154,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
         <div className="space-y-6 mt-4">
           {/* Status buttons */}
           {canEdit && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(['todo', 'doing', 'done'] as TaskStatus[]).map((s) => {
                 const config = statusConfig[s];
                 const Icon = config.icon;
@@ -188,7 +188,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
           )}
 
           {/* Meta info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>Prazo: {format(new Date(task.due_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
@@ -271,11 +271,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
                     attachment={{
                       id: attachment.id,
                       fileName: attachment.file_name,
-                      fileUrl: attachment.file_url,
+                      filePath: attachment.file_path,
                       fileType: attachment.file_type,
                     }}
                     canDelete={canEdit}
-                    onDelete={() => handleDeleteAttachment(attachment.id, attachment.file_url)}
+                    onDelete={() => handleDeleteAttachment(attachment.id, attachment.file_path)}
                   />
                 ))}
               </div>

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface UploadResult {
   fileName: string;
-  fileUrl: string;
+  filePath: string;
   fileType: string;
 }
 
@@ -46,20 +46,11 @@ export const useFileUpload = () => {
         throw error;
       }
 
-      // Get signed URL (bucket is private for security)
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from('task-attachments')
-        .createSignedUrl(data.path, 3600 * 24 * 7); // 7 days expiry
-
-      if (urlError || !urlData?.signedUrl) {
-        throw new Error('Failed to generate signed URL');
-      }
-
       setUploadProgress(100);
 
       return {
         fileName: file.name,
-        fileUrl: urlData.signedUrl,
+        filePath: data.path,
         fileType: file.type,
       };
     } catch (error: any) {
@@ -71,13 +62,28 @@ export const useFileUpload = () => {
     }
   };
 
-  const deleteFile = async (fileUrl: string): Promise<boolean> => {
+  // Signed URLs are generated on demand (short expiry) instead of being
+  // stored, since a URL saved in the database would go stale once it expires.
+  const getSignedUrl = async (filePath: string, expiresIn = 60): Promise<string | null> => {
     try {
-      // Extract file path from URL
-      const url = new URL(fileUrl);
-      const pathParts = url.pathname.split('/');
-      const filePath = pathParts.slice(pathParts.indexOf('task-attachments') + 1).join('/');
+      const { data, error } = await supabase.storage
+        .from('task-attachments')
+        .createSignedUrl(filePath, expiresIn);
 
+      if (error || !data?.signedUrl) {
+        throw error || new Error('Failed to generate signed URL');
+      }
+
+      return data.signedUrl;
+    } catch (error: any) {
+      console.error('Signed URL error:', error);
+      toast.error('Erro ao gerar link do anexo: ' + error.message);
+      return null;
+    }
+  };
+
+  const deleteFile = async (filePath: string): Promise<boolean> => {
+    try {
       const { error } = await supabase.storage
         .from('task-attachments')
         .remove([filePath]);
@@ -96,6 +102,7 @@ export const useFileUpload = () => {
 
   return {
     uploadFile,
+    getSignedUrl,
     deleteFile,
     isUploading,
     uploadProgress,

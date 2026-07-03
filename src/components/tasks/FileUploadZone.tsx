@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useTasks } from '@/hooks/useTasks';
@@ -20,7 +20,7 @@ interface FileUploadZoneProps {
 interface AttachmentPreview {
   id: string;
   fileName: string;
-  fileUrl: string;
+  filePath: string;
   fileType: string | null;
 }
 
@@ -50,7 +50,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
           .insert({
             task_id: taskId,
             file_name: result.fileName,
-            file_url: result.fileUrl,
+            file_path: result.filePath,
             file_type: result.fileType,
             uploaded_by_id: user.id,
           });
@@ -158,35 +158,70 @@ export const AttachmentItem: React.FC<{
   onDelete?: () => void;
   canDelete?: boolean;
 }> = ({ attachment, onDelete, canDelete }) => {
+  const { getSignedUrl } = useFileUpload();
   const Icon = getFileIcon(attachment.fileType);
   const isImage = attachment.fileType?.startsWith('image/');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isOpening, setIsOpening] = useState(false);
+
+  useEffect(() => {
+    if (!isImage) return;
+    let active = true;
+    getSignedUrl(attachment.filePath).then((url) => {
+      if (active) setPreviewUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attachment.filePath, isImage]);
+
+  const handleOpen = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isOpening) return;
+    setIsOpening(true);
+    // Open a blank tab synchronously (on the user gesture) so popup blockers
+    // don't kick in while the fresh signed URL is being fetched.
+    const newWindow = window.open('', '_blank', 'noopener,noreferrer');
+    const url = await getSignedUrl(attachment.filePath);
+    setIsOpening(false);
+
+    if (url && newWindow) {
+      newWindow.location.href = url;
+    } else {
+      newWindow?.close();
+      toast.error('Não foi possível abrir o anexo');
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 p-2 rounded-lg border bg-card group">
       {isImage ? (
         <a
-          href={attachment.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="h-12 w-12 rounded overflow-hidden flex-shrink-0"
+          href="#"
+          onClick={handleOpen}
+          className="h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center"
         >
-          <img
-            src={attachment.fileUrl}
-            alt={attachment.fileName}
-            className="h-full w-full object-cover"
-          />
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt={attachment.fileName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Icon className="h-6 w-6 text-muted-foreground" />
+          )}
         </a>
       ) : (
         <div className="h-12 w-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
           <Icon className="h-6 w-6 text-muted-foreground" />
         </div>
       )}
-      
+
       <div className="flex-1 min-w-0">
         <a
-          href={attachment.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
+          onClick={handleOpen}
           className="text-sm font-medium truncate block hover:text-primary"
         >
           {attachment.fileName}

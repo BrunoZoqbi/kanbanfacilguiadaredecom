@@ -24,11 +24,19 @@ serve(async (req) => {
       },
     });
 
-    const { email, password, fullName, isAdmin } = await req.json();
+    const { email, password, fullName, isAdmin, isGestorTecnico, isGestorComercial } = await req.json();
 
     if (!email || !password || !fullName) {
       return new Response(
         JSON.stringify({ error: "Email, password and fullName are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const roleFlagsCount = [isAdmin, isGestorTecnico, isGestorComercial].filter(Boolean).length;
+    if (roleFlagsCount > 1) {
+      return new Response(
+        JSON.stringify({ error: "Usuário só pode ter um papel: Administrador, Gestor Técnico ou Gestor Comercial" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -58,31 +66,28 @@ serve(async (req) => {
       .update({ full_name: fullName })
       .eq("id", userId);
 
-    // Set admin role if requested
-    if (isAdmin) {
-      // First check if role exists
-      const { data: existingRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
+    // Set the role if requested (admin, gestor_tecnico and gestor_comercial
+    // are mutually exclusive, and user_roles only enforces
+    // UNIQUE(user_id, role) — not one row per user — so we clear any
+    // existing rows before inserting).
+    if (isAdmin || isGestorTecnico || isGestorComercial) {
+      const role = isAdmin ? "admin" : isGestorTecnico ? "gestor_tecnico" : "gestor_comercial";
 
-      if (existingRole) {
-        await supabaseAdmin
-          .from("user_roles")
-          .update({ role: "admin" })
-          .eq("user_id", userId);
-      } else {
-        await supabaseAdmin
-          .from("user_roles")
-          .insert({ user_id: userId, role: "admin" });
-      }
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+      await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        user: { id: userId, email, fullName, isAdmin } 
+      JSON.stringify({
+        success: true,
+        user: {
+          id: userId,
+          email,
+          fullName,
+          isAdmin: !!isAdmin,
+          isGestorTecnico: !!isGestorTecnico,
+          isGestorComercial: !!isGestorComercial,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

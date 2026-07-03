@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsGestorComercial } from '@/hooks/useIsGestorComercial';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -15,6 +16,8 @@ import {
   ListTodo,
   BarChart3,
   CalendarDays,
+  Boxes,
+  Target,
   Plus,
   Menu,
   X,
@@ -32,6 +35,7 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { profile, isAdmin, signOut } = useAuth();
+  const isGestorComercial = useIsGestorComercial();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,6 +52,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
     { name: 'Calendário', href: '/calendar', icon: CalendarDays },
+    { name: 'Estoque', href: '/estoque', icon: Boxes },
+    ...(isAdmin || isGestorComercial ? [
+      { name: 'Prospecção', href: '/prospeccao', icon: Target },
+    ] : []),
     ...(isAdmin ? [
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),

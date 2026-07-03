@@ -1,7 +1,7 @@
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskType = 'daily' | 'one_time';
 export type TaskStatus = 'todo' | 'doing' | 'done';
-export type AppRole = 'admin' | 'user';
+export type AppRole = 'admin' | 'user' | 'gestor_tecnico' | 'gestor_comercial';
 
 export interface Profile {
   id: string;
@@ -45,6 +45,7 @@ export interface Task {
   due_date: string;
   scheduled_date: string | null;
   completed_at: string | null;
+  item_serializado_id: string | null;
   position: number;
   created_at: string;
   updated_at: string;
@@ -87,7 +88,7 @@ export interface TaskAttachment {
   id: string;
   task_id: string;
   file_name: string;
-  file_url: string;
+  file_path: string;
   file_type: string | null;
   uploaded_by_id: string;
   created_at: string;
