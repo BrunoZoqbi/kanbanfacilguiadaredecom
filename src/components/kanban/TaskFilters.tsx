@@ -1,6 +1,7 @@
 import React from 'react';
 import { Profile, Tag } from '@/types/database';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -70,58 +71,70 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
         </div>
 
         {/* Assignee */}
-        <Select value={filters.assignee || 'all'} onValueChange={(v) => updateFilter('assignee', v === 'all' ? '' : v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Responsável" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {profiles.map((profile) => (
-              <SelectItem key={profile.id} value={profile.id}>
-                {profile.full_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <Label className="text-xs font-normal text-muted-foreground">Responsável</Label>
+          <Select value={filters.assignee || 'all'} onValueChange={(v) => updateFilter('assignee', v === 'all' ? '' : v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {profiles.map((profile) => (
+                <SelectItem key={profile.id} value={profile.id}>
+                  {profile.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Priority */}
-        <Select value={filters.priority || 'all'} onValueChange={(v) => updateFilter('priority', v === 'all' ? '' : v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Prioridade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="low">Baixa</SelectItem>
-            <SelectItem value="medium">Média</SelectItem>
-            <SelectItem value="high">Alta</SelectItem>
-            <SelectItem value="critical">Crítica</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <Label className="text-xs font-normal text-muted-foreground">Prioridade</Label>
+          <Select value={filters.priority || 'all'} onValueChange={(v) => updateFilter('priority', v === 'all' ? '' : v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Prioridade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="low">Baixa</SelectItem>
+              <SelectItem value="medium">Média</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="critical">Crítica</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Type */}
-        <Select value={filters.type || 'all'} onValueChange={(v) => updateFilter('type', v === 'all' ? '' : v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="daily">Diária</SelectItem>
-            <SelectItem value="one_time">Pontual</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <Label className="text-xs font-normal text-muted-foreground">Tipo</Label>
+          <Select value={filters.type || 'all'} onValueChange={(v) => updateFilter('type', v === 'all' ? '' : v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="daily">Diária</SelectItem>
+              <SelectItem value="one_time">Pontual</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Date Filter */}
-        <Select value={filters.dateFilter || 'all'} onValueChange={(v) => updateFilter('dateFilter', v === 'all' ? '' : v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Prazo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="today">Vence hoje</SelectItem>
-            <SelectItem value="overdue">Atrasadas</SelectItem>
-            <SelectItem value="upcoming">Próximas 48h</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1">
+          <Label className="text-xs font-normal text-muted-foreground">Prazo</Label>
+          <Select value={filters.dateFilter || 'all'} onValueChange={(v) => updateFilter('dateFilter', v === 'all' ? '' : v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Prazo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="today">Vence hoje</SelectItem>
+              <SelectItem value="overdue">Atrasadas</SelectItem>
+              <SelectItem value="upcoming">Próximas 48h</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tags row */}
