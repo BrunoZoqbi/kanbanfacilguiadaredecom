@@ -2,7 +2,18 @@ import React, { useMemo } from 'react';
 import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Loader2, Wrench, CheckCircle2, XCircle } from 'lucide-react';
 
 const ItensEmAnalise: React.FC = () => {
@@ -57,15 +68,37 @@ const ItensEmAnalise: React.FC = () => {
                     <CheckCircle2 className="h-4 w-4 mr-1" />
                     Reparo Concluído
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => confirmarBaixado.mutate({ itemId: item.id })}
-                    disabled={confirmarBaixado.isPending}
-                  >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    Confirmar Baixa
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={confirmarBaixado.isPending}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Confirmar Baixa
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar baixa definitiva</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja dar baixa definitiva neste equipamento? Ele será
+                          removido permanentemente do estoque ativo e essa ação não pode ser
+                          desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          className={buttonVariants({ variant: 'destructive' })}
+                          onClick={() => confirmarBaixado.mutate({ itemId: item.id })}
+                        >
+                          Confirmar Baixa
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
