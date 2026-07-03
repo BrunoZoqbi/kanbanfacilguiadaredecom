@@ -14,6 +14,8 @@ import Calendar from "./pages/Calendar";
 import Admin from "./pages/Admin";
 import Estoque from "./pages/Estoque";
 import Prospeccao from "./pages/Prospeccao";
+import Tickets from "./pages/Tickets";
+import ConsultaTicket from "./pages/ConsultaTicket";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/estoque" element={<Estoque />} />
             <Route path="/prospeccao" element={<Prospeccao />} />
+            <Route path="/tickets" element={<Tickets />} />
+            <Route path="/consulta-ticket" element={<ConsultaTicket />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
