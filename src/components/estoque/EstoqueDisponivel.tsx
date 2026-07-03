@@ -14,19 +14,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Boxes, UserCog, Hash } from 'lucide-react';
+import { Loader2, Boxes, UserCog, Hash, AlertTriangle } from 'lucide-react';
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
+import DarBaixaDialog from './DarBaixaDialog';
 
 const EstoqueDisponivel: React.FC = () => {
   const { isAdmin } = useAuth();
   const isGestorTecnico = useIsGestorTecnico();
   const canRetirar = isAdmin || isGestorTecnico;
+  const canDarBaixa = isAdmin || isGestorTecnico;
   const { itens, isLoading, estoqueGeral } = useItensSerializados();
   const { data: saldos = [], isLoading: isLoadingSaldo } = useEstoqueSaldo(estoqueGeral?.id);
 
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [produtoFiltro, setProdutoFiltro] = useState('');
   const [retirarItem, setRetirarItem] = useState<ItemSerializadoWithRelations | null>(null);
+  const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
 
   const itensDisponiveis = useMemo(
     () => itens.filter((item) => item.status === 'disponivel'),
@@ -127,12 +130,20 @@ const EstoqueDisponivel: React.FC = () => {
                     </p>
                   </div>
 
-                  {canRetirar && (
-                    <Button variant="outline" size="sm" onClick={() => setRetirarItem(item)}>
-                      <UserCog className="h-4 w-4 mr-1" />
-                      Retirar para Técnico
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {canRetirar && (
+                      <Button variant="outline" size="sm" onClick={() => setRetirarItem(item)}>
+                        <UserCog className="h-4 w-4 mr-1" />
+                        Retirar para Técnico
+                      </Button>
+                    )}
+                    {canDarBaixa && (
+                      <Button variant="outline" size="sm" onClick={() => setBaixaItem(item)}>
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Dar Baixa / Registrar Defeito
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
 
@@ -191,6 +202,14 @@ const EstoqueDisponivel: React.FC = () => {
           item={retirarItem}
           open={!!retirarItem}
           onClose={() => setRetirarItem(null)}
+        />
+      )}
+
+      {baixaItem && (
+        <DarBaixaDialog
+          item={baixaItem}
+          open={!!baixaItem}
+          onClose={() => setBaixaItem(null)}
         />
       )}
     </div>

@@ -694,6 +694,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      dar_baixa_item: {
+        Args: {
+          p_item_id: string
+          p_novo_status: Database["public"]["Enums"]["status_item"]
+          p_observacao: string
+        }
+        Returns: undefined
+      }
       devolver_sede: {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined

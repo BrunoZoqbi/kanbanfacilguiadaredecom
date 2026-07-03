@@ -1,18 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { CONDICAO_LABELS, ItemSerializadoWithRelations } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wrench, Undo2, PackageCheck } from 'lucide-react';
+import { Loader2, Wrench, Undo2, PackageCheck, AlertTriangle } from 'lucide-react';
 import InstalarItemDialog from './InstalarItemDialog';
+import DarBaixaDialog from './DarBaixaDialog';
 
 const MeuEstoque: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const isGestorTecnico = useIsGestorTecnico();
+  const canDarBaixa = isAdmin || isGestorTecnico;
   const { itens, isLoading, devolverSede } = useItensSerializados();
 
   const [instalarItemAlvo, setInstalarItemAlvo] = useState<ItemSerializadoWithRelations | null>(null);
+  const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
 
   const meusItens = useMemo(
     () => itens.filter((item) => item.tecnico_atual_id === user?.id),
@@ -69,6 +74,12 @@ const MeuEstoque: React.FC = () => {
                       <Undo2 className="h-4 w-4 mr-1" />
                       Devolver na Sede
                     </Button>
+                    {canDarBaixa && (
+                      <Button variant="outline" size="sm" onClick={() => setBaixaItem(item)}>
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Dar Baixa / Registrar Defeito
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -88,6 +99,14 @@ const MeuEstoque: React.FC = () => {
           item={instalarItemAlvo}
           open={!!instalarItemAlvo}
           onClose={() => setInstalarItemAlvo(null)}
+        />
+      )}
+
+      {baixaItem && (
+        <DarBaixaDialog
+          item={baixaItem}
+          open={!!baixaItem}
+          onClose={() => setBaixaItem(null)}
         />
       )}
     </div>

@@ -5,6 +5,8 @@ import { useEstoqueGeral } from './useEstoqueGeral';
 import { CondicaoItem, ItemSerializadoWithRelations } from '@/types/estoque';
 import { toast } from 'sonner';
 
+const nowIso = () => new Date().toISOString();
+
 interface CreateItemInput {
   produto_id: string;
   numero_serie: string;
@@ -180,6 +182,107 @@ export const useItensSerializados = () => {
     },
   });
 
+  // Admin / gestor técnico only (enforced server-side by the function).
+  // Only items 'disponivel' or 'com_tecnico' can be baixado — an installed
+  // item must be recolhido first.
+  const darBaixa = useMutation({
+    mutationFn: async ({
+      itemId,
+      novoStatus,
+      observacao,
+    }: {
+      itemId: string;
+      novoStatus: 'analise_defeito' | 'baixado';
+      observacao: string;
+    }) => {
+      const { error } = await supabase.rpc('dar_baixa_item', {
+        p_item_id: itemId,
+        p_novo_status: novoStatus,
+        p_observacao: observacao,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      invalidate();
+      toast.success(
+        variables.novoStatus === 'analise_defeito'
+          ? 'Item enviado para análise de defeito!'
+          : 'Item baixado (descarte)!'
+      );
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao dar baixa no item: ' + error.message);
+    },
+  });
+
+  // Admin only. Reparo concluído: item volta para o estoque geral.
+  const voltarDisponivel = useMutation({
+    mutationFn: async ({ itemId, produtoId }: { itemId: string; produtoId: string }) => {
+      if (!user) throw new Error('Não autenticado');
+      if (!estoqueGeral) throw new Error('Estoque geral da sede não encontrado');
+
+      const { error } = await supabase
+        .from('itens_serializados')
+        .update({
+          status: 'disponivel',
+          estoque_atual_id: estoqueGeral.id,
+          tecnico_atual_id: null,
+          ultima_movimentacao_em: nowIso(),
+        })
+        .eq('id', itemId);
+      if (error) throw error;
+
+      const { error: movError } = await supabase.from('movimentacoes_estoque').insert({
+        produto_id: produtoId,
+        item_serializado_id: itemId,
+        tipo_movimento: 'devolucao_sede',
+        estoque_destino_id: estoqueGeral.id,
+        usuario_responsavel_id: user.id,
+        observacao: 'Reparo concluído',
+      });
+      if (movError) throw movError;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success('Item de volta ao estoque disponível!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao devolver item ao estoque: ' + error.message);
+    },
+  });
+
+  // Admin only. Sem conserto: confirma o descarte definitivo.
+  const confirmarBaixado = useMutation({
+    mutationFn: async ({ itemId, produtoId }: { itemId: string; produtoId: string }) => {
+      if (!user) throw new Error('Não autenticado');
+
+      const { error } = await supabase
+        .from('itens_serializados')
+        .update({
+          status: 'baixado',
+          ultima_movimentacao_em: nowIso(),
+        })
+        .eq('id', itemId);
+      if (error) throw error;
+
+      const { error: movError } = await supabase.from('movimentacoes_estoque').insert({
+        produto_id: produtoId,
+        item_serializado_id: itemId,
+        tipo_movimento: 'descarte',
+        usuario_responsavel_id: user.id,
+        observacao: 'Confirmado sem conserto',
+      });
+      if (movError) throw movError;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success('Item baixado definitivamente!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao confirmar baixa: ' + error.message);
+    },
+  });
+
   return {
     itens,
     isLoading,
@@ -189,5 +292,8 @@ export const useItensSerializados = () => {
     instalarItem,
     devolverSede,
     lancarRecolhimento,
+    darBaixa,
+    voltarDisponivel,
+    confirmarBaixado,
   };
 };

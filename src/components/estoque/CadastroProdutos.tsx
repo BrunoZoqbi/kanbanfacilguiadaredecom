@@ -56,6 +56,11 @@ const CadastroProdutos: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Cadastre aqui o <strong>tipo de produto/categoria</strong>, ex: Roteador TP-Link. Isso é o
+        catálogo — use "Novo Equipamento" para lançar uma unidade física específica.
+      </p>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">

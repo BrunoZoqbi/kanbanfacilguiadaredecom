@@ -84,6 +84,10 @@ const CadastroItemSerializado: React.FC = () => {
           <PackagePlus className="h-5 w-5" />
           Cadastrar Item Serializado
         </CardTitle>
+        <p className="text-sm text-muted-foreground pt-1">
+          Cadastre aqui uma <strong>unidade física específica</strong>, com número de série — o
+          produto/tipo já precisa existir em "Tipos de Produto".
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

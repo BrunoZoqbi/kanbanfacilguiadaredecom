@@ -9,8 +9,9 @@ import EstoquePorTecnico from '@/components/estoque/EstoquePorTecnico';
 import LancarRecolhimento from '@/components/estoque/LancarRecolhimento';
 import CadastroProdutos from '@/components/estoque/CadastroProdutos';
 import CadastroItemSerializado from '@/components/estoque/CadastroItemSerializado';
+import ItensEmAnalise from '@/components/estoque/ItensEmAnalise';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList } from 'lucide-react';
+import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench } from 'lucide-react';
 
 const Estoque: React.FC = () => {
   const { user, isAdmin, isLoading } = useAuth();
@@ -63,9 +64,15 @@ const Estoque: React.FC = () => {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="em-analise" className="flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Em Análise
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="cadastro" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Cadastro de Produtos
+                Cadastro
               </TabsTrigger>
             )}
           </TabsList>
@@ -91,11 +98,17 @@ const Estoque: React.FC = () => {
           )}
 
           {isAdmin && (
+            <TabsContent value="em-analise" className="mt-6">
+              <ItensEmAnalise />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
             <TabsContent value="cadastro" className="mt-6">
               <Tabs defaultValue="produtos">
                 <TabsList>
-                  <TabsTrigger value="produtos">Produtos</TabsTrigger>
-                  <TabsTrigger value="itens">Itens Serializados</TabsTrigger>
+                  <TabsTrigger value="produtos">Tipos de Produto</TabsTrigger>
+                  <TabsTrigger value="itens">Novo Equipamento</TabsTrigger>
                 </TabsList>
                 <TabsContent value="produtos" className="mt-6">
                   <CadastroProdutos />
