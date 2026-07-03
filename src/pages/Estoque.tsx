@@ -63,7 +63,7 @@ const Estoque: React.FC = () => {
                 Lançar Recolhimento
               </TabsTrigger>
             )}
-            {isAdmin && (
+            {canManageStock && (
               <TabsTrigger value="em-analise" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
                 Em Análise
@@ -97,7 +97,7 @@ const Estoque: React.FC = () => {
             </TabsContent>
           )}
 
-          {isAdmin && (
+          {canManageStock && (
             <TabsContent value="em-analise" className="mt-6">
               <ItensEmAnalise />
             </TabsContent>

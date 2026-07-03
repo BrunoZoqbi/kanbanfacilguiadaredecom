@@ -51,7 +51,7 @@ const ItensEmAnalise: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => voltarDisponivel.mutate({ itemId: item.id, produtoId: item.produto_id })}
+                    onClick={() => voltarDisponivel.mutate({ itemId: item.id })}
                     disabled={voltarDisponivel.isPending}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -60,7 +60,7 @@ const ItensEmAnalise: React.FC = () => {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => confirmarBaixado.mutate({ itemId: item.id, produtoId: item.produto_id })}
+                    onClick={() => confirmarBaixado.mutate({ itemId: item.id })}
                     disabled={confirmarBaixado.isPending}
                   >
                     <XCircle className="h-4 w-4 mr-1" />

@@ -5,8 +5,6 @@ import { useEstoqueGeral } from './useEstoqueGeral';
 import { CondicaoItem, ItemSerializadoWithRelations } from '@/types/estoque';
 import { toast } from 'sonner';
 
-const nowIso = () => new Date().toISOString();
-
 interface CreateItemInput {
   produto_id: string;
   numero_serie: string;
@@ -215,32 +213,15 @@ export const useItensSerializados = () => {
     },
   });
 
-  // Admin only. Reparo concluído: item volta para o estoque geral.
+  // Admin / gestor técnico only (enforced server-side by the function).
+  // Reparo concluído: item volta para o estoque geral.
   const voltarDisponivel = useMutation({
-    mutationFn: async ({ itemId, produtoId }: { itemId: string; produtoId: string }) => {
-      if (!user) throw new Error('Não autenticado');
-      if (!estoqueGeral) throw new Error('Estoque geral da sede não encontrado');
-
-      const { error } = await supabase
-        .from('itens_serializados')
-        .update({
-          status: 'disponivel',
-          estoque_atual_id: estoqueGeral.id,
-          tecnico_atual_id: null,
-          ultima_movimentacao_em: nowIso(),
-        })
-        .eq('id', itemId);
-      if (error) throw error;
-
-      const { error: movError } = await supabase.from('movimentacoes_estoque').insert({
-        produto_id: produtoId,
-        item_serializado_id: itemId,
-        tipo_movimento: 'devolucao_sede',
-        estoque_destino_id: estoqueGeral.id,
-        usuario_responsavel_id: user.id,
-        observacao: 'Reparo concluído',
+    mutationFn: async ({ itemId, observacao }: { itemId: string; observacao?: string }) => {
+      const { error } = await supabase.rpc('reparo_concluido', {
+        p_item_id: itemId,
+        p_observacao: observacao,
       });
-      if (movError) throw movError;
+      if (error) throw error;
     },
     onSuccess: () => {
       invalidate();
@@ -251,28 +232,15 @@ export const useItensSerializados = () => {
     },
   });
 
-  // Admin only. Sem conserto: confirma o descarte definitivo.
+  // Admin / gestor técnico only (enforced server-side by the function).
+  // Sem conserto: confirma o descarte definitivo.
   const confirmarBaixado = useMutation({
-    mutationFn: async ({ itemId, produtoId }: { itemId: string; produtoId: string }) => {
-      if (!user) throw new Error('Não autenticado');
-
-      const { error } = await supabase
-        .from('itens_serializados')
-        .update({
-          status: 'baixado',
-          ultima_movimentacao_em: nowIso(),
-        })
-        .eq('id', itemId);
-      if (error) throw error;
-
-      const { error: movError } = await supabase.from('movimentacoes_estoque').insert({
-        produto_id: produtoId,
-        item_serializado_id: itemId,
-        tipo_movimento: 'descarte',
-        usuario_responsavel_id: user.id,
-        observacao: 'Confirmado sem conserto',
+    mutationFn: async ({ itemId, observacao }: { itemId: string; observacao?: string }) => {
+      const { error } = await supabase.rpc('confirmar_baixa_definitiva', {
+        p_item_id: itemId,
+        p_observacao: observacao,
       });
-      if (movError) throw movError;
+      if (error) throw error;
     },
     onSuccess: () => {
       invalidate();

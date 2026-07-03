@@ -694,6 +694,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirmar_baixa_definitiva: {
+        Args: { p_item_id: string; p_observacao?: string }
+        Returns: undefined
+      }
       dar_baixa_item: {
         Args: {
           p_item_id: string
@@ -735,6 +739,10 @@ export type Database = {
           p_titulo: string
         }
         Returns: string
+      }
+      reparo_concluido: {
+        Args: { p_item_id: string; p_observacao?: string }
+        Returns: undefined
       }
       retirar_para_tecnico: {
         Args: { p_item_id: string; p_observacao?: string; p_tecnico_id: string }
