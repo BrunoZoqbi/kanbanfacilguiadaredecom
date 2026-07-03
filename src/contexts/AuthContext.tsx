@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AppRole, Profile } from '@/types/database';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -40,7 +41,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-      
+
+      // A deactivated account (profiles.is_active = false) must not be
+      // allowed to keep using an already-established Supabase Auth
+      // session — sign it out immediately instead of letting it proceed.
+      // The matching RLS check (is_user_active()) covers writes even if
+      // this client-side check is bypassed or hasn't run yet.
+      if (profileData && profileData.is_active === false) {
+        toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setRole(null);
+        return;
+      }
+
       setProfile(profileData);
 
       // Fetch role
@@ -49,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
-      
+
       setRole(roleData?.role || 'user');
     } catch (error) {
       console.error('Error fetching user data:', error);
