@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# Kanban Fácil — Fibron
 
-## Project info
+Sistema de gestão interna da Fibron (Raul Soares/MG): gestão de tarefas, controle de estoque de equipamentos e prospecção comercial, em uma plataforma única e modular.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Módulos
 
-## How can I edit this code?
+- **Tarefas (Kanban)** — quadro de tarefas com anexos (PDF/JPEG/PNG), checklist, comentários, tags e tipos configuráveis. Visibilidade por papel (admin vê tudo; usuário comum só as próprias).
+- **Estoque** — controle de equipamentos com rastreamento individual (nº de série, MAC, patrimônio). Fluxo completo: Estoque Disponível → Retirada (Gestor Técnico) → Instalação/Recolhimento → Devolução, com histórico completo de movimentações.
+- **Prospecção Comercial** — cadastro de clientes potenciais com checklist de pontuação e classificação automática (baixa/média/alta), gerenciado pelo Gestor Comercial.
 
-There are several ways of editing your application.
+## Papéis do sistema
 
-**Use Lovable**
+| Papel | Permissões |
+|---|---|
+| Admin | Acesso total a todos os módulos |
+| Gestor Técnico | Gerencia Estoque (retirada/recolhimento) e vê tarefas da equipe (exceto de admins) |
+| Gestor Comercial | Gerencia Prospecção (só as próprias) |
+| Usuário comum | Vê e cria apenas as próprias tarefas |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Stack técnico
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend:** Vite + React 18 + TypeScript + shadcn-ui + Tailwind CSS
+- **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions)
+- **PWA:** instalável em dispositivos móveis (vite-plugin-pwa)
+- **Hospedagem:** Vercel (deploy automático via push na branch `main`)
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Desenvolvimento local
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/BrunoZoqbi/kanbanfacilguiadaredecom.git
+cd kanbanfacilguiadaredecom
+npm install
+cp .env.example .env
+# Preencha o .env com as credenciais do projeto Supabase (peça ao administrador do sistema)
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Estrutura do banco de dados
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Migrations em `supabase/migrations/`. Principais grupos de tabelas:
+- **Núcleo:** profiles, user_roles
+- **Tarefas:** tasks, task_tags, task_comments, task_checklist_items, task_attachments, task_types, activity_logs
+- **Estoque:** produtos, estoques, itens_serializados, estoque_saldo, movimentacoes_estoque
+- **Prospecção:** prospeccoes, prospeccoes_respostas
 
-**Use GitHub Codespaces**
+## Scripts disponíveis
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `npm run dev` — servidor de desenvolvimento
+- `npm run build` — build de produção
+- `npm run test` — testes
+- `npx tsc --noEmit` — checagem de tipos
 
-## What technologies are used for this project?
+## Segurança
 
-This project is built with:
+Todas as tabelas usam Row Level Security (RLS) do Supabase — as permissões por papel são aplicadas tanto na interface quanto no banco de dados.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+Projeto desenvolvido por Zoqbi (Bruno Zoqbi) para a Fibron – Raul Soares.
