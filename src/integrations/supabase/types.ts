@@ -692,6 +692,127 @@ export type Database = {
           },
         ]
       }
+      ticket_notas_internas: {
+        Row: {
+          autor_id: string
+          created_at: string
+          id: string
+          texto: string
+          ticket_id: string
+        }
+        Insert: {
+          autor_id: string
+          created_at?: string
+          id?: string
+          texto: string
+          ticket_id: string
+        }
+        Update: {
+          autor_id?: string
+          created_at?: string
+          id?: string
+          texto?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_notas_internas_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_respostas: {
+        Row: {
+          autor_id: string | null
+          autor_nome: string
+          created_at: string
+          id: string
+          texto: string
+          ticket_id: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nome: string
+          created_at?: string
+          id?: string
+          texto: string
+          ticket_id: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nome?: string
+          created_at?: string
+          id?: string
+          texto?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_respostas_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          atendente_id: string | null
+          cpf_ou_contrato: string
+          created_at: string
+          created_by_id: string
+          descricao: string
+          id: string
+          nome_cliente: string
+          numero_ticket: number
+          prioridade: Database["public"]["Enums"]["prioridade_ticket"]
+          resolved_at: string | null
+          sla_prazo: string | null
+          status: Database["public"]["Enums"]["status_ticket"]
+          telefone: string
+          tipo_problema: string
+          updated_at: string
+        }
+        Insert: {
+          atendente_id?: string | null
+          cpf_ou_contrato: string
+          created_at?: string
+          created_by_id: string
+          descricao: string
+          id?: string
+          nome_cliente: string
+          numero_ticket?: number
+          prioridade?: Database["public"]["Enums"]["prioridade_ticket"]
+          resolved_at?: string | null
+          sla_prazo?: string | null
+          status?: Database["public"]["Enums"]["status_ticket"]
+          telefone: string
+          tipo_problema: string
+          updated_at?: string
+        }
+        Update: {
+          atendente_id?: string | null
+          cpf_ou_contrato?: string
+          created_at?: string
+          created_by_id?: string
+          descricao?: string
+          id?: string
+          nome_cliente?: string
+          numero_ticket?: number
+          prioridade?: Database["public"]["Enums"]["prioridade_ticket"]
+          resolved_at?: string | null
+          sla_prazo?: string | null
+          status?: Database["public"]["Enums"]["status_ticket"]
+          telefone?: string
+          tipo_problema?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -774,6 +895,7 @@ export type Database = {
       app_role: "admin" | "user" | "gestor_tecnico" | "gestor_comercial"
       classificacao_prospeccao: "baixa" | "media" | "alta"
       condicao_item: "novo" | "usado" | "recondicionado"
+      prioridade_ticket: "baixa" | "media" | "alta" | "urgente"
       status_item:
         | "disponivel"
         | "com_tecnico"
@@ -781,6 +903,12 @@ export type Database = {
         | "analise_defeito"
         | "baixado"
       status_prospeccao: "novo" | "em_negociacao" | "convertido" | "perdido"
+      status_ticket:
+        | "aberto"
+        | "em_andamento"
+        | "aguardando_cliente"
+        | "resolvido"
+        | "fechado"
       task_priority: "low" | "medium" | "high" | "critical"
       task_status: "todo" | "doing" | "done"
       task_type: "daily" | "one_time"
@@ -924,6 +1052,7 @@ export const Constants = {
       app_role: ["admin", "user", "gestor_tecnico", "gestor_comercial"],
       classificacao_prospeccao: ["baixa", "media", "alta"],
       condicao_item: ["novo", "usado", "recondicionado"],
+      prioridade_ticket: ["baixa", "media", "alta", "urgente"],
       status_item: [
         "disponivel",
         "com_tecnico",
@@ -932,6 +1061,13 @@ export const Constants = {
         "baixado",
       ],
       status_prospeccao: ["novo", "em_negociacao", "convertido", "perdido"],
+      status_ticket: [
+        "aberto",
+        "em_andamento",
+        "aguardando_cliente",
+        "resolvido",
+        "fechado",
+      ],
       task_priority: ["low", "medium", "high", "critical"],
       task_status: ["todo", "doing", "done"],
       task_type: ["daily", "one_time"],

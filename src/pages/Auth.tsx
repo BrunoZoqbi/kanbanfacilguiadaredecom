@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -179,6 +179,9 @@ const Auth: React.FC = () => {
               }}
             >
               Esqueci minha senha
+            </Button>
+            <Button type="button" variant="link" className="w-full" asChild>
+              <Link to="/consulta-ticket">Consultar meu chamado</Link>
             </Button>
           </form>
         </CardContent>

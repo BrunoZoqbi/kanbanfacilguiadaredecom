@@ -18,6 +18,7 @@ import {
   CalendarDays,
   Boxes,
   Target,
+  Ticket as TicketIcon,
   Plus,
   Menu,
   X,
@@ -51,6 +52,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     ] : []),
     { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
+    { name: 'Tickets', href: '/tickets', icon: TicketIcon },
     { name: 'Calendário', href: '/calendar', icon: CalendarDays },
     { name: 'Estoque', href: '/estoque', icon: Boxes },
     ...(isAdmin || isGestorComercial ? [
