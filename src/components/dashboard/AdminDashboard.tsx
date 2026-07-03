@@ -341,16 +341,15 @@ const AdminDashboard: React.FC = () => {
                   <tr key={user.id} className="border-b last:border-0">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        {index < 3 && (
-                          <span className={cn(
-                            'flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold',
-                            index === 0 && 'bg-yellow-500 text-white',
-                            index === 1 && 'bg-gray-400 text-white',
-                            index === 2 && 'bg-amber-700 text-white'
-                          )}>
-                            {index + 1}
-                          </span>
-                        )}
+                        <span className={cn(
+                          'flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold flex-shrink-0',
+                          index === 0 && 'bg-yellow-500 text-white',
+                          index === 1 && 'bg-gray-400 text-white',
+                          index === 2 && 'bg-amber-700 text-white',
+                          index > 2 && 'bg-muted text-muted-foreground'
+                        )}>
+                          {index + 1}
+                        </span>
                         <span className="font-medium">{user.name}</span>
                       </div>
                     </td>

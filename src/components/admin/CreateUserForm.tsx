@@ -154,7 +154,7 @@ const CreateUserForm: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleCreateUser} className="space-y-4">
+        <form onSubmit={handleCreateUser} className="space-y-4" autoComplete="off">
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
               {error}
@@ -182,6 +182,7 @@ const CreateUserForm: React.FC = () => {
                 placeholder="email@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="new-email"
                 required
               />
             </div>
@@ -195,6 +196,7 @@ const CreateUserForm: React.FC = () => {
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
                 <Button

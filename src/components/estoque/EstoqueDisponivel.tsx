@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
-import { CATEGORIAS_PRODUTO, CONDICAO_LABELS, ItemSerializadoWithRelations } from '@/types/estoque';
+import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
+import { CONDICAO_LABELS, ItemSerializadoWithRelations } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,8 @@ const EstoqueDisponivel: React.FC = () => {
   const canDarBaixa = isAdmin || isGestorTecnico;
   const { itens, isLoading, estoqueGeral } = useItensSerializados();
   const { data: saldos = [], isLoading: isLoadingSaldo } = useEstoqueSaldo(estoqueGeral?.id);
+  const { categorias } = useCategoriasProduto();
+  const categoriasAtivas = categorias.filter((c) => c.ativo);
 
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [produtoFiltro, setProdutoFiltro] = useState('');
@@ -59,9 +62,6 @@ const EstoqueDisponivel: React.FC = () => {
     return true;
   });
 
-  const categoriaLabel = (value?: string) =>
-    CATEGORIAS_PRODUTO.find((c) => c.value === value)?.label || value || '-';
-
   return (
     <div className="space-y-6">
       <Card>
@@ -73,9 +73,9 @@ const EstoqueDisponivel: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as categorias</SelectItem>
-                {CATEGORIAS_PRODUTO.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
+                {categoriasAtivas.map((c) => (
+                  <SelectItem key={c.id} value={c.nome}>
+                    {c.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -118,7 +118,7 @@ const EstoqueDisponivel: React.FC = () => {
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <p className="font-medium">{item.produto?.nome}</p>
                       <Badge variant="secondary" className="text-xs">
-                        {categoriaLabel(item.produto?.categoria)}
+                        {item.produto?.categoria}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {CONDICAO_LABELS[item.condicao]}
@@ -177,7 +177,7 @@ const EstoqueDisponivel: React.FC = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium">{saldo.produto?.nome}</p>
                       <Badge variant="secondary" className="text-xs">
-                        {categoriaLabel(saldo.produto?.categoria)}
+                        {saldo.produto?.categoria}
                       </Badge>
                     </div>
                   </div>

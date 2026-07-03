@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProdutos } from '@/hooks/useProdutos';
-import { CATEGORIAS_PRODUTO } from '@/types/estoque';
+import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ import { Loader2, Package, Plus, Search } from 'lucide-react';
 
 const CadastroProdutos: React.FC = () => {
   const { produtos, isLoading, createProduto, toggleProdutoActive } = useProdutos();
+  const { categorias } = useCategoriasProduto();
+  const categoriasAtivas = categorias.filter((c) => c.ativo);
 
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -50,9 +52,6 @@ const CadastroProdutos: React.FC = () => {
       p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const categoriaLabel = (value: string) =>
-    CATEGORIAS_PRODUTO.find((c) => c.value === value)?.label || value;
 
   return (
     <div className="space-y-6">
@@ -89,13 +88,18 @@ const CadastroProdutos: React.FC = () => {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIAS_PRODUTO.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
+                    {categoriasAtivas.map((c) => (
+                      <SelectItem key={c.id} value={c.nome}>
+                        {c.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {categoriasAtivas.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma categoria ativa. Cadastre uma na aba "Categorias".
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -165,7 +169,7 @@ const CadastroProdutos: React.FC = () => {
                       <p className="font-medium truncate">{produto.nome}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge variant="secondary" className="text-xs">
-                          {categoriaLabel(produto.categoria)}
+                          {produto.categoria}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {produto.controla_serial ? 'Controla série/patrimônio' : `Saldo em ${produto.unidade_medida || 'un'}`}

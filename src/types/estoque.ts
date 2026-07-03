@@ -94,23 +94,19 @@ export interface MovimentacaoEstoque {
   created_at: string;
 }
 
-// Categorias de produto disponíveis no cadastro (lista curada, não livre,
-// para que a regra de exibição do campo MAC abaixo seja previsível).
-export const CATEGORIAS_PRODUTO = [
-  { value: 'roteador', label: 'Roteador' },
-  { value: 'onu', label: 'ONU' },
-  { value: 'radio', label: 'Rádio' },
-  { value: 'switch', label: 'Switch' },
-  { value: 'cabo', label: 'Cabo' },
-  { value: 'conector', label: 'Conector' },
-  { value: 'splitter', label: 'Splitter' },
-  { value: 'fonte', label: 'Fonte' },
-  { value: 'ferramenta', label: 'Ferramenta' },
-  { value: 'outro', label: 'Outro' },
-];
+// Categorias de produto são gerenciadas pelo admin na tabela
+// categorias_produto (ver useCategoriasProduto) em vez de uma lista fixa.
+export interface CategoriaProduto {
+  id: string;
+  nome: string;
+  ativo: boolean;
+  created_at: string;
+}
 
-// Categorias de produto que exibem o campo MAC address no cadastro do item.
-export const CATEGORIAS_COM_MAC = ['roteador', 'onu', 'radio'];
+// Categorias de produto que exibem o campo MAC address no cadastro do item
+// (comparação por nome, já que categorias agora são texto livre gerenciado
+// pelo admin).
+export const CATEGORIAS_COM_MAC = ['Roteador', 'ONU', 'Rádio'];
 
 export const CONDICAO_LABELS: Record<CondicaoItem, string> = {
   novo: 'Novo',

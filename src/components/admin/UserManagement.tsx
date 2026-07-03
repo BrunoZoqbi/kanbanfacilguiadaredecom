@@ -1,15 +1,46 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useActivityLog } from '@/hooks/useActivityLog';
 import CreateUserForm from './CreateUserForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Shield, ShieldOff, User, Phone, Search, Wrench, Briefcase } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Loader2,
+  Shield,
+  ShieldOff,
+  User,
+  Phone,
+  Search,
+  Wrench,
+  Briefcase,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { AppRole } from '@/types/database';
 
@@ -30,10 +61,17 @@ const roleLabels: Record<AppRole, string> = {
 };
 
 const UserManagement: React.FC = () => {
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLog();
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingUsers, setUpdatingUsers] = useState<Set<string>>(new Set());
+
+  // Edit dialog state
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -165,6 +203,81 @@ const UserManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     } catch (error: any) {
       toast.error('Erro: ' + error.message);
+    }
+  };
+
+  const openEditDialog = (user: UserWithRole) => {
+    setEditingUser(user);
+    setEditFullName(user.full_name);
+    setEditPhone(user.phone_whatsapp || '');
+  };
+
+  const closeEditDialog = () => {
+    setEditingUser(null);
+    setEditFullName('');
+    setEditPhone('');
+  };
+
+  // E-mail não é editável aqui: é a identidade de login no Supabase Auth.
+  const handleSaveEdit = async () => {
+    if (!editingUser || !editFullName.trim()) return;
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editFullName.trim(),
+          phone_whatsapp: editPhone.trim() || null,
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+
+      await logActivity({
+        action: 'update',
+        entityType: 'user',
+        entityId: editingUser.id,
+        details: { user_name: editFullName.trim() },
+      });
+
+      toast.success('Usuário atualizado!');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      closeEditDialog();
+    } catch (error: any) {
+      toast.error('Erro ao atualizar usuário: ' + error.message);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeleteUser = async (user: UserWithRole) => {
+    setUserUpdating(user.id, true);
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('delete-user', {
+        body: { userId: user.id },
+      });
+
+      if (invokeError) {
+        throw new Error(invokeError.message || 'Erro ao excluir usuário');
+      }
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao excluir usuário');
+      }
+
+      await logActivity({
+        action: 'delete',
+        entityType: 'user',
+        entityId: user.id,
+        details: { user_name: user.full_name },
+      });
+
+      toast.success(`Usuário "${user.full_name}" excluído!`);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    } catch (error: any) {
+      toast.error('Erro ao excluir usuário: ' + error.message);
+    } finally {
+      setUserUpdating(user.id, false);
     }
   };
 
@@ -304,6 +417,51 @@ const UserManagement: React.FC = () => {
                         </>
                       )}
                     </Button>
+
+                    {/* Edit */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(user)}
+                      disabled={isUpdating}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+
+                    {/* Delete */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          disabled={isUpdating || user.id === currentUser?.id}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir usuário</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir "{user.full_name}"? Essa ação não pode
+                            ser desfeita. Se o usuário tiver tarefas ou movimentações vinculadas,
+                            a exclusão pode falhar — nesse caso, use "Desativar" em vez disso.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className={buttonVariants({ variant: 'destructive' })}
+                            onClick={() => handleDeleteUser(user)}
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </div>
@@ -318,6 +476,50 @@ const UserManagement: React.FC = () => {
         </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && closeEditDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-fullName">Nome Completo *</Label>
+                <Input
+                  id="edit-fullName"
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">WhatsApp</Label>
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  placeholder="5511999999999"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O e-mail não pode ser alterado por aqui, pois é a identidade de login do usuário.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={!editFullName.trim() || isSavingEdit}>
+              {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

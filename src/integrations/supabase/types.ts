@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      categorias_produto: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       estoque_saldo: {
         Row: {
           estoque_id: string

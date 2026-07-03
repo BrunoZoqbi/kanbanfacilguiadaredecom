@@ -9,6 +9,7 @@ import EstoquePorTecnico from '@/components/estoque/EstoquePorTecnico';
 import LancarRecolhimento from '@/components/estoque/LancarRecolhimento';
 import CadastroProdutos from '@/components/estoque/CadastroProdutos';
 import CadastroItemSerializado from '@/components/estoque/CadastroItemSerializado';
+import GestaoCategorias from '@/components/estoque/GestaoCategorias';
 import ItensEmAnalise from '@/components/estoque/ItensEmAnalise';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench } from 'lucide-react';
@@ -109,12 +110,16 @@ const Estoque: React.FC = () => {
                 <TabsList>
                   <TabsTrigger value="produtos">Tipos de Produto</TabsTrigger>
                   <TabsTrigger value="itens">Novo Equipamento</TabsTrigger>
+                  <TabsTrigger value="categorias">Categorias</TabsTrigger>
                 </TabsList>
                 <TabsContent value="produtos" className="mt-6">
                   <CadastroProdutos />
                 </TabsContent>
                 <TabsContent value="itens" className="mt-6">
                   <CadastroItemSerializado />
+                </TabsContent>
+                <TabsContent value="categorias" className="mt-6">
+                  <GestaoCategorias />
                 </TabsContent>
               </Tabs>
             </TabsContent>
