@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -126,12 +127,12 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
           {/* Editable fields */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium">Status</p>
+              <Label htmlFor="ticket-status">Status</Label>
               <Select
                 value={ticket.status}
                 onValueChange={(v) => updateStatus.mutate({ id: ticket.id, status: v as StatusTicket })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="ticket-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,14 +146,14 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium">Prioridade</p>
+              <Label htmlFor="ticket-prioridade-detalhe">Prioridade</Label>
               <Select
                 value={ticket.prioridade}
                 onValueChange={(v) =>
                   updatePrioridade.mutate({ id: ticket.id, prioridade: v as PrioridadeTicket })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="ticket-prioridade-detalhe">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -166,7 +167,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium">Atendente</p>
+              <Label htmlFor="ticket-atendente">Atendente</Label>
               {canManageAtendente ? (
                 <Select
                   value={ticket.atendente_id ?? 'none'}
@@ -174,7 +175,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
                     updateAtendente.mutate({ id: ticket.id, atendente_id: v === 'none' ? null : v })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="ticket-atendente">
                     <SelectValue placeholder="Não atribuído" />
                   </SelectTrigger>
                   <SelectContent>
@@ -244,6 +245,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
               <div className="flex gap-2">
                 <Textarea
                   placeholder="Responder ao cliente..."
+                  aria-label="Responder ao cliente"
                   value={novaResposta}
                   onChange={(e) => setNovaResposta(e.target.value)}
                   className="flex-1 min-h-[80px]"
@@ -279,6 +281,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
               <div className="flex gap-2">
                 <Textarea
                   placeholder="Nota interna (visível apenas para a equipe)..."
+                  aria-label="Nota interna"
                   value={novaNota}
                   onChange={(e) => setNovaNota(e.target.value)}
                   className="flex-1 min-h-[80px]"

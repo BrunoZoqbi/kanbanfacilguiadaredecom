@@ -48,8 +48,8 @@ export const CLASSIFICACAO_LABELS: Record<ClassificacaoProspeccao, string> = {
 
 // Tailwind classes for the classification badge (vermelho/amarelo/verde).
 export const CLASSIFICACAO_BADGE_CLASSES: Record<ClassificacaoProspeccao, string> = {
-  baixa: 'bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400',
-  media: 'bg-amber-500/15 text-amber-600 border-amber-500/30 dark:text-amber-400',
+  baixa: 'bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400',
+  media: 'bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400',
   alta: 'bg-green-500/15 text-green-600 border-green-500/30 dark:text-green-400',
 };
 

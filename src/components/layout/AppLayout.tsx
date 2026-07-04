@@ -27,7 +27,6 @@ import {
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import fibrontecLogo from '@/assets/fibrontec-logo-horizontal.png';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface AppLayoutProps {
@@ -104,6 +103,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <button
             className="lg:hidden text-sidebar-foreground/80 hover:text-sidebar-foreground"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Fechar menu"
           >
             <X className="h-5 w-5" />
           </button>
@@ -153,6 +153,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <button
             className="lg:hidden text-foreground"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menu"
           >
             <Menu className="h-6 w-6" />
           </button>

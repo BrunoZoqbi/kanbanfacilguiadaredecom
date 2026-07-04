@@ -70,9 +70,9 @@ const RetirarParaTecnicoDialog: React.FC<RetirarParaTecnicoDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Técnico</label>
+            <label htmlFor="retirar-tecnico" className="text-sm font-medium">Técnico</label>
             <Select value={tecnicoId} onValueChange={setTecnicoId}>
-              <SelectTrigger>
+              <SelectTrigger id="retirar-tecnico">
                 <SelectValue placeholder="Selecione o técnico..." />
               </SelectTrigger>
               <SelectContent>
@@ -86,8 +86,9 @@ const RetirarParaTecnicoDialog: React.FC<RetirarParaTecnicoDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Observação (opcional)</label>
+            <label htmlFor="retirar-observacao" className="text-sm font-medium">Observação (opcional)</label>
             <Textarea
+              id="retirar-observacao"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               placeholder="Detalhes sobre a retirada..."
