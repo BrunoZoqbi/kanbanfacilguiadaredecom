@@ -44,24 +44,25 @@ const ItensEmAnalise: React.FC = () => {
         ) : (
           <div className="border rounded-lg divide-y">
             {itensEmAnalise.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4 p-3 flex-wrap">
+              <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <p className="font-medium">{item.produto?.nome}</p>
+                    <p className="font-medium truncate max-w-full">{item.produto?.nome}</p>
                     <Badge variant="destructive" className="text-xs">
                       Em análise
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {item.numero_serie && <>Série: {item.numero_serie} </>}
                     {item.patrimonio && <>· Patrimônio: {item.patrimonio}</>}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                     onClick={() => voltarDisponivel.mutate({ itemId: item.id })}
                     disabled={voltarDisponivel.isPending}
                   >
@@ -73,6 +74,7 @@ const ItensEmAnalise: React.FC = () => {
                       <Button
                         variant="destructive"
                         size="sm"
+                        className="w-full sm:w-auto"
                         disabled={confirmarBaixado.isPending}
                       >
                         <XCircle className="h-4 w-4 mr-1" />

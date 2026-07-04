@@ -317,7 +317,7 @@ const UserManagement: React.FC = () => {
         </div>
 
         {/* Users list */}
-        <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+        <div className="w-full border rounded-lg divide-y max-h-[500px] overflow-y-auto overflow-x-hidden">
           {filteredUsers.map((user) => {
             const isUpdating = updatingUsers.has(user.id);
             return (
@@ -351,9 +351,9 @@ const UserManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto sm:items-center sm:gap-4">
+                  <div className="grid grid-cols-1 gap-2 w-full min-w-0 sm:flex sm:flex-wrap sm:w-auto sm:items-center sm:gap-4">
                     {/* Active toggle */}
-                    <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                    <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">Ativo</span>
                       <Switch
                         checked={user.is_active}

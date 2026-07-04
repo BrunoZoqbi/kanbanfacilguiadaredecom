@@ -109,6 +109,7 @@ const TicketList: React.FC = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -154,6 +155,7 @@ const TicketList: React.FC = () => {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
 
           {!isLoading && filteredTickets.length === 0 && (
