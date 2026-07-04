@@ -91,11 +91,46 @@ export const useProspeccoes = () => {
         if (respostasError) throw respostasError;
       }
 
+      // Prospecções quentes (classificação Alta) geram automaticamente uma
+      // tarefa de follow-up no Kanban, atribuída ao próprio vendedor.
+      if (classificacao === 'alta') {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 2);
+
+        const { data: task, error: taskError } = await supabase
+          .from('tasks')
+          .insert({
+            title: `Enviar proposta para ${input.nome_contato}`,
+            description: `Prospecção classificada como Alta (${pontuacaoTotal} pontos). Contato: ${input.telefone_whatsapp}`,
+            assignee_id: user.id,
+            created_by_id: user.id,
+            priority: 'high',
+            due_date: dueDate.toISOString(),
+          })
+          .select()
+          .single();
+
+        if (taskError) throw taskError;
+
+        const { error: linkError } = await supabase
+          .from('prospeccoes')
+          .update({ task_id_gerada: task.id })
+          .eq('id', prospeccao.id);
+        if (linkError) throw linkError;
+
+        return { ...prospeccao, task_id_gerada: task.id } as Prospeccao;
+      }
+
       return prospeccao as Prospeccao;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       invalidate();
-      toast.success('Prospecção cadastrada!');
+      if (data.task_id_gerada) {
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        toast.success('Prospecção cadastrada! Tarefa de proposta criada no Kanban.');
+      } else {
+        toast.success('Prospecção cadastrada!');
+      }
     },
     onError: (error: any) => {
       toast.error('Erro ao cadastrar prospecção: ' + error.message);

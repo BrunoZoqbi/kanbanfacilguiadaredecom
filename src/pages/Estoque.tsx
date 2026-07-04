@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
+import { useItensSerializados } from '@/hooks/useItensSerializados';
+import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
+import { useProfiles } from '@/hooks/useProfiles';
 import AppLayout from '@/components/layout/AppLayout';
 import EstoqueDisponivel from '@/components/estoque/EstoqueDisponivel';
 import MeuEstoque from '@/components/estoque/MeuEstoque';
@@ -12,12 +15,30 @@ import CadastroItemSerializado from '@/components/estoque/CadastroItemSerializad
 import GestaoCategorias from '@/components/estoque/GestaoCategorias';
 import ItensEmAnalise from '@/components/estoque/ItensEmAnalise';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, FileSpreadsheet } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Estoque: React.FC = () => {
   const { user, isAdmin, isLoading } = useAuth();
   const isGestorTecnico = useIsGestorTecnico();
   const canManageStock = isAdmin || isGestorTecnico;
+  const { itens, estoqueGeral } = useItensSerializados();
+  const { data: saldos = [] } = useEstoqueSaldo(estoqueGeral?.id);
+  const { data: profiles = [] } = useProfiles();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const { generateEstoqueExcelReport } = await import('@/utils/exportReports');
+      generateEstoqueExcelReport({ itens, saldos, profiles });
+    } catch (error: any) {
+      toast.error('Erro ao exportar relatório: ' + error.message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -34,12 +55,24 @@ const Estoque: React.FC = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold font-display flex items-center gap-2">
-            <Boxes className="h-6 w-6" />
-            Estoque
-          </h1>
-          <p className="text-muted-foreground">Controle de equipamentos e consumíveis</p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+              <Boxes className="h-6 w-6" />
+              Estoque
+            </h1>
+            <p className="text-muted-foreground">Controle de equipamentos e consumíveis</p>
+          </div>
+          {canManageStock && (
+            <Button variant="outline" size="sm" onClick={handleExportExcel} disabled={isExporting}>
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+              )}
+              Exportar Relatório
+            </Button>
+          )}
         </div>
 
         <Tabs defaultValue="disponivel">

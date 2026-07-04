@@ -16,6 +16,7 @@ export interface Prospeccao {
   observacoes: string | null;
   status: StatusProspeccao;
   data_retorno_prevista: string | null;
+  task_id_gerada: string | null;
   created_at: string;
   updated_at: string;
 }

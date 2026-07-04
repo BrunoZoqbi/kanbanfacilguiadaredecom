@@ -15,9 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Boxes, UserCog, Hash, AlertTriangle } from 'lucide-react';
+import { Loader2, Boxes, UserCog, Hash, AlertTriangle, PackageX } from 'lucide-react';
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
+
+// Mesma definição usada pela RPC estoque_disponivel_por_produto: itens
+// serializados 'disponivel' + saldo de consumíveis do estoque geral.
+const LIMITE_ESTOQUE_BAIXO = 2;
 
 const EstoqueDisponivel: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -38,6 +42,17 @@ const EstoqueDisponivel: React.FC = () => {
     () => itens.filter((item) => item.status === 'disponivel'),
     [itens]
   );
+
+  const quantidadeDisponivelPorProduto = useMemo(() => {
+    const map = new Map<string, number>();
+    itensDisponiveis.forEach((item) => {
+      map.set(item.produto_id, (map.get(item.produto_id) || 0) + 1);
+    });
+    saldos.forEach((saldo) => {
+      map.set(saldo.produto_id, (map.get(saldo.produto_id) || 0) + saldo.quantidade);
+    });
+    return map;
+  }, [itensDisponiveis, saldos]);
 
   const produtosDisponiveis = useMemo(() => {
     const map = new Map<string, string>();
@@ -123,6 +138,12 @@ const EstoqueDisponivel: React.FC = () => {
                       <Badge variant="outline" className="text-xs">
                         {CONDICAO_LABELS[item.condicao]}
                       </Badge>
+                      {(quantidadeDisponivelPorProduto.get(item.produto_id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
+                        <Badge variant="destructive" className="text-xs">
+                          <PackageX className="h-3 w-3 mr-1" />
+                          Estoque baixo
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {item.numero_serie && <>Série: {item.numero_serie} </>}
@@ -189,6 +210,12 @@ const EstoqueDisponivel: React.FC = () => {
                       <Badge variant="secondary" className="text-xs">
                         {saldo.produto?.categoria}
                       </Badge>
+                      {(quantidadeDisponivelPorProduto.get(saldo.produto_id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
+                        <Badge variant="destructive" className="text-xs">
+                          <PackageX className="h-3 w-3 mr-1" />
+                          Estoque baixo
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <p className="text-sm font-semibold">
