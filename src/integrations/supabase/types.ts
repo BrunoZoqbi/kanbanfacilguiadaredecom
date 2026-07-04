@@ -368,6 +368,7 @@ export type Database = {
           pontuacao_total: number
           provedor_atual: string | null
           status: Database["public"]["Enums"]["status_prospeccao"]
+          task_id_gerada: string | null
           telefone_whatsapp: string
           tipo_contato: Database["public"]["Enums"]["tipo_contato_prospeccao"]
           updated_at: string
@@ -385,6 +386,7 @@ export type Database = {
           pontuacao_total?: number
           provedor_atual?: string | null
           status?: Database["public"]["Enums"]["status_prospeccao"]
+          task_id_gerada?: string | null
           telefone_whatsapp: string
           tipo_contato?: Database["public"]["Enums"]["tipo_contato_prospeccao"]
           updated_at?: string
@@ -402,12 +404,21 @@ export type Database = {
           pontuacao_total?: number
           provedor_atual?: string | null
           status?: Database["public"]["Enums"]["status_prospeccao"]
+          task_id_gerada?: string | null
           telefone_whatsapp?: string
           tipo_contato?: Database["public"]["Enums"]["tipo_contato_prospeccao"]
           updated_at?: string
           vendedor_responsavel_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prospeccoes_task_id_gerada_fkey"
+            columns: ["task_id_gerada"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prospeccoes_respostas: {
         Row: {
@@ -851,6 +862,10 @@ export type Database = {
       devolver_sede: {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined
+      }
+      estoque_disponivel_por_produto: {
+        Args: { p_produto_id: string }
+        Returns: number
       }
       has_role: {
         Args: {

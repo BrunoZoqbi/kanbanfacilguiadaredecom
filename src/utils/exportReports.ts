@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { TaskWithRelations, Profile } from '@/types/database';
+import { ItemSerializadoWithRelations, EstoqueSaldoWithProduto, STATUS_ITEM_LABELS } from '@/types/estoque';
 import { format, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -184,4 +185,51 @@ export const generateExcelReport = (data: ReportData) => {
   
   // Save
   XLSX.writeFile(wb, `fibrontec-relatorio-${format(now, 'yyyy-MM-dd')}.xlsx`);
+};
+
+interface EstoqueReportData {
+  itens: ItemSerializadoWithRelations[];
+  saldos: EstoqueSaldoWithProduto[];
+  profiles: Profile[];
+}
+
+export const generateEstoqueExcelReport = (data: EstoqueReportData) => {
+  const now = new Date();
+
+  // Itens serializados sheet
+  const itensData = data.itens.map((item) => {
+    const tecnico = data.profiles.find((p) => p.id === item.tecnico_atual_id);
+    return {
+      'Produto': item.produto?.nome || '',
+      'Série': item.numero_serie || '',
+      'Patrimônio': item.patrimonio || '',
+      'Status': STATUS_ITEM_LABELS[item.status],
+      'Técnico Atual': tecnico?.full_name || '',
+    };
+  });
+
+  // Saldo de consumíveis sheet
+  const saldosData = data.saldos.map((saldo) => ({
+    'Produto': saldo.produto?.nome || '',
+    'Categoria': saldo.produto?.categoria || '',
+    'Quantidade': saldo.quantidade,
+    'Unidade': saldo.produto?.unidade_medida || 'un',
+  }));
+
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+
+  const wsItens = XLSX.utils.json_to_sheet(itensData);
+  XLSX.utils.book_append_sheet(wb, wsItens, 'Itens Serializados');
+
+  const wsSaldos = XLSX.utils.json_to_sheet(saldosData);
+  XLSX.utils.book_append_sheet(wb, wsSaldos, 'Saldo de Consumíveis');
+
+  // Auto-width columns
+  const maxWidth = 30;
+  wsItens['!cols'] = Object.keys(itensData[0] || {}).map(() => ({ wch: maxWidth }));
+  wsSaldos['!cols'] = Object.keys(saldosData[0] || {}).map(() => ({ wch: maxWidth }));
+
+  // Save
+  XLSX.writeFile(wb, `fibrontec-estoque-${format(now, 'yyyy-MM-dd')}.xlsx`);
 };
