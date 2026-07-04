@@ -25,7 +25,6 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { generatePDFReport, generateExcelReport } from '@/utils/exportReports';
 
 const AdminDashboard: React.FC = () => {
   const { tasks, profiles, isLoading } = useTasks();
@@ -144,11 +143,13 @@ const AdminDashboard: React.FC = () => {
     return `${Math.round(hours / 24)}d`;
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const { generatePDFReport } = await import('@/utils/exportReports');
     generatePDFReport({ tasks, profiles, period });
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const { generateExcelReport } = await import('@/utils/exportReports');
     generateExcelReport({ tasks, profiles, period });
   };
 

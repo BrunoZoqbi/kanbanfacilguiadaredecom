@@ -454,6 +454,7 @@ const CreateTaskForm: React.FC = () => {
                             size="icon"
                             onClick={() => removePendingAttachment(index)}
                             className="h-8 w-8"
+                            aria-label="Remover anexo"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -501,6 +502,7 @@ const CreateTaskForm: React.FC = () => {
                           size="icon"
                           onClick={() => removeChecklistItemLocal(index)}
                           className="h-8 w-8"
+                          aria-label="Remover item"
                         >
                           <X className="h-4 w-4" />
                         </Button>

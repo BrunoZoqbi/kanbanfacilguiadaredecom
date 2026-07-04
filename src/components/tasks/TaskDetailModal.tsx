@@ -325,6 +325,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
                 <div className="flex gap-2 mt-3">
                   <Input
                     placeholder="Novo item..."
+                    aria-label="Novo item da checklist"
                     value={newChecklistItem}
                     onChange={(e) => setNewChecklistItem(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddChecklistItem()}
@@ -373,6 +374,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
             <div className="flex gap-2 mt-4">
               <Textarea
                 placeholder="Adicionar comentário..."
+                aria-label="Adicionar comentário"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 className="flex-1 min-h-[80px]"

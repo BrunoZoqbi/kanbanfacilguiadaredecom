@@ -134,9 +134,9 @@ const CreateTicketDialog: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Prioridade *</Label>
+            <Label htmlFor="ticket-prioridade">Prioridade *</Label>
             <Select value={prioridade} onValueChange={(v) => setPrioridade(v as PrioridadeTicket)}>
-              <SelectTrigger>
+              <SelectTrigger id="ticket-prioridade">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

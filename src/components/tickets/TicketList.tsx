@@ -128,6 +128,14 @@ const TicketList: React.FC = () => {
                     key={ticket.id}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelectedTicketId(ticket.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedTicketId(ticket.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <TableCell className="font-medium">#{ticket.numero_ticket}</TableCell>
                     <TableCell>{ticket.nome_cliente}</TableCell>

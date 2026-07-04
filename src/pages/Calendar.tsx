@@ -97,13 +97,13 @@ const Calendar: React.FC = () => {
               Calendário de Tarefas
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigateMonth('prev')}>
+              <Button variant="outline" size="icon" onClick={() => navigateMonth('prev')} aria-label="Mês anterior">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="font-semibold min-w-[140px] text-center">
                 {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
               </span>
-              <Button variant="outline" size="icon" onClick={() => navigateMonth('next')}>
+              <Button variant="outline" size="icon" onClick={() => navigateMonth('next')} aria-label="Próximo mês">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -209,6 +209,14 @@ const Calendar: React.FC = () => {
                   <div
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedTask(task);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     className="p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-2 mb-1">

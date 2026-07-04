@@ -59,6 +59,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, profiles = [] }) => 
   const commentCount = task.comments?.length || 0;
   const assignee = profiles.find((p) => p.id === task.assignee_id);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    listeners?.onKeyDown?.(event);
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick?.();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -66,6 +74,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, profiles = [] }) => 
       {...attributes}
       {...listeners}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       className={cn(
         'task-card animate-slide-in',
         isDragging && 'task-card-dragging',
