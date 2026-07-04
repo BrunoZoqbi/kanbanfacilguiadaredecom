@@ -97,10 +97,14 @@ const RetirarParaTecnicoDialog: React.FC<RetirarParaTecnicoDialogProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" className="h-11 sm:h-10" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={!tecnicoId || retirarParaTecnico.isPending}>
+          <Button
+            className="h-11 sm:h-10"
+            onClick={handleConfirm}
+            disabled={!tecnicoId || retirarParaTecnico.isPending}
+          >
             {retirarParaTecnico.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Confirmar Retirada
           </Button>

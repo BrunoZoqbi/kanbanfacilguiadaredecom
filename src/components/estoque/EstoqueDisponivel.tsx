@@ -113,10 +113,10 @@ const EstoqueDisponivel: React.FC = () => {
           ) : (
             <div className="border rounded-lg divide-y">
               {filteredItens.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-4 p-3 flex-wrap">
+                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p className="font-medium">{item.produto?.nome}</p>
+                      <p className="font-medium truncate max-w-full">{item.produto?.nome}</p>
                       <Badge variant="secondary" className="text-xs">
                         {item.produto?.categoria}
                       </Badge>
@@ -124,21 +124,31 @@ const EstoqueDisponivel: React.FC = () => {
                         {CONDICAO_LABELS[item.condicao]}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {item.numero_serie && <>Série: {item.numero_serie} </>}
                       {item.patrimonio && <>· Patrimônio: {item.patrimonio}</>}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                     {canRetirar && (
-                      <Button variant="outline" size="sm" onClick={() => setRetirarItem(item)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        onClick={() => setRetirarItem(item)}
+                      >
                         <UserCog className="h-4 w-4 mr-1" />
                         Retirar para Técnico
                       </Button>
                     )}
                     {canDarBaixa && (
-                      <Button variant="outline" size="sm" onClick={() => setBaixaItem(item)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        onClick={() => setBaixaItem(item)}
+                      >
                         <AlertTriangle className="h-4 w-4 mr-1" />
                         Dar Baixa / Registrar Defeito
                       </Button>
@@ -172,10 +182,10 @@ const EstoqueDisponivel: React.FC = () => {
           ) : (
             <div className="border rounded-lg divide-y">
               {filteredSaldos.map((saldo) => (
-                <div key={saldo.id} className="flex items-center justify-between gap-4 p-3 flex-wrap">
+                <div key={saldo.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium">{saldo.produto?.nome}</p>
+                      <p className="font-medium truncate max-w-full">{saldo.produto?.nome}</p>
                       <Badge variant="secondary" className="text-xs">
                         {saldo.produto?.categoria}
                       </Badge>

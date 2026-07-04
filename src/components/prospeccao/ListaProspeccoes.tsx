@@ -156,39 +156,45 @@ const ListaProspeccoes: React.FC = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Classificação</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data Contato</TableHead>
-                  <TableHead>Retorno Previsto</TableHead>
-                  <TableHead>Observações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile: stacked cards */}
+              <div className="space-y-3 sm:hidden">
                 {filteredProspeccoes.map((prospeccao) => (
-                  <TableRow key={prospeccao.id}>
-                    <TableCell className="font-medium">{prospeccao.nome_contato}</TableCell>
-                    <TableCell>{prospeccao.telefone_whatsapp}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(CLASSIFICACAO_BADGE_CLASSES[prospeccao.classificacao])}
-                      >
-                        {CLASSIFICACAO_LABELS[prospeccao.classificacao]} ({prospeccao.pontuacao_total})
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
+                  <div key={prospeccao.id} className="border rounded-lg p-3 space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium truncate">{prospeccao.nome_contato}</p>
+                        <Badge
+                          variant="outline"
+                          className={cn('shrink-0', CLASSIFICACAO_BADGE_CLASSES[prospeccao.classificacao])}
+                        >
+                          {CLASSIFICACAO_LABELS[prospeccao.classificacao]} ({prospeccao.pontuacao_total})
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {prospeccao.telefone_whatsapp}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Contato: {format(new Date(prospeccao.data_contato), 'dd/MM/yyyy', { locale: ptBR })}
+                        {prospeccao.data_retorno_prevista && (
+                          <>
+                            {' '}
+                            · Retorno: {format(new Date(prospeccao.data_retorno_prevista), 'dd/MM/yyyy', {
+                              locale: ptBR,
+                            })}
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
                       <Select
                         value={prospeccao.status}
                         onValueChange={(v) =>
                           updateStatus.mutate({ id: prospeccao.id, status: v as StatusProspeccao })
                         }
                       >
-                        <SelectTrigger className="w-40 h-8">
+                        <SelectTrigger className="w-full h-9">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -199,31 +205,96 @@ const ListaProspeccoes: React.FC = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {format(new Date(prospeccao.data_contato), 'dd/MM/yyyy', { locale: ptBR })}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {prospeccao.data_retorno_prevista
-                        ? format(new Date(prospeccao.data_retorno_prevista), 'dd/MM/yyyy', { locale: ptBR })
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
+
                       <Input
                         defaultValue={prospeccao.observacoes || ''}
                         placeholder="Adicionar observação..."
-                        className="h-8 min-w-48 text-sm"
+                        className="h-9 w-full text-sm"
                         onBlur={(e) => {
                           if (e.target.value !== (prospeccao.observacoes || '')) {
                             updateObservacoes.mutate({ id: prospeccao.id, observacoes: e.target.value });
                           }
                         }}
                       />
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Classificação</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data Contato</TableHead>
+                      <TableHead>Retorno Previsto</TableHead>
+                      <TableHead>Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProspeccoes.map((prospeccao) => (
+                      <TableRow key={prospeccao.id}>
+                        <TableCell className="font-medium max-w-[160px] truncate">
+                          {prospeccao.nome_contato}
+                        </TableCell>
+                        <TableCell>{prospeccao.telefone_whatsapp}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn(CLASSIFICACAO_BADGE_CLASSES[prospeccao.classificacao])}
+                          >
+                            {CLASSIFICACAO_LABELS[prospeccao.classificacao]} ({prospeccao.pontuacao_total})
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={prospeccao.status}
+                            onValueChange={(v) =>
+                              updateStatus.mutate({ id: prospeccao.id, status: v as StatusProspeccao })
+                            }
+                          >
+                            <SelectTrigger className="w-40 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(Object.keys(STATUS_PROSPECCAO_LABELS) as StatusProspeccao[]).map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {STATUS_PROSPECCAO_LABELS[s]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(prospeccao.data_contato), 'dd/MM/yyyy', { locale: ptBR })}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {prospeccao.data_retorno_prevista
+                            ? format(new Date(prospeccao.data_retorno_prevista), 'dd/MM/yyyy', { locale: ptBR })
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            defaultValue={prospeccao.observacoes || ''}
+                            placeholder="Adicionar observação..."
+                            className="h-8 min-w-48 text-sm"
+                            onBlur={(e) => {
+                              if (e.target.value !== (prospeccao.observacoes || '')) {
+                                updateObservacoes.mutate({ id: prospeccao.id, observacoes: e.target.value });
+                              }
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
 
           {!isLoading && filteredProspeccoes.length === 0 && (
