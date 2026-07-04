@@ -351,7 +351,7 @@ const AdminPage: React.FC = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
+                  <div className="w-full border rounded-lg divide-y max-h-96 overflow-y-auto overflow-x-hidden">
                     {tasks.map((task) => {
                       const assignee = profiles.find((p) => p.id === task.assignee_id);
                       return (
@@ -524,19 +524,19 @@ const AdminPage: React.FC = () => {
                     {taskTypes.map((type) => (
                       <div
                         key={type.id}
-                        className="flex items-center justify-between gap-4 p-3"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <span
-                            className="h-4 w-4 rounded-full"
+                            className="h-4 w-4 rounded-full shrink-0"
                             style={{ backgroundColor: type.color }}
                           />
-                          <div>
-                            <span className="font-medium">{type.label}</span>
-                            <span className="text-xs text-muted-foreground ml-2">({type.name})</span>
+                          <div className="min-w-0">
+                            <span className="font-medium truncate block">{type.label}</span>
+                            <span className="text-xs text-muted-foreground">({type.name})</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant={type.is_active ? 'default' : 'secondary'}>
                             {type.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
