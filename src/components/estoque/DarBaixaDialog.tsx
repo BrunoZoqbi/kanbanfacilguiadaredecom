@@ -92,11 +92,12 @@ const DarBaixaDialog: React.FC<DarBaixaDialogProps> = ({ item, open, onClose }) 
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" className="h-11 sm:h-10" onClick={handleClose}>
             Cancelar
           </Button>
           <Button
             variant="destructive"
+            className="h-11 sm:h-10"
             onClick={handleConfirm}
             disabled={!observacao.trim() || darBaixa.isPending}
           >

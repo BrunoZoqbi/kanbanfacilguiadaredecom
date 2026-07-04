@@ -325,10 +325,10 @@ const UserManagement: React.FC = () => {
                 key={user.id}
                 className="p-4 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="min-w-0 sm:flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium">{user.full_name}</p>
+                      <p className="font-medium truncate max-w-full">{user.full_name}</p>
                       <Badge variant={user.role === 'user' ? 'secondary' : 'default'}>
                         {roleLabels[user.role]}
                       </Badge>
@@ -337,11 +337,11 @@ const UserManagement: React.FC = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
                         placeholder="WhatsApp (ex: 5511999999999)"
                         defaultValue={user.phone_whatsapp || ''}
-                        className="h-8 w-48 text-sm"
+                        className="h-8 w-full max-w-[220px] sm:w-48 text-sm"
                         onBlur={(e) => {
                           if (e.target.value !== (user.phone_whatsapp || '')) {
                             updatePhoneWhatsapp(user.id, e.target.value);
@@ -351,9 +351,9 @@ const UserManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto sm:items-center sm:gap-4">
                     {/* Active toggle */}
-                    <div className="flex items-center gap-2">
+                    <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
                       <span className="text-sm text-muted-foreground">Ativo</span>
                       <Switch
                         checked={user.is_active}
@@ -366,6 +366,7 @@ const UserManagement: React.FC = () => {
                     <Button
                       variant={user.role === 'admin' ? 'default' : 'outline'}
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => setUserRole(user, 'admin')}
                       disabled={isUpdating}
                     >
@@ -388,6 +389,7 @@ const UserManagement: React.FC = () => {
                     <Button
                       variant={user.role === 'gestor_tecnico' ? 'default' : 'outline'}
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => setUserRole(user, 'gestor_tecnico')}
                       disabled={isUpdating}
                     >
@@ -405,6 +407,7 @@ const UserManagement: React.FC = () => {
                     <Button
                       variant={user.role === 'gestor_comercial' ? 'default' : 'outline'}
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => setUserRole(user, 'gestor_comercial')}
                       disabled={isUpdating}
                     >
@@ -422,6 +425,7 @@ const UserManagement: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => openEditDialog(user)}
                       disabled={isUpdating}
                     >
@@ -435,7 +439,7 @@ const UserManagement: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-destructive hover:text-destructive"
+                          className="w-full sm:w-auto text-destructive hover:text-destructive"
                           disabled={isUpdating || user.id === currentUser?.id}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />

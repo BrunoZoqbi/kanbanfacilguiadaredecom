@@ -160,8 +160,8 @@ const NotificationBell: React.FC = () => {
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{notification.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm font-medium truncate">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">

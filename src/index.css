@@ -189,7 +189,7 @@
   }
 
   .kanban-column {
-    @apply rounded-xl p-4 min-h-[calc(100vh-16rem)];
+    @apply rounded-xl p-4 min-h-[280px] sm:min-h-[calc(100vh-16rem)];
   }
 
   .task-card {

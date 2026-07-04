@@ -60,14 +60,20 @@ const MeuEstoque: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setInstalarItemAlvo(item)}>
+                  <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-11 sm:h-9 w-full sm:w-auto"
+                      onClick={() => setInstalarItemAlvo(item)}
+                    >
                       <Wrench className="h-4 w-4 mr-1" />
                       Instalar / Usar
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-11 sm:h-9 w-full sm:w-auto"
                       onClick={() => devolverSede.mutate({ itemId: item.id })}
                       disabled={devolverSede.isPending}
                     >
@@ -75,7 +81,12 @@ const MeuEstoque: React.FC = () => {
                       Devolver na Sede
                     </Button>
                     {canDarBaixa && (
-                      <Button variant="outline" size="sm" onClick={() => setBaixaItem(item)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-11 sm:h-9 w-full sm:w-auto"
+                        onClick={() => setBaixaItem(item)}
+                      >
                         <AlertTriangle className="h-4 w-4 mr-1" />
                         Dar Baixa / Registrar Defeito
                       </Button>

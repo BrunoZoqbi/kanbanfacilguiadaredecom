@@ -140,7 +140,7 @@ const Calendar: React.FC = () => {
                         key={idx}
                         onClick={() => setSelectedDate(day)}
                         className={cn(
-                          'min-h-[80px] p-2 rounded-lg border transition-all text-left relative',
+                          'min-h-[64px] sm:min-h-[80px] p-2 rounded-lg border transition-all text-left relative',
                           !isCurrentMonth && 'opacity-40',
                           isToday(day) && 'ring-2 ring-primary',
                           isSelected && 'bg-primary/10 border-primary',
@@ -157,22 +157,17 @@ const Calendar: React.FC = () => {
                         </span>
 
                         {dayTasks.length > 0 && (
-                          <div className="mt-1 space-y-1">
-                            {dayTasks.slice(0, 2).map((task) => (
-                              <div
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {dayTasks.slice(0, 4).map((task) => (
+                              <span
                                 key={task.id}
-                                className={cn(
-                                  'text-xs px-1.5 py-0.5 rounded truncate',
-                                  priorityColors[task.priority],
-                                  'text-white'
-                                )}
-                              >
-                                {task.title}
-                              </div>
+                                title={task.title}
+                                className={cn('h-1.5 w-1.5 rounded-full', priorityColors[task.priority])}
+                              />
                             ))}
-                            {dayTasks.length > 2 && (
-                              <span className="text-xs text-muted-foreground">
-                                +{dayTasks.length - 2} mais
+                            {dayTasks.length > 4 && (
+                              <span className="text-[10px] leading-none text-muted-foreground">
+                                +{dayTasks.length - 4}
                               </span>
                             )}
                           </div>

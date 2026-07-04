@@ -93,10 +93,11 @@ const InstalarItemDialog: React.FC<InstalarItemDialogProps> = ({ item, open, onC
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" className="h-11 sm:h-10" onClick={handleClose}>
             Cancelar
           </Button>
           <Button
+            className="h-11 sm:h-10"
             onClick={handleConfirm}
             disabled={!clienteVinculado.trim() || instalarItem.isPending}
           >
