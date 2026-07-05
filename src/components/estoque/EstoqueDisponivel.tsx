@@ -4,6 +4,7 @@ import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
 import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
+import { useEstoqueDisponivelPorProduto } from '@/hooks/useEstoqueDisponivelPorProduto';
 import { CONDICAO_LABELS, ItemSerializadoWithRelations } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +20,6 @@ import { Loader2, Boxes, UserCog, Hash, AlertTriangle, PackageX } from 'lucide-r
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
 
-// Mesma definição usada pela RPC estoque_disponivel_por_produto: itens
-// serializados 'disponivel' + saldo de consumíveis do estoque geral.
 const LIMITE_ESTOQUE_BAIXO = 2;
 
 const EstoqueDisponivel: React.FC = () => {
@@ -43,17 +42,6 @@ const EstoqueDisponivel: React.FC = () => {
     [itens]
   );
 
-  const quantidadeDisponivelPorProduto = useMemo(() => {
-    const map = new Map<string, number>();
-    itensDisponiveis.forEach((item) => {
-      map.set(item.produto_id, (map.get(item.produto_id) || 0) + 1);
-    });
-    saldos.forEach((saldo) => {
-      map.set(saldo.produto_id, (map.get(saldo.produto_id) || 0) + saldo.quantidade);
-    });
-    return map;
-  }, [itensDisponiveis, saldos]);
-
   const produtosDisponiveis = useMemo(() => {
     const map = new Map<string, string>();
     itensDisponiveis.forEach((item) => {
@@ -64,6 +52,10 @@ const EstoqueDisponivel: React.FC = () => {
     });
     return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
   }, [itensDisponiveis, saldos]);
+
+  const quantidadeDisponivelPorProduto = useEstoqueDisponivelPorProduto(
+    produtosDisponiveis.map((p) => p.id)
+  );
 
   const filteredItens = itensDisponiveis.filter((item) => {
     if (categoriaFiltro && item.produto?.categoria !== categoriaFiltro) return false;

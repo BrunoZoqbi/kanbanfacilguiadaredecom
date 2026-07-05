@@ -10,6 +10,8 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equip
 - **Estoque** — rastreamento individual de equipamentos (nº de série, MAC, patrimônio). Ciclo completo: Disponível → Retirada → Instalação → Recolhimento → Devolução → Análise/Baixa. Alerta de estoque baixo e exportação para Excel.
 - **Prospecção Comercial** — cadastro de leads com checklist de pontuação e classificação automática (baixa/média/alta). Prospecções "Alta" geram tarefa automática no Kanban.
 - **Tickets** — atendimento de suporte com respostas ao cliente, notas internas privadas, e portal público de consulta (sem login), protegido contra força bruta.
+- **Scripts de Atendimento** — biblioteca de textos prontos por setor (Comercial, Financeiro, Atendimento Geral), organizados por categoria, com busca e cópia rápida. Edição restrita ao Admin, na aba "Gerenciar".
+- **Meu Perfil** — cada usuário edita o próprio nome e WhatsApp, e troca a própria senha (informando a atual).
 
 ## Papéis do sistema
 
@@ -47,6 +49,7 @@ Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - **Estoque:** produtos, categorias_produto, estoques, itens_serializados, estoque_saldo, movimentacoes_estoque
 - **Prospecção:** prospeccoes, prospeccoes_respostas
 - **Tickets:** tickets, ticket_respostas, ticket_notas_internas, ticket_consulta_tentativas
+- **Scripts de Atendimento:** scripts_atendimento
 
 ## Segurança
 

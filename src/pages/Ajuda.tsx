@@ -156,6 +156,41 @@ const Ajuda: React.FC = () => {
       ),
     },
     {
+      id: 'scripts',
+      titulo: 'Scripts de Atendimento',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Textos prontos para copiar e colar no WhatsApp, organizados em 3 abas por setor:
+            Comercial, Financeiro e Atendimento Geral.
+          </li>
+          <li>Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção, Cobrança).</li>
+          <li>
+            Use o campo de busca para encontrar um script pelo título ou conteúdo, e o botão{' '}
+            <strong className="font-medium text-foreground">"Copiar"</strong> para colar direto na
+            conversa.
+          </li>
+          <li>
+            Admin edita, cria, ativa/desativa e reordena os scripts na aba{' '}
+            <strong className="font-medium text-foreground">"Gerenciar"</strong>.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'perfil',
+      titulo: 'Meu Perfil',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>Edite seu nome completo e WhatsApp a qualquer momento.</li>
+          <li>
+            Para trocar a senha, informe a senha atual e a nova senha — por segurança, e-mail e
+            papel não podem ser alterados por aqui (fale com o administrador).
+          </li>
+        </ul>
+      ),
+    },
+    {
       id: 'papeis',
       titulo: 'Papéis e Permissões',
       // Usuário comum não precisa do detalhe administrativo de papéis; quem
