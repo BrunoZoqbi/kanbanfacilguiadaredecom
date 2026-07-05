@@ -25,7 +25,7 @@ Para agendar sua instalação, preciso de algumas informações:
 📱 WhatsApp de contato:
 📅 Melhor dia e turno: (manhã / tarde)
 
-A instalação acontece em até 72h. Nossa equipe avisa antes de ir! 😊', 'Após coletar os dados, registrar no IXC e acionar Thais para abertura de OS de instalação.', 8, true);
+A instalação acontece em até 72h. Nossa equipe avisa antes de ir! 😊', 'Após coletar os dados, registrar no IXC e acionar o Gestor Técnico para abertura de OS de instalação.', 8, true);
 INSERT INTO public.scripts_atendimento (setor, categoria, titulo, conteudo, observacao, ordem, ativo) VALUES ('comercial', 'Objeção', 'Cliente acha o preço caro', 'Entendo! Vamos comparar juntos.
 
 Você já tem internet em casa? Quanto paga hoje?
@@ -95,7 +95,7 @@ INSERT INTO public.scripts_atendimento (setor, categoria, titulo, conteudo, obse
 
 Mas estamos expandindo constantemente! Posso cadastrar seu endereço na lista de interesse — assim que chegarmos na sua rua, você é um dos primeiros a saber. 😊
 
-Posso registrar seu contato?', 'Registrar endereço e contato. Reportar para Ramilson as regiões com maior demanda reprimida.', 10, true);
+Posso registrar seu contato?', 'Registrar endereço e contato. Reportar ao Admin as regiões com maior demanda reprimida.', 10, true);
 INSERT INTO public.scripts_atendimento (setor, categoria, titulo, conteudo, observacao, ordem, ativo) VALUES ('financeiro', 'Bloqueio', 'Serviço bloqueado — comunicar e orientar', 'Olá, [nome]. Aqui é a Fibron – Raul Soares.
 
 Seu serviço foi suspenso por fatura(s) em aberto no valor de R$ [valor].
@@ -179,7 +179,7 @@ INSERT INTO public.scripts_atendimento (setor, categoria, titulo, conteudo, obse
 [Após retorno:]
 Conseguimos [condição: ex. prazo até XX/XX / entrada + restante parcelado].
 
-Isso resolve pra você? Se sim, já formalizo e te envio a confirmação. 😊', 'Nunca prometer condição sem autorização. Negociações são sempre caso a caso com Ramilson.', 10, true);
+Isso resolve pra você? Se sim, já formalizo e te envio a confirmação. 😊', 'Nunca prometer condição sem autorização. Negociações são sempre caso a caso com o Admin.', 10, true);
 INSERT INTO public.scripts_atendimento (setor, categoria, titulo, conteudo, observacao, ordem, ativo) VALUES ('financeiro', 'Pós-pagamento', 'Confirmação de pagamento recebido', 'Olá, [nome]! Pagamento confirmado! ✅
 
 Fatura de R$ [valor] — quitada em [data].
