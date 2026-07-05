@@ -26,17 +26,24 @@ const CadastroProdutos: React.FC = () => {
   const [controlaSerial, setControlaSerial] = useState(true);
   const [unidadeMedida, setUnidadeMedida] = useState('un');
   const [searchTerm, setSearchTerm] = useState('');
+  const [errors, setErrors] = useState<{ nome?: string; categoria?: string }>({});
 
   const resetForm = () => {
     setNome('');
     setCategoria('');
     setControlaSerial(true);
     setUnidadeMedida('un');
+    setErrors({});
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome.trim() || !categoria) return;
+
+    const nextErrors: typeof errors = {};
+    if (!nome.trim()) nextErrors.nome = 'Informe o nome do produto.';
+    if (!categoria) nextErrors.categoria = 'Selecione uma categoria.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     await createProduto.mutateAsync({
       nome: nome.trim(),
@@ -76,14 +83,23 @@ const CadastroProdutos: React.FC = () => {
                   id="produto-nome"
                   placeholder="Ex: Roteador Intelbras AC1200"
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setNome(e.target.value);
+                    if (errors.nome) setErrors((prev) => ({ ...prev, nome: undefined }));
+                  }}
                 />
+                {errors.nome && <p className="text-sm font-medium text-destructive">{errors.nome}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="produto-categoria">Categoria *</Label>
-                <Select value={categoria} onValueChange={setCategoria}>
+                <Select
+                  value={categoria}
+                  onValueChange={(v) => {
+                    setCategoria(v);
+                    if (errors.categoria) setErrors((prev) => ({ ...prev, categoria: undefined }));
+                  }}
+                >
                   <SelectTrigger id="produto-categoria">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -95,6 +111,9 @@ const CadastroProdutos: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.categoria && (
+                  <p className="text-sm font-medium text-destructive">{errors.categoria}</p>
+                )}
                 {categoriasAtivas.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Nenhuma categoria ativa. Cadastre uma na aba "Categorias".
@@ -125,7 +144,7 @@ const CadastroProdutos: React.FC = () => {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={createProduto.isPending || !nome.trim() || !categoria}>
+              <Button type="submit" disabled={createProduto.isPending}>
                 {createProduto.isPending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (

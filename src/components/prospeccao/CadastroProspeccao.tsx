@@ -32,6 +32,12 @@ const CadastroProspeccao: React.FC = () => {
 
   // perguntaId -> índice da opção selecionada
   const [respostas, setRespostas] = useState<Record<string, number>>({});
+  const [errors, setErrors] = useState<{
+    nomeContato?: string;
+    telefoneWhatsapp?: string;
+    dataContato?: string;
+    endereco?: string;
+  }>({});
 
   const pontuacaoTotal = useMemo(() => {
     return CHECKLIST_PERGUNTAS.reduce((sum, pergunta) => {
@@ -44,13 +50,6 @@ const CadastroProspeccao: React.FC = () => {
   const classificacao = calcularClassificacao(pontuacaoTotal);
   const todasRespondidas = CHECKLIST_PERGUNTAS.every((p) => respostas[p.id] !== undefined);
   const enderecoValido = tipoContato !== 'visita' || endereco.trim().length > 0;
-  const podeSubmeter =
-    nomeContato.trim() &&
-    telefoneWhatsapp.trim() &&
-    dataContato &&
-    enderecoValido &&
-    todasRespondidas &&
-    !createProspeccao.isPending;
 
   const resetForm = () => {
     setNomeContato('');
@@ -61,11 +60,19 @@ const CadastroProspeccao: React.FC = () => {
     setDataContato(todayIso());
     setObservacoes('');
     setRespostas({});
+    setErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!podeSubmeter) return;
+
+    const nextErrors: typeof errors = {};
+    if (!nomeContato.trim()) nextErrors.nomeContato = 'Informe o nome do contato.';
+    if (!telefoneWhatsapp.trim()) nextErrors.telefoneWhatsapp = 'Informe o telefone/WhatsApp.';
+    if (!dataContato) nextErrors.dataContato = 'Informe a data do contato.';
+    if (!enderecoValido) nextErrors.endereco = 'Informe o endereço da visita.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || !todasRespondidas || createProspeccao.isPending) return;
 
     await createProspeccao.mutateAsync({
       nome_contato: nomeContato.trim(),
@@ -105,9 +112,14 @@ const CadastroProspeccao: React.FC = () => {
                   id="prospeccao-nome"
                   placeholder="Nome do cliente em potencial"
                   value={nomeContato}
-                  onChange={(e) => setNomeContato(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setNomeContato(e.target.value);
+                    if (errors.nomeContato) setErrors((prev) => ({ ...prev, nomeContato: undefined }));
+                  }}
                 />
+                {errors.nomeContato && (
+                  <p className="text-sm font-medium text-destructive">{errors.nomeContato}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -116,9 +128,15 @@ const CadastroProspeccao: React.FC = () => {
                   id="prospeccao-telefone"
                   placeholder="5511999999999"
                   value={telefoneWhatsapp}
-                  onChange={(e) => setTelefoneWhatsapp(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setTelefoneWhatsapp(e.target.value);
+                    if (errors.telefoneWhatsapp)
+                      setErrors((prev) => ({ ...prev, telefoneWhatsapp: undefined }));
+                  }}
                 />
+                {errors.telefoneWhatsapp && (
+                  <p className="text-sm font-medium text-destructive">{errors.telefoneWhatsapp}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -137,16 +155,26 @@ const CadastroProspeccao: React.FC = () => {
                   id="prospeccao-data"
                   type="date"
                   value={dataContato}
-                  onChange={(e) => setDataContato(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setDataContato(e.target.value);
+                    if (errors.dataContato) setErrors((prev) => ({ ...prev, dataContato: undefined }));
+                  }}
                 />
+                {errors.dataContato && (
+                  <p className="text-sm font-medium text-destructive">{errors.dataContato}</p>
+                )}
               </div>
 
               <div className="space-y-2 sm:col-span-2">
                 <Label>Tipo de Contato *</Label>
                 <RadioGroup
                   value={tipoContato}
-                  onValueChange={(v) => setTipoContato(v as TipoContatoProspeccao)}
+                  onValueChange={(v) => {
+                    setTipoContato(v as TipoContatoProspeccao);
+                    if (v !== 'visita' && errors.endereco) {
+                      setErrors((prev) => ({ ...prev, endereco: undefined }));
+                    }
+                  }}
                   className="flex gap-6"
                 >
                   <div className="flex items-center gap-2">
@@ -172,9 +200,14 @@ const CadastroProspeccao: React.FC = () => {
                   id="prospeccao-endereco"
                   placeholder="Endereço da visita"
                   value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                  required={tipoContato === 'visita'}
+                  onChange={(e) => {
+                    setEndereco(e.target.value);
+                    if (errors.endereco) setErrors((prev) => ({ ...prev, endereco: undefined }));
+                  }}
                 />
+                {errors.endereco && (
+                  <p className="text-sm font-medium text-destructive">{errors.endereco}</p>
+                )}
               </div>
 
               <div className="space-y-2 sm:col-span-2">
@@ -243,7 +276,7 @@ const CadastroProspeccao: React.FC = () => {
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={!podeSubmeter}>
+              <Button type="submit" disabled={createProspeccao.isPending}>
                 {createProspeccao.isPending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (

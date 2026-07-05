@@ -320,7 +320,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose }
                   </span>
                 </div>
               ))}
-              
+
+              {!canEdit && (!task.checklist_items || task.checklist_items.length === 0) && (
+                <p className="text-sm text-muted-foreground">Nenhum item no checklist</p>
+              )}
+
               {canEdit && (
                 <div className="flex gap-2 mt-3">
                   <Input
