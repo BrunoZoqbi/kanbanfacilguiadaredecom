@@ -1,12 +1,15 @@
 # Kanban Fácil — Fibron
 
-Sistema de gestão interna da Fibron (Raul Soares/MG): gestão de tarefas, controle de estoque de equipamentos e prospecção comercial, em uma plataforma única e modular.
+Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equipamentos, prospecção comercial e atendimento de tickets, em uma plataforma única.
+
+**Produção:** gestao.fibrontec.com.br
 
 ## Módulos
 
-- **Tarefas (Kanban)** — quadro de tarefas com anexos (PDF/JPEG/PNG), checklist, comentários, tags e tipos configuráveis. Visibilidade por papel (admin vê tudo; usuário comum só as próprias).
-- **Estoque** — controle de equipamentos com rastreamento individual (nº de série, MAC, patrimônio). Fluxo completo: Estoque Disponível → Retirada (Gestor Técnico) → Instalação/Recolhimento → Devolução, com histórico completo de movimentações.
-- **Prospecção Comercial** — cadastro de clientes potenciais com checklist de pontuação e classificação automática (baixa/média/alta), gerenciado pelo Gestor Comercial.
+- **Tarefas (Kanban)** — quadro de tarefas com anexos (PDF/JPEG/PNG), checklist, comentários, tags e tipos configuráveis.
+- **Estoque** — rastreamento individual de equipamentos (nº de série, MAC, patrimônio). Ciclo completo: Disponível → Retirada → Instalação → Recolhimento → Devolução → Análise/Baixa. Alerta de estoque baixo e exportação para Excel.
+- **Prospecção Comercial** — cadastro de leads com checklist de pontuação e classificação automática (baixa/média/alta). Prospecções "Alta" geram tarefa automática no Kanban.
+- **Tickets** — atendimento de suporte com respostas ao cliente, notas internas privadas, e portal público de consulta (sem login), protegido contra força bruta.
 
 ## Papéis do sistema
 
@@ -14,15 +17,16 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): gestão de tarefas, contr
 |---|---|
 | Admin | Acesso total a todos os módulos |
 | Gestor Técnico | Gerencia Estoque (retirada/recolhimento) e vê tarefas da equipe (exceto de admins) |
-| Gestor Comercial | Gerencia Prospecção (só as próprias) |
-| Usuário comum | Vê e cria apenas as próprias tarefas |
+| Gestor Comercial | Gerencia Prospecção e Tickets |
+| Usuário comum | Vê e cria apenas as próprias tarefas; usa Estoque e Tickets atribuídos a si |
 
 ## Stack técnico
 
 - **Frontend:** Vite + React 18 + TypeScript + shadcn-ui + Tailwind CSS
 - **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions)
-- **PWA:** instalável em dispositivos móveis (vite-plugin-pwa)
-- **Hospedagem:** Vercel (deploy automático via push na branch `main`)
+- **PWA:** instalável em dispositivos móveis
+- **Hospedagem:** Vercel (deploy automático via push/merge na branch `main`)
+- **CI:** GitHub Actions roda type-check + build em toda pull request
 
 ## Desenvolvimento local
 
@@ -40,8 +44,16 @@ npm run dev
 Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - **Núcleo:** profiles, user_roles
 - **Tarefas:** tasks, task_tags, task_comments, task_checklist_items, task_attachments, task_types, activity_logs
-- **Estoque:** produtos, estoques, itens_serializados, estoque_saldo, movimentacoes_estoque
+- **Estoque:** produtos, categorias_produto, estoques, itens_serializados, estoque_saldo, movimentacoes_estoque
 - **Prospecção:** prospeccoes, prospeccoes_respostas
+- **Tickets:** tickets, ticket_respostas, ticket_notas_internas, ticket_consulta_tentativas
+
+## Segurança
+
+- Row Level Security (RLS) em todas as tabelas — permissões aplicadas na interface e no banco.
+- Contas desativadas são bloqueadas em cascata (login, RLS, funções RPC).
+- Portal público de tickets com limite de tentativas (anti força-bruta) e minimização de dados pessoais.
+- Funções sensíveis de estoque e usuários rodam como RPC com validação de permissão própria (SECURITY DEFINER).
 
 ## Scripts disponíveis
 
@@ -50,9 +62,9 @@ Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - `npm run test` — testes
 - `npx tsc --noEmit` — checagem de tipos
 
-## Segurança
+## Documentação
 
-Todas as tabelas usam Row Level Security (RLS) do Supabase — as permissões por papel são aplicadas tanto na interface quanto no banco de dados.
+Manual de uso e POPs operacionais mantidos separadamente pela consultoria (Zoqbi).
 
 ---
 Projeto desenvolvido por Zoqbi (Bruno Zoqbi) para a Fibron – Raul Soares.
