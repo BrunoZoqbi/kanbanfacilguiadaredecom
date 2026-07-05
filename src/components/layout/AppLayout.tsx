@@ -26,6 +26,7 @@ import {
   Bell,
   Settings,
   HelpCircle,
+  MessageSquareText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -53,6 +54,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
     { name: 'Tickets', href: '/tickets', icon: TicketIcon },
+    { name: 'Scripts', href: '/scripts', icon: MessageSquareText },
     { name: 'Calendário', href: '/calendar', icon: CalendarDays },
     { name: 'Estoque', href: '/estoque', icon: Boxes },
     ...(isAdmin || isGestorComercial ? [

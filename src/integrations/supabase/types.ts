@@ -452,6 +452,45 @@ export type Database = {
           },
         ]
       }
+      scripts_atendimento: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          conteudo: string
+          created_at: string
+          id: string
+          observacao: string | null
+          ordem: number
+          setor: Database["public"]["Enums"]["setor_script"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          conteudo: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          setor: Database["public"]["Enums"]["setor_script"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          setor?: Database["public"]["Enums"]["setor_script"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string | null
@@ -911,6 +950,7 @@ export type Database = {
       classificacao_prospeccao: "baixa" | "media" | "alta"
       condicao_item: "novo" | "usado" | "recondicionado"
       prioridade_ticket: "baixa" | "media" | "alta" | "urgente"
+      setor_script: "comercial" | "financeiro" | "atendimento_geral"
       status_item:
         | "disponivel"
         | "com_tecnico"
@@ -1068,6 +1108,7 @@ export const Constants = {
       classificacao_prospeccao: ["baixa", "media", "alta"],
       condicao_item: ["novo", "usado", "recondicionado"],
       prioridade_ticket: ["baixa", "media", "alta", "urgente"],
+      setor_script: ["comercial", "financeiro", "atendimento_geral"],
       status_item: [
         "disponivel",
         "com_tecnico",
