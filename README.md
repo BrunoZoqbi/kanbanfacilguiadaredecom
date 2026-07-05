@@ -16,8 +16,8 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equip
 | Papel | Permissões |
 |---|---|
 | Admin | Acesso total a todos os módulos |
-| Gestor Técnico | Gerencia Estoque (retirada/recolhimento) e vê tarefas da equipe (exceto de admins) |
-| Gestor Comercial | Gerencia Prospecção e Tickets |
+| Gestor Técnico | Gerencia Estoque (retirada/recolhimento), vê tarefas da equipe (exceto de admins) e tem visão ampla de Tickets — responde principalmente pelos chamados técnicos (suporte, conexão, instalação) |
+| Gestor Comercial | Gerencia Prospecção e tem visão ampla de Tickets — responde principalmente pelos chamados comerciais e financeiros (cobrança, negociação, cancelamento) |
 | Usuário comum | Vê e cria apenas as próprias tarefas; usa Estoque e Tickets atribuídos a si |
 
 ## Stack técnico

@@ -169,11 +169,15 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
-            Estoque (retirada, recolhimento) e vê as tarefas da equipe técnica.
+            Estoque (retirada, recolhimento), vê as tarefas da equipe técnica e tem visão ampla de
+            todos os Tickets — na prática, responde principalmente pelos chamados técnicos
+            (suporte, conexão, instalação).
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia
-            Prospecção Comercial e Tickets.
+            Prospecção Comercial e também tem visão ampla de todos os Tickets — na prática,
+            responde principalmente pelos chamados comerciais e financeiros (cobrança,
+            negociação, cancelamento).
           </li>
           <li>
             <strong className="font-medium text-foreground">Usuário comum:</strong> vê e cria
