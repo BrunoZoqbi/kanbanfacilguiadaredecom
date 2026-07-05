@@ -42,27 +42,66 @@ const Ajuda: React.FC = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // TODO: substituir os textos de placeholder abaixo pelo conteúdo final de
-  // cada módulo (será enviado em seguida).
   const secoes: SecaoAjuda[] = [
     {
       id: 'tarefas',
       titulo: 'Tarefas (Kanban)',
       conteudo: (
-        <p className="text-sm text-muted-foreground">
-          [Placeholder] Conteúdo de uso rápido do módulo de Tarefas (Kanban) — quadro, anexos,
-          checklist, comentários, tags e tipos de tarefa.
-        </p>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Toque em <strong className="font-medium text-foreground">"Nova Tarefa"</strong> para
+            criar — já é possível anexar PDF/foto e criar um checklist no momento da criação.
+          </li>
+          <li>
+            Arraste o cartão entre as colunas "A Fazer", "Fazendo" e "Feito".
+          </li>
+          <li>
+            Use os filtros (Responsável, Prioridade, Tipo, Prazo) para encontrar tarefas
+            rapidamente.
+          </li>
+          <li>"Minhas Tarefas" mostra só o que está atribuído a você.</li>
+          <li>
+            O Calendário mostra as tarefas por data, com pontos coloridos indicando a prioridade.
+          </li>
+        </ul>
       ),
     },
     {
       id: 'estoque',
       titulo: 'Estoque',
       conteudo: (
-        <p className="text-sm text-muted-foreground">
-          [Placeholder] Conteúdo de uso rápido do módulo de Estoque — itens serializados, saldo
-          de consumíveis, retirada, instalação, recolhimento e devolução.
-        </p>
+        <div className="space-y-3 text-sm text-muted-foreground">
+          <p>
+            <strong className="font-medium text-foreground">Fluxo do equipamento:</strong>{' '}
+            Disponível (na sede) → Retirado por um técnico → Instalado no cliente → Recolhido
+            (vira tarefa automaticamente) → Devolvido à sede → Em Análise (se com defeito) →
+            Reparado ou Baixa definitiva.
+          </p>
+          <div>
+            <p className="font-medium text-foreground mb-1">Gestor Técnico</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>Cadastra produtos e itens na aba "Cadastro".</li>
+              <li>
+                Retira equipamento para técnico na aba "Disponível" (um selo "Estoque baixo"
+                aparece quando restam 2 unidades ou menos).
+              </li>
+              <li>Lança recolhimento — já cria a tarefa e move o item automaticamente.</li>
+              <li>Decide reparo ou baixa na aba "Em Análise".</li>
+              <li>
+                O botão <strong className="font-medium text-foreground">"Exportar Relatório"</strong>{' '}
+                gera uma planilha Excel completa.
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Técnico</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>Acompanha os equipamentos com você em "Meu Estoque".</li>
+              <li>Use "Instalar/Usar" ao instalar em um cliente.</li>
+              <li>Use "Devolver na Sede" ao devolver.</li>
+            </ul>
+          </div>
+        </div>
       ),
     },
     {
@@ -71,20 +110,49 @@ const Ajuda: React.FC = () => {
       // Só quem tem acesso ao módulo (mesma regra do menu em AppLayout).
       visivelPara: () => isAdmin || isGestorComercial,
       conteudo: (
-        <p className="text-sm text-muted-foreground">
-          [Placeholder] Conteúdo de uso rápido do módulo de Prospecção Comercial — cadastro de
-          leads, checklist de pontuação e classificação automática.
-        </p>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Toque em <strong className="font-medium text-foreground">"Nova Prospecção"</strong> e
+            preencha os dados do contato (visita ou ligação).
+          </li>
+          <li>
+            Responda o checklist de 7 perguntas — pontuação e classificação (Baixa/Média/Alta) são
+            calculadas automaticamente.
+          </li>
+          <li>
+            Prospecções "Alta" geram uma tarefa automaticamente no Kanban, com prazo de 2 dias,
+            para você não perder o timing de contato.
+          </li>
+          <li>
+            Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista.
+          </li>
+        </ul>
       ),
     },
     {
       id: 'tickets',
       titulo: 'Tickets',
       conteudo: (
-        <p className="text-sm text-muted-foreground">
-          [Placeholder] Conteúdo de uso rápido do módulo de Tickets — respostas ao cliente, notas
-          internas e portal público de consulta.
-        </p>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Toque em <strong className="font-medium text-foreground">"Novo Ticket"</strong> para
+            registrar um chamado de suporte.
+          </li>
+          <li>
+            Use a aba "Respostas" para se comunicar com o cliente (ele acompanha essas mensagens
+            pelo Portal Público).
+          </li>
+          <li>
+            Use "Notas Internas" para anotações que só a equipe vê — o cliente nunca acessa essa
+            aba.
+          </li>
+          <li>Ao resolver, toque em "Marcar como Resolvido".</li>
+          <li>
+            O cliente consulta seu próprio chamado, sem login, em{' '}
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">/consulta-ticket</code>,
+            informando o número do ticket e o CPF ou telefone cadastrado.
+          </li>
+        </ul>
       ),
     },
     {
@@ -94,10 +162,24 @@ const Ajuda: React.FC = () => {
       // tem alguma função de gestão (admin, gestor técnico ou comercial) vê.
       visivelPara: () => role !== 'user',
       conteudo: (
-        <p className="text-sm text-muted-foreground">
-          [Placeholder] Conteúdo de uso rápido sobre papéis e permissões — o que cada papel
-          (Admin, Gestor Técnico, Gestor Comercial, Usuário) pode ver e fazer no sistema.
-        </p>
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            <strong className="font-medium text-foreground">Admin:</strong> acesso total a todos
+            os módulos e usuários.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
+            Estoque (retirada, recolhimento) e vê as tarefas da equipe técnica.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia
+            Prospecção Comercial e Tickets.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Usuário comum:</strong> vê e cria
+            apenas as próprias tarefas, e usa Estoque/Tickets apenas nos itens atribuídos a si.
+          </li>
+        </ul>
       ),
     },
   ];
