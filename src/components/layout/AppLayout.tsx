@@ -25,6 +25,7 @@ import {
   LogOut,
   Bell,
   Settings,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -60,6 +61,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     ...(isAdmin ? [
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
+    { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
   ];
 
   const NavLink = ({ item }: { item: typeof navigation[0] }) => {
