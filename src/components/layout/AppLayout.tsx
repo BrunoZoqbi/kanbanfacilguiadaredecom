@@ -27,6 +27,7 @@ import {
   Settings,
   HelpCircle,
   MessageSquareText,
+  UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -64,6 +65,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
     { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
+    { name: 'Meu Perfil', href: '/perfil', icon: UserCircle },
   ];
 
   const NavLink = ({ item }: { item: typeof navigation[0] }) => {

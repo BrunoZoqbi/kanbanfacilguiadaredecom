@@ -8,6 +8,8 @@ export interface Profile {
   full_name: string;
   created_at: string;
   updated_at: string;
+  is_active?: boolean;
+  phone_whatsapp?: string | null;
 }
 
 export interface UserRole {
