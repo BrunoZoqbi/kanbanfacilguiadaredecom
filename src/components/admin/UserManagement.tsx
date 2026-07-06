@@ -40,6 +40,7 @@ import {
   Briefcase,
   Pencil,
   Trash2,
+  KeyRound,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppRole } from '@/types/database';
@@ -71,7 +72,16 @@ const UserManagement: React.FC = () => {
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [editFullName, setEditFullName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [originalEmail, setOriginalEmail] = useState('');
+  const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [pendingEmailChange, setPendingEmailChange] = useState(false);
+
+  // Reset password state (within the Edit dialog)
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -206,20 +216,41 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const openEditDialog = (user: UserWithRole) => {
+  const openEditDialog = async (user: UserWithRole) => {
     setEditingUser(user);
     setEditFullName(user.full_name);
     setEditPhone(user.phone_whatsapp || '');
+    setEditEmail('');
+    setOriginalEmail('');
+    setShowResetPassword(false);
+    setNewPassword('');
+
+    setIsLoadingEmail(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_get_user_email', {
+        p_user_id: user.id,
+      });
+      if (error) throw error;
+      setEditEmail(data || '');
+      setOriginalEmail(data || '');
+    } catch (error: any) {
+      toast.error('Erro ao carregar e-mail: ' + error.message);
+    } finally {
+      setIsLoadingEmail(false);
+    }
   };
 
   const closeEditDialog = () => {
     setEditingUser(null);
     setEditFullName('');
     setEditPhone('');
+    setEditEmail('');
+    setOriginalEmail('');
+    setShowResetPassword(false);
+    setNewPassword('');
   };
 
-  // E-mail não é editável aqui: é a identidade de login no Supabase Auth.
-  const handleSaveEdit = async () => {
+  const performSaveEdit = async () => {
     if (!editingUser || !editFullName.trim()) return;
 
     setIsSavingEdit(true);
@@ -234,11 +265,20 @@ const UserManagement: React.FC = () => {
 
       if (error) throw error;
 
+      const emailChanged = editEmail.trim() !== originalEmail;
+      if (emailChanged) {
+        const { data, error: invokeError } = await supabase.functions.invoke('update-user-email', {
+          body: { user_id: editingUser.id, new_email: editEmail.trim() },
+        });
+        if (invokeError) throw new Error(invokeError.message || 'Erro ao atualizar e-mail');
+        if (!data?.success) throw new Error(data?.error || 'Erro ao atualizar e-mail');
+      }
+
       await logActivity({
         action: 'update',
         entityType: 'user',
         entityId: editingUser.id,
-        details: { user_name: editFullName.trim() },
+        details: { user_name: editFullName.trim(), ...(emailChanged ? { email_changed: true } : {}) },
       });
 
       toast.success('Usuário atualizado!');
@@ -248,6 +288,48 @@ const UserManagement: React.FC = () => {
       toast.error('Erro ao atualizar usuário: ' + error.message);
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  // Se o e-mail foi alterado, pede confirmação explícita antes de salvar —
+  // essa troca é o login do usuário, não só um dado de cadastro.
+  const handleSaveEdit = () => {
+    if (!editingUser || !editFullName.trim()) return;
+
+    const emailChanged = editEmail.trim() !== originalEmail;
+    if (emailChanged) {
+      setPendingEmailChange(true);
+    } else {
+      performSaveEdit();
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingUser || newPassword.length < 6) return;
+
+    setIsResettingPassword(true);
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('reset-user-password', {
+        body: { user_id: editingUser.id, new_password: newPassword },
+      });
+
+      if (invokeError) throw new Error(invokeError.message || 'Erro ao redefinir senha');
+      if (!data?.success) throw new Error(data?.error || 'Erro ao redefinir senha');
+
+      await logActivity({
+        action: 'update',
+        entityType: 'user',
+        entityId: editingUser.id,
+        details: { user_name: editingUser.full_name, password_reset: true },
+      });
+
+      toast.success('Senha redefinida com sucesso!');
+      setShowResetPassword(false);
+      setNewPassword('');
+    } catch (error: any) {
+      toast.error('Erro ao redefinir senha: ' + error.message);
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -508,22 +590,108 @@ const UserManagement: React.FC = () => {
                   onChange={(e) => setEditPhone(e.target.value)}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                O e-mail não pode ser alterado por aqui, pois é a identidade de login do usuário.
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">E-mail</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  disabled={isLoadingEmail}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este é o e-mail de login do usuário. Alterá-lo pede confirmação ao salvar.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                {!showResetPassword ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowResetPassword(true)}
+                  >
+                    <KeyRound className="h-4 w-4 mr-2" />
+                    Redefinir Senha
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-new-password">Nova senha</Label>
+                    <Input
+                      id="edit-new-password"
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleResetPassword}
+                        disabled={newPassword.length < 6 || isResettingPassword}
+                      >
+                        {isResettingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Confirmar Nova Senha
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowResetPassword(false);
+                          setNewPassword('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={closeEditDialog}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEdit} disabled={!editFullName.trim() || isSavingEdit}>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={!editFullName.trim() || isSavingEdit || isLoadingEmail}
+            >
               {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmação específica para troca de e-mail de login */}
+      <AlertDialog open={pendingEmailChange} onOpenChange={setPendingEmailChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar e-mail de login</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza? Isso muda o e-mail de login deste usuário — ele vai precisar usar o
+              novo e-mail para entrar no sistema a partir de agora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPendingEmailChange(false);
+                performSaveEdit();
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

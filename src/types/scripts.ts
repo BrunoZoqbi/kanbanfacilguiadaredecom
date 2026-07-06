@@ -48,11 +48,11 @@ const CATEGORIA_COR: Record<string, CorCategoria> = {
 };
 
 export const CATEGORIA_BADGE_CLASSES: Record<CorCategoria, string> = {
-  verde: 'bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-400',
-  azul: 'bg-blue-500/10 text-blue-700 border-blue-500/30 dark:text-blue-400',
-  laranja: 'bg-orange-500/10 text-orange-700 border-orange-500/30 dark:text-orange-400',
-  vermelho: 'bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400',
-  cinza: 'bg-slate-500/10 text-slate-700 border-slate-500/30 dark:text-slate-400',
+  verde: 'bg-green-500/10 text-green-700 border-green-500/30',
+  azul: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
+  laranja: 'bg-orange-500/10 text-orange-700 border-orange-500/30',
+  vermelho: 'bg-red-500/10 text-red-700 border-red-500/30',
+  cinza: 'bg-slate-500/10 text-slate-700 border-slate-500/30',
 };
 
 export const getCategoriaBadgeClass = (categoria: string): string =>

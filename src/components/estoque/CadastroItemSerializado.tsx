@@ -33,6 +33,7 @@ const CadastroItemSerializado: React.FC = () => {
   const [notaFiscal, setNotaFiscal] = useState('');
   const [valorAquisicao, setValorAquisicao] = useState('');
   const [garantiaAte, setGarantiaAte] = useState('');
+  const [errors, setErrors] = useState<{ produtoId?: string; numeroSerie?: string }>({});
 
   const produtosSerializados = useMemo(
     () => produtos.filter((p) => p.controla_serial && p.is_active),
@@ -55,11 +56,17 @@ const CadastroItemSerializado: React.FC = () => {
     setValorAquisicao('');
     setGarantiaAte('');
     setShowOpcionais(false);
+    setErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!produtoId || !numeroSerie.trim()) return;
+
+    const nextErrors: typeof errors = {};
+    if (!produtoId) nextErrors.produtoId = 'Selecione o produto.';
+    if (!numeroSerie.trim()) nextErrors.numeroSerie = 'Informe o número de série.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     await createItem.mutateAsync({
       produto_id: produtoId,
@@ -94,7 +101,13 @@ const CadastroItemSerializado: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="item-produto">Produto *</Label>
-              <Select value={produtoId} onValueChange={setProdutoId}>
+              <Select
+                value={produtoId}
+                onValueChange={(v) => {
+                  setProdutoId(v);
+                  if (errors.produtoId) setErrors((prev) => ({ ...prev, produtoId: undefined }));
+                }}
+              >
                 <SelectTrigger id="item-produto">
                   <SelectValue placeholder="Selecione o produto..." />
                 </SelectTrigger>
@@ -106,6 +119,9 @@ const CadastroItemSerializado: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.produtoId && (
+                <p className="text-sm font-medium text-destructive">{errors.produtoId}</p>
+              )}
               {produtosSerializados.length === 0 && (
                 <p className="text-xs text-muted-foreground">
                   Nenhum produto com controle de série cadastrado ainda.
@@ -119,9 +135,14 @@ const CadastroItemSerializado: React.FC = () => {
                 id="item-serie"
                 placeholder="Ex: SN123456789"
                 value={numeroSerie}
-                onChange={(e) => setNumeroSerie(e.target.value)}
-                required
+                onChange={(e) => {
+                  setNumeroSerie(e.target.value);
+                  if (errors.numeroSerie) setErrors((prev) => ({ ...prev, numeroSerie: undefined }));
+                }}
               />
+              {errors.numeroSerie && (
+                <p className="text-sm font-medium text-destructive">{errors.numeroSerie}</p>
+              )}
             </div>
 
             {showMac && (
@@ -233,10 +254,7 @@ const CadastroItemSerializado: React.FC = () => {
           </Collapsible>
 
           <div className="flex justify-end pt-2">
-            <Button
-              type="submit"
-              disabled={createItem.isPending || !produtoId || !numeroSerie.trim()}
-            >
+            <Button type="submit" disabled={createItem.isPending}>
               {createItem.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (

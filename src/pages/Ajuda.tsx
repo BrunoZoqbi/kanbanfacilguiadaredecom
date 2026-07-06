@@ -218,6 +218,10 @@ const Ajuda: React.FC = () => {
             <strong className="font-medium text-foreground">Usuário comum:</strong> vê e cria
             apenas as próprias tarefas, e usa Estoque/Tickets apenas nos itens atribuídos a si.
           </li>
+          <li>
+            O admin pode editar o e-mail e redefinir a senha de qualquer usuário diretamente pela
+            tela Editar, dentro de Gerenciar &gt; Usuários.
+          </li>
         </ul>
       ),
     },
