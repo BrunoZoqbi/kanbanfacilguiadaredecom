@@ -57,6 +57,7 @@ Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - Contas desativadas são bloqueadas em cascata (login, RLS, funções RPC).
 - Portal público de tickets com limite de tentativas (anti força-bruta) e minimização de dados pessoais.
 - Funções sensíveis de estoque e usuários rodam como RPC com validação de permissão própria (SECURITY DEFINER).
+- Admin pode editar o e-mail e redefinir a senha de qualquer usuário, via edge functions dedicadas (`update-user-email`, `reset-user-password`) que validam o papel de quem chama no servidor antes de agir.
 
 ## Scripts disponíveis
 
