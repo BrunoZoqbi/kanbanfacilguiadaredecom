@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorComercial } from '@/hooks/useIsGestorComercial';
@@ -10,7 +10,27 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HelpCircle, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { HelpCircle, Loader2, Search } from 'lucide-react';
+
+// Extrai o texto puro de um nó React (ex: o conteúdo JSX de uma seção),
+// para permitir busca por texto sem precisar duplicar o conteúdo como
+// string separada em cada seção.
+const extrairTexto = (node: React.ReactNode): string => {
+  if (node === null || node === undefined || typeof node === 'boolean') {
+    return '';
+  }
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(extrairTexto).join(' ');
+  }
+  if (React.isValidElement(node)) {
+    return extrairTexto((node.props as { children?: React.ReactNode }).children);
+  }
+  return '';
+};
 
 // Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
@@ -29,6 +49,7 @@ interface SecaoAjuda {
 const Ajuda: React.FC = () => {
   const { user, isAdmin, role, isLoading } = useAuth();
   const isGestorComercial = useIsGestorComercial();
+  const [busca, setBusca] = useState('');
 
   if (isLoading) {
     return (
@@ -229,6 +250,13 @@ const Ajuda: React.FC = () => {
 
   const secoesVisiveis = secoes.filter((secao) => !secao.visivelPara || secao.visivelPara());
 
+  const termoBusca = busca.trim().toLowerCase();
+  const secoesFiltradas = termoBusca
+    ? secoesVisiveis.filter((secao) =>
+        `${secao.titulo} ${extrairTexto(secao.conteudo)}`.toLowerCase().includes(termoBusca)
+      )
+    : secoesVisiveis;
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -243,19 +271,35 @@ const Ajuda: React.FC = () => {
           </p>
         </div>
 
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título ou conteúdo..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Módulos</CardTitle>
           </CardHeader>
           <CardContent>
-            <Accordion type="multiple" className="w-full">
-              {secoesVisiveis.map((secao) => (
-                <AccordionItem key={secao.id} value={secao.id}>
-                  <AccordionTrigger>{secao.titulo}</AccordionTrigger>
-                  <AccordionContent>{secao.conteudo}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            {secoesFiltradas.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Nenhum resultado encontrado.
+              </p>
+            ) : (
+              <Accordion type="multiple" className="w-full">
+                {secoesFiltradas.map((secao) => (
+                  <AccordionItem key={secao.id} value={secao.id}>
+                    <AccordionTrigger>{secao.titulo}</AccordionTrigger>
+                    <AccordionContent>{secao.conteudo}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
           </CardContent>
         </Card>
       </div>
