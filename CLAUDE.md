@@ -34,3 +34,9 @@ Bundle principal deve ficar abaixo de ~1MB. Novas páginas/rotas devem usar `Rea
 ## Antes de finalizar qualquer sessão
 
 Rode `npx tsc --noEmit` e `npx vite build`. Nunca deixe erro de tipo ou build quebrado numa PR.
+
+## Lições de sessões anteriores
+
+- Copiar a política de RLS de um módulo para outro sem adaptar já gerou erro real (Tickets herdou a regra de "só um gestor" do Estoque, quando deveria ser compartilhado com Gestor Comercial). Sempre confirmar a matriz de papéis do módulo específico antes de reusar RLS de outro.
+- Ações aplicadas direto em produção via integração (fora desta sessão) geram "schema drift" — sempre verificar o schema real do banco antes de assumir que algo não existe só porque não tem arquivo de migration local.
+- Toda mudança em Edge Function sensível (que altera dado de outro usuário) deve validar o papel de quem chama DENTRO da própria função, nunca confiar só na interface para bloquear o botão.
