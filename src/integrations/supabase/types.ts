@@ -886,6 +886,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_user_email: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       confirmar_baixa_definitiva: {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined
