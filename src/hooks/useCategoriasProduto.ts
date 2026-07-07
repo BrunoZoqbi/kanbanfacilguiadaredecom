@@ -45,6 +45,20 @@ export const useCategoriasProduto = () => {
     },
   });
 
+  const updateCategoria = useMutation({
+    mutationFn: async ({ id, nome }: { id: string; nome: string }) => {
+      const { error } = await supabase.from('categorias_produto').update({ nome }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categorias-produto'] });
+      toast.success('Categoria atualizada!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao atualizar categoria: ' + error.message);
+    },
+  });
+
   const toggleCategoriaAtivo = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
       const { error } = await supabase
@@ -63,5 +77,5 @@ export const useCategoriasProduto = () => {
     },
   });
 
-  return { categorias, isLoading, createCategoria, toggleCategoriaAtivo };
+  return { categorias, isLoading, createCategoria, updateCategoria, toggleCategoriaAtivo };
 };

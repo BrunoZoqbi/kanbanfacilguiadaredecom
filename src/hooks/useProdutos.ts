@@ -11,6 +11,14 @@ interface CreateProdutoInput {
   unidade_medida?: string;
 }
 
+interface UpdateProdutoInput {
+  id: string;
+  nome: string;
+  categoria: string;
+  controla_serial: boolean;
+  unidade_medida?: string;
+}
+
 export const useProdutos = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -49,6 +57,20 @@ export const useProdutos = () => {
     },
   });
 
+  const updateProduto = useMutation({
+    mutationFn: async ({ id, ...input }: UpdateProdutoInput) => {
+      const { error } = await supabase.from('produtos').update(input).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+      toast.success('Produto atualizado!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao atualizar produto: ' + error.message);
+    },
+  });
+
   const toggleProdutoActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase
@@ -67,5 +89,5 @@ export const useProdutos = () => {
     },
   });
 
-  return { produtos, isLoading, createProduto, toggleProdutoActive };
+  return { produtos, isLoading, createProduto, updateProduto, toggleProdutoActive };
 };

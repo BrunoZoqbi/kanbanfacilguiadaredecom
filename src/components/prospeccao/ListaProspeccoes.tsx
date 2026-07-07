@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import { Loader2, TrendingUp, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ProspeccaoDetailModal from './ProspeccaoDetailModal';
 
 const ListaProspeccoes: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -37,6 +38,7 @@ const ListaProspeccoes: React.FC = () => {
 
   const [classificacaoFiltro, setClassificacaoFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState('');
+  const [selectedProspeccaoId, setSelectedProspeccaoId] = useState<string | null>(null);
 
   const metrics = useMemo(() => {
     const total = prospeccoes.length;
@@ -53,6 +55,8 @@ const ListaProspeccoes: React.FC = () => {
     if (statusFiltro && p.status !== statusFiltro) return false;
     return true;
   });
+
+  const selectedProspeccao = prospeccoes.find((p) => p.id === selectedProspeccaoId) || null;
 
   return (
     <div className="space-y-6">
@@ -160,7 +164,19 @@ const ListaProspeccoes: React.FC = () => {
               {/* Mobile: stacked cards */}
               <div className="space-y-3 sm:hidden">
                 {filteredProspeccoes.map((prospeccao) => (
-                  <div key={prospeccao.id} className="border rounded-lg p-3 space-y-3">
+                  <div
+                    key={prospeccao.id}
+                    className="border rounded-lg p-3 space-y-3 cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelectedProspeccaoId(prospeccao.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedProspeccaoId(prospeccao.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-medium truncate">{prospeccao.nome_contato}</p>
@@ -187,7 +203,7 @@ const ListaProspeccoes: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-2" onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={prospeccao.status}
                         onValueChange={(v) =>
@@ -237,7 +253,19 @@ const ListaProspeccoes: React.FC = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredProspeccoes.map((prospeccao) => (
-                      <TableRow key={prospeccao.id}>
+                      <TableRow
+                        key={prospeccao.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedProspeccaoId(prospeccao.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedProspeccaoId(prospeccao.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <TableCell className="font-medium max-w-[160px] truncate">
                           {prospeccao.nome_contato}
                         </TableCell>
@@ -250,7 +278,7 @@ const ListaProspeccoes: React.FC = () => {
                             {CLASSIFICACAO_LABELS[prospeccao.classificacao]} ({prospeccao.pontuacao_total})
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={prospeccao.status}
                             onValueChange={(v) =>
@@ -277,7 +305,7 @@ const ListaProspeccoes: React.FC = () => {
                             ? format(new Date(prospeccao.data_retorno_prevista), 'dd/MM/yyyy', { locale: ptBR })
                             : '-'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Input
                             defaultValue={prospeccao.observacoes || ''}
                             placeholder="Adicionar observação..."
@@ -304,6 +332,13 @@ const ListaProspeccoes: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <ProspeccaoDetailModal
+        key={selectedProspeccaoId}
+        prospeccao={selectedProspeccao}
+        open={!!selectedProspeccao}
+        onClose={() => setSelectedProspeccaoId(null)}
+      />
     </div>
   );
 };
