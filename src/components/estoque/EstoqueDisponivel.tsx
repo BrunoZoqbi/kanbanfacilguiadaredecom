@@ -17,10 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Boxes, UserCog, Hash, AlertTriangle, PackageX, PackagePlus } from 'lucide-react';
+import {
+  Loader2,
+  Boxes,
+  UserCog,
+  Hash,
+  AlertTriangle,
+  PackageX,
+  PackagePlus,
+  PackageMinus,
+} from 'lucide-react';
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
 import LancarEntradaDialog from './LancarEntradaDialog';
+import LancarSaidaDialog from './LancarSaidaDialog';
 
 const LIMITE_ESTOQUE_BAIXO = 2;
 
@@ -41,6 +51,7 @@ const EstoqueDisponivel: React.FC = () => {
   const [retirarItem, setRetirarItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [entradaProduto, setEntradaProduto] = useState<Produto | null>(null);
+  const [saidaProduto, setSaidaProduto] = useState<Produto | null>(null);
 
   const itensDisponiveis = useMemo(
     () => itens.filter((item) => item.status === 'disponivel'),
@@ -249,6 +260,16 @@ const EstoqueDisponivel: React.FC = () => {
                         Lançar Entrada
                       </Button>
                     )}
+                    {canLancarEntrada && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSaidaProduto(produto)}
+                      >
+                        <PackageMinus className="h-4 w-4 mr-1" />
+                        Lançar Saída
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -285,6 +306,16 @@ const EstoqueDisponivel: React.FC = () => {
           estoqueId={estoqueGeral.id}
           open={!!entradaProduto}
           onClose={() => setEntradaProduto(null)}
+        />
+      )}
+
+      {saidaProduto && estoqueGeral && (
+        <LancarSaidaDialog
+          produto={saidaProduto}
+          estoqueId={estoqueGeral.id}
+          saldoAtual={saldoConsumiveis.find((s) => s.produto.id === saidaProduto.id)?.quantidade ?? 0}
+          open={!!saidaProduto}
+          onClose={() => setSaidaProduto(null)}
         />
       )}
     </div>

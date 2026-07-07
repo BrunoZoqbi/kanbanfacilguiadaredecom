@@ -938,6 +938,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      lancar_saida_consumivel: {
+        Args: {
+          p_estoque_id: string
+          p_observacao?: string
+          p_produto_id: string
+          p_quantidade: number
+        }
+        Returns: undefined
+      }
       lancar_tarefa_recolhimento: {
         Args: {
           p_descricao: string
@@ -990,6 +999,7 @@ export type Database = {
         | "devolucao_sede"
         | "baixa_defeito"
         | "descarte"
+        | "saida_consumo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1150,6 +1160,7 @@ export const Constants = {
         "devolucao_sede",
         "baixa_defeito",
         "descarte",
+        "saida_consumo",
       ],
     },
   },
