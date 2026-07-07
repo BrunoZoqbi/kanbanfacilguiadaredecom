@@ -51,5 +51,35 @@ export const useEstoqueSaldo = (estoqueId?: string | null) => {
     },
   });
 
-  return { ...query, lancarEntrada };
+  const lancarSaida = useMutation({
+    mutationFn: async ({
+      produtoId,
+      estoqueId: targetEstoqueId,
+      quantidade,
+      observacao,
+    }: {
+      produtoId: string;
+      estoqueId: string;
+      quantidade: number;
+      observacao?: string;
+    }) => {
+      const { error } = await supabase.rpc('lancar_saida_consumivel', {
+        p_produto_id: produtoId,
+        p_estoque_id: targetEstoqueId,
+        p_quantidade: quantidade,
+        p_observacao: observacao || undefined,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['estoque-saldo'] });
+      queryClient.invalidateQueries({ queryKey: ['estoque-disponivel-por-produto'] });
+      toast.success('Saída lançada!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao lançar saída: ' + error.message);
+    },
+  });
+
+  return { ...query, lancarEntrada, lancarSaida };
 };
