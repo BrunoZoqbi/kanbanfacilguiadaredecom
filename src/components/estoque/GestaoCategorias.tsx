@@ -1,21 +1,49 @@
 import React, { useState } from 'react';
 import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
+import { CategoriaProduto } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Tags, Plus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Loader2, Tags, Plus, Pencil } from 'lucide-react';
 
 const GestaoCategorias: React.FC = () => {
-  const { categorias, isLoading, createCategoria, toggleCategoriaAtivo } = useCategoriasProduto();
+  const { categorias, isLoading, createCategoria, updateCategoria, toggleCategoriaAtivo } =
+    useCategoriasProduto();
   const [nome, setNome] = useState('');
+
+  const [editingCategoria, setEditingCategoria] = useState<CategoriaProduto | null>(null);
+  const [editNome, setEditNome] = useState('');
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim()) return;
     await createCategoria.mutateAsync(nome.trim());
     setNome('');
+  };
+
+  const openEditDialog = (categoria: CategoriaProduto) => {
+    setEditingCategoria(categoria);
+    setEditNome(categoria.nome);
+  };
+
+  const closeEditDialog = () => {
+    setEditingCategoria(null);
+    setEditNome('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCategoria || !editNome.trim()) return;
+    await updateCategoria.mutateAsync({ id: editingCategoria.id, nome: editNome.trim() });
+    closeEditDialog();
   };
 
   return (
@@ -79,16 +107,22 @@ const GestaoCategorias: React.FC = () => {
                       <Badge variant="destructive" className="text-xs">Inativa</Badge>
                     )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      toggleCategoriaAtivo.mutate({ id: categoria.id, ativo: !categoria.ativo })
-                    }
-                    disabled={toggleCategoriaAtivo.isPending}
-                  >
-                    {categoria.ativo ? 'Desativar' : 'Ativar'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(categoria)}>
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toggleCategoriaAtivo.mutate({ id: categoria.id, ativo: !categoria.ativo })
+                      }
+                      disabled={toggleCategoriaAtivo.isPending}
+                    >
+                      {categoria.ativo ? 'Desativar' : 'Ativar'}
+                    </Button>
+                  </div>
                 </div>
               ))}
 
@@ -101,6 +135,32 @@ const GestaoCategorias: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Categoria Dialog */}
+      <Dialog open={!!editingCategoria} onOpenChange={(open) => !open && closeEditDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="edit-categoria-nome">Nome *</Label>
+            <Input
+              id="edit-categoria-nome"
+              value={editNome}
+              onChange={(e) => setEditNome(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={!editNome.trim() || updateCategoria.isPending}>
+              {updateCategoria.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

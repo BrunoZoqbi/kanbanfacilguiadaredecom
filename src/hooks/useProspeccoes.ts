@@ -137,6 +137,46 @@ export const useProspeccoes = () => {
     },
   });
 
+  const updateContato = useMutation({
+    mutationFn: async ({
+      id,
+      nome_contato,
+      telefone_whatsapp,
+      provedor_atual,
+      tipo_contato,
+      endereco,
+      data_contato,
+    }: {
+      id: string;
+      nome_contato: string;
+      telefone_whatsapp: string;
+      provedor_atual: string | null;
+      tipo_contato: TipoContatoProspeccao;
+      endereco: string | null;
+      data_contato: string;
+    }) => {
+      const { error } = await supabase
+        .from('prospeccoes')
+        .update({
+          nome_contato,
+          telefone_whatsapp,
+          provedor_atual: provedor_atual || null,
+          tipo_contato,
+          endereco: tipo_contato === 'visita' ? endereco || null : null,
+          data_contato,
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success('Dados do contato atualizados!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao atualizar dados do contato: ' + error.message);
+    },
+  });
+
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: StatusProspeccao }) => {
       const { error } = await supabase.from('prospeccoes').update({ status }).eq('id', id);
@@ -172,6 +212,7 @@ export const useProspeccoes = () => {
     prospeccoes,
     isLoading,
     createProspeccao,
+    updateContato,
     updateStatus,
     updateObservacoes,
   };

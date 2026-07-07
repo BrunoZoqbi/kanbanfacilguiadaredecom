@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useProdutos } from '@/hooks/useProdutos';
 import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
+import { Produto } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Package, Plus, Search } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Loader2, Package, Pencil, Plus, Search } from 'lucide-react';
 
 const CadastroProdutos: React.FC = () => {
-  const { produtos, isLoading, createProduto, toggleProdutoActive } = useProdutos();
+  const { produtos, isLoading, createProduto, updateProduto, toggleProdutoActive } = useProdutos();
   const { categorias } = useCategoriasProduto();
   const categoriasAtivas = categorias.filter((c) => c.ativo);
 
@@ -27,6 +35,47 @@ const CadastroProdutos: React.FC = () => {
   const [unidadeMedida, setUnidadeMedida] = useState('un');
   const [searchTerm, setSearchTerm] = useState('');
   const [errors, setErrors] = useState<{ nome?: string; categoria?: string }>({});
+
+  // Edit dialog state
+  const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
+  const [editNome, setEditNome] = useState('');
+  const [editCategoria, setEditCategoria] = useState('');
+  const [editControlaSerial, setEditControlaSerial] = useState(true);
+  const [editUnidadeMedida, setEditUnidadeMedida] = useState('un');
+  const [editErrors, setEditErrors] = useState<{ nome?: string; categoria?: string }>({});
+
+  const openEditDialog = (produto: Produto) => {
+    setEditingProduto(produto);
+    setEditNome(produto.nome);
+    setEditCategoria(produto.categoria);
+    setEditControlaSerial(produto.controla_serial);
+    setEditUnidadeMedida(produto.unidade_medida || 'un');
+    setEditErrors({});
+  };
+
+  const closeEditDialog = () => {
+    setEditingProduto(null);
+    setEditErrors({});
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProduto) return;
+
+    const nextErrors: typeof editErrors = {};
+    if (!editNome.trim()) nextErrors.nome = 'Informe o nome do produto.';
+    if (!editCategoria) nextErrors.categoria = 'Selecione uma categoria.';
+    setEditErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    await updateProduto.mutateAsync({
+      id: editingProduto.id,
+      nome: editNome.trim(),
+      categoria: editCategoria,
+      controla_serial: editControlaSerial,
+      unidade_medida: editUnidadeMedida.trim() || 'un',
+    });
+    closeEditDialog();
+  };
 
   const resetForm = () => {
     setNome('');
@@ -200,16 +249,26 @@ const CadastroProdutos: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      toggleProdutoActive.mutate({ id: produto.id, is_active: !produto.is_active })
-                    }
-                    disabled={toggleProdutoActive.isPending}
-                  >
-                    {produto.is_active ? 'Desativar' : 'Ativar'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(produto)}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toggleProdutoActive.mutate({ id: produto.id, is_active: !produto.is_active })
+                      }
+                      disabled={toggleProdutoActive.isPending}
+                    >
+                      {produto.is_active ? 'Desativar' : 'Ativar'}
+                    </Button>
+                  </div>
                 </div>
               ))}
 
@@ -222,6 +281,91 @@ const CadastroProdutos: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Produto Dialog */}
+      <Dialog open={!!editingProduto} onOpenChange={(open) => !open && closeEditDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Produto</DialogTitle>
+          </DialogHeader>
+          {editingProduto && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-produto-nome">Nome *</Label>
+                <Input
+                  id="edit-produto-nome"
+                  value={editNome}
+                  onChange={(e) => {
+                    setEditNome(e.target.value);
+                    if (editErrors.nome) setEditErrors((prev) => ({ ...prev, nome: undefined }));
+                  }}
+                />
+                {editErrors.nome && (
+                  <p className="text-sm font-medium text-destructive">{editErrors.nome}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-produto-categoria">Categoria *</Label>
+                <Select
+                  value={editCategoria}
+                  onValueChange={(v) => {
+                    setEditCategoria(v);
+                    if (editErrors.categoria) setEditErrors((prev) => ({ ...prev, categoria: undefined }));
+                  }}
+                >
+                  <SelectTrigger id="edit-produto-categoria">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(categoriasAtivas.some((c) => c.nome === editCategoria)
+                      ? categoriasAtivas
+                      : [...categoriasAtivas, { id: 'current', nome: editCategoria, ativo: true }]
+                    ).map((c) => (
+                      <SelectItem key={c.id} value={c.nome}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {editErrors.categoria && (
+                  <p className="text-sm font-medium text-destructive">{editErrors.categoria}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-produto-unidade">Unidade de Medida</Label>
+                <Input
+                  id="edit-produto-unidade"
+                  placeholder="un, m, cx..."
+                  value={editUnidadeMedida}
+                  onChange={(e) => setEditUnidadeMedida(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="edit-produto-controla-serial"
+                  checked={editControlaSerial}
+                  onCheckedChange={setEditControlaSerial}
+                />
+                <Label htmlFor="edit-produto-controla-serial" className="cursor-pointer">
+                  Controla número de série / patrimônio
+                </Label>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={updateProduto.isPending}>
+              {updateProduto.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
