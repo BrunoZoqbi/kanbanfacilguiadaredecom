@@ -929,6 +929,15 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_gestor_comercial: { Args: never; Returns: boolean }
       is_gestor_tecnico: { Args: never; Returns: boolean }
+      lancar_entrada_consumivel: {
+        Args: {
+          p_estoque_id: string
+          p_observacao?: string
+          p_produto_id: string
+          p_quantidade: number
+        }
+        Returns: undefined
+      }
       lancar_tarefa_recolhimento: {
         Args: {
           p_descricao: string

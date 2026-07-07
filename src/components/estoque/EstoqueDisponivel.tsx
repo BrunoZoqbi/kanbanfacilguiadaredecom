@@ -4,8 +4,9 @@ import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
 import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
+import { useProdutos } from '@/hooks/useProdutos';
 import { useEstoqueDisponivelPorProduto } from '@/hooks/useEstoqueDisponivelPorProduto';
-import { CONDICAO_LABELS, ItemSerializadoWithRelations } from '@/types/estoque';
+import { CONDICAO_LABELS, ItemSerializadoWithRelations, Produto } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Boxes, UserCog, Hash, AlertTriangle, PackageX } from 'lucide-react';
+import { Loader2, Boxes, UserCog, Hash, AlertTriangle, PackageX, PackagePlus } from 'lucide-react';
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
+import LancarEntradaDialog from './LancarEntradaDialog';
 
 const LIMITE_ESTOQUE_BAIXO = 2;
 
@@ -27,8 +29,10 @@ const EstoqueDisponivel: React.FC = () => {
   const isGestorTecnico = useIsGestorTecnico();
   const canRetirar = isAdmin || isGestorTecnico;
   const canDarBaixa = isAdmin || isGestorTecnico;
+  const canLancarEntrada = isAdmin || isGestorTecnico;
   const { itens, isLoading, estoqueGeral } = useItensSerializados();
   const { data: saldos = [], isLoading: isLoadingSaldo } = useEstoqueSaldo(estoqueGeral?.id);
+  const { produtos } = useProdutos();
   const { categorias } = useCategoriasProduto();
   const categoriasAtivas = categorias.filter((c) => c.ativo);
 
@@ -36,10 +40,28 @@ const EstoqueDisponivel: React.FC = () => {
   const [produtoFiltro, setProdutoFiltro] = useState('');
   const [retirarItem, setRetirarItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
+  const [entradaProduto, setEntradaProduto] = useState<Produto | null>(null);
 
   const itensDisponiveis = useMemo(
     () => itens.filter((item) => item.status === 'disponivel'),
     [itens]
+  );
+
+  // Todo produto consumível ativo aparece aqui, mesmo sem nenhuma entrada
+  // lançada ainda (saldo 0) — antes só apareciam produtos que já tinham
+  // uma linha em estoque_saldo, então um consumível novo nunca aparecia.
+  const produtosConsumiveis = useMemo(
+    () => produtos.filter((p) => !p.controla_serial && p.is_active),
+    [produtos]
+  );
+
+  const saldoConsumiveis = useMemo(
+    () =>
+      produtosConsumiveis.map((produto) => {
+        const saldoExistente = saldos.find((s) => s.produto_id === produto.id);
+        return { produto, quantidade: saldoExistente?.quantidade ?? 0 };
+      }),
+    [produtosConsumiveis, saldos]
   );
 
   const produtosDisponiveis = useMemo(() => {
@@ -47,11 +69,11 @@ const EstoqueDisponivel: React.FC = () => {
     itensDisponiveis.forEach((item) => {
       if (item.produto) map.set(item.produto.id, item.produto.nome);
     });
-    saldos.forEach((saldo) => {
-      if (saldo.produto) map.set(saldo.produto.id, saldo.produto.nome);
+    produtosConsumiveis.forEach((produto) => {
+      map.set(produto.id, produto.nome);
     });
     return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
-  }, [itensDisponiveis, saldos]);
+  }, [itensDisponiveis, produtosConsumiveis]);
 
   const quantidadeDisponivelPorProduto = useEstoqueDisponivelPorProduto(
     produtosDisponiveis.map((p) => p.id)
@@ -63,9 +85,9 @@ const EstoqueDisponivel: React.FC = () => {
     return true;
   });
 
-  const filteredSaldos = saldos.filter((saldo) => {
-    if (categoriaFiltro && saldo.produto?.categoria !== categoriaFiltro) return false;
-    if (produtoFiltro && saldo.produto_id !== produtoFiltro) return false;
+  const filteredSaldoConsumiveis = saldoConsumiveis.filter(({ produto }) => {
+    if (categoriaFiltro && produto.categoria !== categoriaFiltro) return false;
+    if (produtoFiltro && produto.id !== produtoFiltro) return false;
     return true;
   });
 
@@ -184,7 +206,7 @@ const EstoqueDisponivel: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Boxes className="h-5 w-5" />
-            Saldo de Consumíveis ({filteredSaldos.length})
+            Saldo de Consumíveis ({filteredSaldoConsumiveis.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -194,15 +216,18 @@ const EstoqueDisponivel: React.FC = () => {
             </div>
           ) : (
             <div className="border rounded-lg divide-y">
-              {filteredSaldos.map((saldo) => (
-                <div key={saldo.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3">
+              {filteredSaldoConsumiveis.map(({ produto, quantidade }) => (
+                <div
+                  key={produto.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3"
+                >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium truncate max-w-full">{saldo.produto?.nome}</p>
+                      <p className="font-medium truncate max-w-full">{produto.nome}</p>
                       <Badge variant="secondary" className="text-xs">
-                        {saldo.produto?.categoria}
+                        {produto.categoria}
                       </Badge>
-                      {(quantidadeDisponivelPorProduto.get(saldo.produto_id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
+                      {(quantidadeDisponivelPorProduto.get(produto.id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
                         <Badge variant="destructive" className="text-xs">
                           <PackageX className="h-3 w-3 mr-1" />
                           Estoque baixo
@@ -210,15 +235,27 @@ const EstoqueDisponivel: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-sm font-semibold">
-                    {saldo.quantidade} {saldo.produto?.unidade_medida || 'un'}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-semibold whitespace-nowrap">
+                      {quantidade} {produto.unidade_medida || 'un'}
+                    </p>
+                    {canLancarEntrada && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEntradaProduto(produto)}
+                      >
+                        <PackagePlus className="h-4 w-4 mr-1" />
+                        Lançar Entrada
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
 
-              {filteredSaldos.length === 0 && (
+              {filteredSaldoConsumiveis.length === 0 && (
                 <div className="p-8 text-center text-muted-foreground">
-                  Nenhum saldo de consumível encontrado
+                  Nenhum produto consumível encontrado
                 </div>
               )}
             </div>
@@ -239,6 +276,15 @@ const EstoqueDisponivel: React.FC = () => {
           item={baixaItem}
           open={!!baixaItem}
           onClose={() => setBaixaItem(null)}
+        />
+      )}
+
+      {entradaProduto && estoqueGeral && (
+        <LancarEntradaDialog
+          produto={entradaProduto}
+          estoqueId={estoqueGeral.id}
+          open={!!entradaProduto}
+          onClose={() => setEntradaProduto(null)}
         />
       )}
     </div>
