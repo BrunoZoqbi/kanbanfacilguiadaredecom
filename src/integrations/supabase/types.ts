@@ -1036,6 +1036,7 @@ export type Database = {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined
       }
+      resumo_estoque_por_status: { Args: never; Returns: Json }
       retirar_consumivel_para_tecnico: {
         Args: {
           p_observacao?: string

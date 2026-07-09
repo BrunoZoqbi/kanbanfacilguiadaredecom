@@ -6,6 +6,7 @@ import { useItensSerializados } from '@/hooks/useItensSerializados';
 import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
 import { useProfiles } from '@/hooks/useProfiles';
 import AppLayout from '@/components/layout/AppLayout';
+import EstoqueVisaoGeral from '@/components/estoque/EstoqueVisaoGeral';
 import EstoqueDisponivel from '@/components/estoque/EstoqueDisponivel';
 import MeuEstoque from '@/components/estoque/MeuEstoque';
 import EstoquePorTecnico from '@/components/estoque/EstoquePorTecnico';
@@ -16,7 +17,7 @@ import GestaoCategorias from '@/components/estoque/GestaoCategorias';
 import ItensEmAnalise from '@/components/estoque/ItensEmAnalise';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, FileSpreadsheet } from 'lucide-react';
+import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Estoque: React.FC = () => {
@@ -75,8 +76,14 @@ const Estoque: React.FC = () => {
           )}
         </div>
 
-        <Tabs defaultValue="disponivel">
+        <Tabs defaultValue={canManageStock ? 'visao-geral' : 'disponivel'}>
           <TabsList className="flex-wrap h-auto">
+            {canManageStock && (
+              <TabsTrigger value="visao-geral" className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Visão Geral
+              </TabsTrigger>
+            )}
             <TabsTrigger value="disponivel" className="flex items-center gap-2">
               <Boxes className="h-4 w-4" />
               Disponível
@@ -110,6 +117,12 @@ const Estoque: React.FC = () => {
               </TabsTrigger>
             )}
           </TabsList>
+
+          {canManageStock && (
+            <TabsContent value="visao-geral" className="mt-6">
+              <EstoqueVisaoGeral />
+            </TabsContent>
+          )}
 
           <TabsContent value="disponivel" className="mt-6">
             <EstoqueDisponivel />
