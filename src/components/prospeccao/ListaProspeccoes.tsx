@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProspeccoes } from '@/hooks/useProspeccoes';
+import { useProspeccaoStats } from '@/hooks/useProspeccaoStats';
 import {
   CLASSIFICACAO_BADGE_CLASSES,
   CLASSIFICACAO_LABELS,
@@ -40,15 +41,7 @@ const ListaProspeccoes: React.FC = () => {
   const [statusFiltro, setStatusFiltro] = useState('');
   const [selectedProspeccaoId, setSelectedProspeccaoId] = useState<string | null>(null);
 
-  const metrics = useMemo(() => {
-    const total = prospeccoes.length;
-    const baixa = prospeccoes.filter((p) => p.classificacao === 'baixa').length;
-    const media = prospeccoes.filter((p) => p.classificacao === 'media').length;
-    const alta = prospeccoes.filter((p) => p.classificacao === 'alta').length;
-    const convertidas = prospeccoes.filter((p) => p.status === 'convertido').length;
-    const taxaConversao = total > 0 ? Math.round((convertidas / total) * 100) : 0;
-    return { total, baixa, media, alta, taxaConversao };
-  }, [prospeccoes]);
+  const { stats: metrics } = useProspeccaoStats();
 
   const filteredProspeccoes = prospeccoes.filter((p) => {
     if (classificacaoFiltro && p.classificacao !== classificacaoFiltro) return false;
