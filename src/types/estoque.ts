@@ -107,6 +107,33 @@ export interface MovimentacaoEstoque {
   created_at: string;
 }
 
+// Retorno de resumo_estoque_por_status() — painel quantitativo de Estoque
+// (EstoqueVisaoGeral.tsx).
+export interface ResumoEstoqueSerializado {
+  categoria: string;
+  produto_id: string;
+  produto_nome: string;
+  disponivel: number;
+  com_tecnico: number;
+  instalado_cliente: number;
+  analise_defeito: number;
+  baixado: number;
+}
+
+export interface ResumoEstoqueConsumivel {
+  categoria: string;
+  produto_id: string;
+  produto_nome: string;
+  unidade_medida: string | null;
+  saldo_sede: number;
+  saldo_tecnicos: number;
+}
+
+export interface ResumoEstoque {
+  serializados: ResumoEstoqueSerializado[];
+  consumiveis: ResumoEstoqueConsumivel[];
+}
+
 // Categorias de produto são gerenciadas pelo admin na tabela
 // categorias_produto (ver useCategoriasProduto) em vez de uma lista fixa.
 export interface CategoriaProduto {
