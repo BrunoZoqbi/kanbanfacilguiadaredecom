@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import CreateTaskForm from '@/components/tasks/CreateTaskForm';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
 const CreateTask: React.FC = () => {
@@ -22,7 +23,9 @@ const CreateTask: React.FC = () => {
 
   return (
     <AppLayout>
-      <CreateTaskForm />
+      <ErrorBoundary label="create-task-form">
+        <CreateTaskForm />
+      </ErrorBoundary>
     </AppLayout>
   );
 };
