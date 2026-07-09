@@ -1,15 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
-import { useItensSerializados } from '@/hooks/useItensSerializados';
+import { useItensSerializadosDisponiveis } from '@/hooks/useItensSerializados';
+import { useEstoqueGeral } from '@/hooks/useEstoqueGeral';
 import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
 import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
 import { useProdutos } from '@/hooks/useProdutos';
 import { useEstoqueDisponivelPorProduto } from '@/hooks/useEstoqueDisponivelPorProduto';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CONDICAO_LABELS, ItemSerializadoWithRelations, Produto } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -26,6 +29,7 @@ import {
   PackageX,
   PackagePlus,
   PackageMinus,
+  Search,
 } from 'lucide-react';
 import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
@@ -41,7 +45,7 @@ const EstoqueDisponivel: React.FC = () => {
   const canRetirar = isAdmin || isGestorTecnico;
   const canDarBaixa = isAdmin || isGestorTecnico;
   const canLancarEntrada = isAdmin || isGestorTecnico;
-  const { itens, isLoading, estoqueGeral } = useItensSerializados();
+  const { data: estoqueGeral } = useEstoqueGeral();
   const { data: saldos = [], isLoading: isLoadingSaldo } = useEstoqueSaldo(estoqueGeral?.id);
   const { produtos } = useProdutos();
   const { categorias } = useCategoriasProduto();
@@ -49,22 +53,40 @@ const EstoqueDisponivel: React.FC = () => {
 
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [produtoFiltro, setProdutoFiltro] = useState('');
+  const [busca, setBusca] = useState('');
+  const buscaDebounced = useDebouncedValue(busca, 400);
   const [retirarItem, setRetirarItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [entradaProduto, setEntradaProduto] = useState<Produto | null>(null);
   const [saidaProduto, setSaidaProduto] = useState<Produto | null>(null);
   const [retirarConsumivelProduto, setRetirarConsumivelProduto] = useState<Produto | null>(null);
 
-  const itensDisponiveis = useMemo(
-    () => itens.filter((item) => item.status === 'disponivel'),
-    [itens]
-  );
+  const {
+    itens: filteredItens,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useItensSerializadosDisponiveis({
+    search: buscaDebounced,
+    categoria: categoriaFiltro,
+    produtoId: produtoFiltro,
+  });
 
   // Todo produto consumível ativo aparece aqui, mesmo sem nenhuma entrada
   // lançada ainda (saldo 0) — antes só apareciam produtos que já tinham
   // uma linha em estoque_saldo, então um consumível novo nunca aparecia.
   const produtosConsumiveis = useMemo(
     () => produtos.filter((p) => !p.controla_serial && p.is_active),
+    [produtos]
+  );
+
+  // Vem de todos os produtos serializados ativos (não só dos itens já
+  // carregados na página atual) — com busca+paginação no servidor, a lista
+  // de itens carregada no cliente é só um recorte, não a base para os
+  // filtros de Produto.
+  const produtosSerializados = useMemo(
+    () => produtos.filter((p) => p.controla_serial && p.is_active),
     [produtos]
   );
 
@@ -79,24 +101,14 @@ const EstoqueDisponivel: React.FC = () => {
 
   const produtosDisponiveis = useMemo(() => {
     const map = new Map<string, string>();
-    itensDisponiveis.forEach((item) => {
-      if (item.produto) map.set(item.produto.id, item.produto.nome);
-    });
-    produtosConsumiveis.forEach((produto) => {
-      map.set(produto.id, produto.nome);
-    });
+    produtosSerializados.forEach((produto) => map.set(produto.id, produto.nome));
+    produtosConsumiveis.forEach((produto) => map.set(produto.id, produto.nome));
     return Array.from(map.entries()).map(([id, nome]) => ({ id, nome }));
-  }, [itensDisponiveis, produtosConsumiveis]);
+  }, [produtosSerializados, produtosConsumiveis]);
 
   const quantidadeDisponivelPorProduto = useEstoqueDisponivelPorProduto(
     produtosDisponiveis.map((p) => p.id)
   );
-
-  const filteredItens = itensDisponiveis.filter((item) => {
-    if (categoriaFiltro && item.produto?.categoria !== categoriaFiltro) return false;
-    if (produtoFiltro && item.produto_id !== produtoFiltro) return false;
-    return true;
-  });
 
   const filteredSaldoConsumiveis = saldoConsumiveis.filter(({ produto }) => {
     if (categoriaFiltro && produto.categoria !== categoriaFiltro) return false;
@@ -107,7 +119,17 @@ const EstoqueDisponivel: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por série, patrimônio, MAC, cliente..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select value={categoriaFiltro || 'all'} onValueChange={(v) => setCategoriaFiltro(v === 'all' ? '' : v)}>
               <SelectTrigger>
@@ -144,7 +166,7 @@ const EstoqueDisponivel: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Hash className="h-5 w-5" />
-            Itens Serializados Disponíveis ({filteredItens.length})
+            Itens Serializados Disponíveis ({filteredItens.length}{hasNextPage ? '+' : ''})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -210,6 +232,19 @@ const EstoqueDisponivel: React.FC = () => {
                   Nenhum item disponível encontrado
                 </div>
               )}
+            </div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Carregar mais
+              </Button>
             </div>
           )}
         </CardContent>

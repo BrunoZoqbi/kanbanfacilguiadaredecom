@@ -922,6 +922,40 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: string
       }
+      buscar_itens_serializados_disponiveis: {
+        Args: {
+          p_categoria?: string
+          p_limit?: number
+          p_offset?: number
+          p_produto_id?: string
+          p_search?: string
+        }
+        Returns: {
+          cliente_vinculado: string | null
+          condicao: Database["public"]["Enums"]["condicao_item"]
+          created_at: string
+          data_entrada: string
+          estoque_atual_id: string | null
+          fabricante: string | null
+          fornecedor: string | null
+          garantia_ate: string | null
+          id: string
+          local_instalacao: string | null
+          mac_address: string | null
+          modelo: string | null
+          nota_fiscal: string | null
+          numero_serie: string | null
+          observacoes: string | null
+          os_vinculada: string | null
+          patrimonio: string | null
+          produto_id: string
+          status: Database["public"]["Enums"]["status_item"]
+          tecnico_atual_id: string | null
+          ultima_movimentacao_em: string
+          updated_at: string
+          valor_aquisicao: number | null
+        }[]
+      }
       confirmar_baixa_definitiva: {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined
