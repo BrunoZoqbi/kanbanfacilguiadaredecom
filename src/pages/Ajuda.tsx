@@ -34,7 +34,7 @@ const extrairTexto = (node: React.ReactNode): string => {
 
 // Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
-const ULTIMA_ATUALIZACAO = '05/07/2026';
+const ULTIMA_ATUALIZACAO = '09/07/2026';
 
 interface SecaoAjuda {
   id: string;
@@ -93,21 +93,32 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            <strong className="font-medium text-foreground">Fluxo do equipamento:</strong>{' '}
+            <strong className="font-medium text-foreground">Fluxo do equipamento (item serializado):</strong>{' '}
             Disponível (na sede) → Retirado por um técnico → Instalado no cliente → Recolhido
             (vira tarefa automaticamente) → Devolvido à sede → Em Análise (se com defeito) →
             Reparado ou Baixa definitiva.
+          </p>
+          <p>
+            <strong className="font-medium text-foreground">Fluxo do consumível</strong> (cabo,
+            conector e outros itens sem número de série): Entrada na sede → Retirar para Técnico →
+            Usar/Consumir (baixa o saldo do técnico) → Devolver à Sede (o que sobrou). O mesmo
+            padrão de custódia do equipamento, só que por quantidade em vez de unidade.
           </p>
           <div>
             <p className="font-medium text-foreground mb-1">Gestor Técnico</p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>Cadastra produtos e itens na aba "Cadastro".</li>
               <li>
-                Retira equipamento para técnico na aba "Disponível" (um selo "Estoque baixo"
-                aparece quando restam 2 unidades ou menos).
+                Retira equipamento ou consumível para um técnico na aba "Disponível" (um selo
+                "Estoque baixo" aparece quando restam 2 unidades ou menos). O campo de busca
+                encontra itens por série, patrimônio, MAC ou nome do cliente vinculado.
               </li>
               <li>Lança recolhimento — já cria a tarefa e move o item automaticamente.</li>
               <li>Decide reparo ou baixa na aba "Em Análise".</li>
+              <li>
+                A aba <strong className="font-medium text-foreground">"Visão Geral"</strong> mostra
+                o resumo quantitativo de todo o estoque por status, categoria e produto.
+              </li>
               <li>
                 O botão <strong className="font-medium text-foreground">"Exportar Relatório"</strong>{' '}
                 gera uma planilha Excel completa.
@@ -118,8 +129,12 @@ const Ajuda: React.FC = () => {
             <p className="font-medium text-foreground mb-1">Técnico</p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>Acompanha os equipamentos com você em "Meu Estoque".</li>
-              <li>Use "Instalar/Usar" ao instalar em um cliente.</li>
-              <li>Use "Devolver na Sede" ao devolver.</li>
+              <li>Use "Instalar/Usar" ao instalar um equipamento em um cliente.</li>
+              <li>Use "Devolver na Sede" ao devolver um equipamento.</li>
+              <li>
+                A seção "Consumíveis Comigo" lista o que você retirou — use "Usar/Consumir" ao
+                aplicar em campo, ou "Devolver à Sede" o que não usar.
+              </li>
             </ul>
           </div>
         </div>
@@ -146,6 +161,11 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista.
+          </li>
+          <li>
+            Toque numa prospecção já cadastrada para reabri-la: você pode consultar as respostas
+            do checklist com a pontuação de cada uma (somente leitura — o checklist em si não pode
+            ser refeito, para não recalcular a pontuação) e editar os dados de contato e o status.
           </li>
         </ul>
       ),
@@ -207,6 +227,24 @@ const Ajuda: React.FC = () => {
           <li>
             Para trocar a senha, informe a senha atual e a nova senha — por segurança, e-mail e
             papel não podem ser alterados por aqui (fale com o administrador).
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'dashboard',
+      titulo: 'Dashboard (Admin)',
+      visivelPara: () => isAdmin,
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Painel consolidado com abas para Tarefas, Estoque, Prospecção e Tickets — um resumo
+            executivo de cada módulo, sem precisar entrar em cada tela separadamente.
+          </li>
+          <li>
+            A aba "Tarefas" mantém o detalhamento completo (ranking por usuário, taxa de
+            conclusão no prazo, exportação em PDF/Excel). As demais abas mostram só os números
+            principais — o detalhamento continua na tela própria de cada módulo.
           </li>
         </ul>
       ),
