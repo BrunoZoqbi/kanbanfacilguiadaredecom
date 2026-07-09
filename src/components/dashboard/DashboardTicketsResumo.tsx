@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTicketStats } from '@/hooks/useTicketStats';
 import { StatusTicket, STATUS_TICKET_LABELS } from '@/types/tickets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import TicketsStatusBarChart, { buildTicketsStatusChartData } from '@/components/tickets/TicketsStatusBarChart';
 
 const DashboardTicketsResumo: React.FC = () => {
   const { stats, isLoading } = useTicketStats();
+
+  const statusChartData = useMemo(() => buildTicketsStatusChartData(stats), [stats]);
 
   if (isLoading) {
     return (
@@ -16,15 +19,19 @@ const DashboardTicketsResumo: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-      {(Object.keys(STATUS_TICKET_LABELS) as StatusTicket[]).map((status) => (
-        <Card key={status}>
-          <CardContent className="pt-6">
-            <div className="text-muted-foreground text-sm mb-1">{STATUS_TICKET_LABELS[status]}</div>
-            <p className="text-2xl font-bold">{stats.porStatus[status]}</p>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {(Object.keys(STATUS_TICKET_LABELS) as StatusTicket[]).map((status) => (
+          <Card key={status}>
+            <CardContent className="pt-6">
+              <div className="text-muted-foreground text-sm mb-1">{STATUS_TICKET_LABELS[status]}</div>
+              <p className="text-2xl font-bold">{stats.porStatus[status]}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <TicketsStatusBarChart data={statusChartData} />
     </div>
   );
 };
