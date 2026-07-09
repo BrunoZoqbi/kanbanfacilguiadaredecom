@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
+import { useConsumivelSaldoTecnico } from '@/hooks/useConsumivelSaldoTecnico';
 import { Produto } from '@/types/estoque';
 import {
   Dialog,
@@ -12,24 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, PackageMinus } from 'lucide-react';
+import { Loader2, Undo2 } from 'lucide-react';
 
-interface LancarSaidaDialogProps {
+interface DevolverConsumivelSedeDialogProps {
   produto: Produto;
-  estoqueId: string;
   saldoAtual: number;
   open: boolean;
   onClose: () => void;
 }
 
-const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
+const DevolverConsumivelSedeDialog: React.FC<DevolverConsumivelSedeDialogProps> = ({
   produto,
-  estoqueId,
   saldoAtual,
   open,
   onClose,
 }) => {
-  const { lancarSaida } = useEstoqueSaldo(estoqueId);
+  const { devolverSede } = useConsumivelSaldoTecnico();
   const [quantidade, setQuantidade] = useState('');
   const [observacao, setObservacao] = useState('');
   const [erro, setErro] = useState('');
@@ -49,16 +47,15 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
     }
 
     try {
-      await lancarSaida.mutateAsync({
+      await devolverSede.mutateAsync({
         produtoId: produto.id,
-        estoqueId,
         quantidade: valor,
         observacao: observacao.trim() || undefined,
       });
       handleClose();
     } catch (error: any) {
-      // Mensagem da própria RPC (ex: saldo insuficiente) — mantém o dialog
-      // aberto com o erro visível, em vez de fechar como se tivesse dado certo.
+      // Mensagem da própria RPC (ex: saldo insuficiente com você) — mantém o
+      // dialog aberto com o erro visível.
       setErro(error.message);
     }
   };
@@ -68,27 +65,23 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <PackageMinus className="h-5 w-5" />
-            Lançar Saída
+            <Undo2 className="h-5 w-5" />
+            Devolver à Sede
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground space-y-1">
+          <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{produto.nome}</p>
             <p>
-              {produto.categoria} · Saldo atual: {saldoAtual} {produto.unidade_medida || 'un'}
-            </p>
-            <p>
-              Use apenas para baixa direta da sede (perda, dano, descarte) sem passar por um
-              técnico. Para enviar consumível com um técnico, use "Retirar para Técnico".
+              {produto.categoria} · Com você: {saldoAtual} {produto.unidade_medida || 'un'}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="saida-quantidade">Quantidade *</Label>
+            <Label htmlFor="devolver-consumivel-quantidade">Quantidade *</Label>
             <Input
-              id="saida-quantidade"
+              id="devolver-consumivel-quantidade"
               type="number"
               min="1"
               step="1"
@@ -103,12 +96,12 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="saida-observacao">Observação (opcional)</Label>
+            <Label htmlFor="devolver-consumivel-observacao">Observação (opcional)</Label>
             <Textarea
-              id="saida-observacao"
+              id="devolver-consumivel-observacao"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Ex: instalação cliente João Silva, OS #1234"
+              placeholder="Detalhes sobre a devolução..."
               className="min-h-[70px]"
             />
           </div>
@@ -121,10 +114,10 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
           <Button
             className="h-11 sm:h-10"
             onClick={handleConfirm}
-            disabled={lancarSaida.isPending}
+            disabled={devolverSede.isPending}
           >
-            {lancarSaida.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Confirmar Saída
+            {devolverSede.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Confirmar Devolução
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -132,4 +125,4 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
   );
 };
 
-export default LancarSaidaDialog;
+export default DevolverConsumivelSedeDialog;
