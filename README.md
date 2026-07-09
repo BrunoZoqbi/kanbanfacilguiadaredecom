@@ -7,10 +7,11 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equip
 ## Módulos
 
 - **Tarefas (Kanban)** — quadro de tarefas com anexos (PDF/JPEG/PNG), checklist, comentários, tags e tipos configuráveis.
-- **Estoque** — rastreamento individual de equipamentos (nº de série, MAC, patrimônio). Ciclo completo: Disponível → Retirada → Instalação → Recolhimento → Devolução → Análise/Baixa. Alerta de estoque baixo e exportação para Excel.
-- **Prospecção Comercial** — cadastro de leads com checklist de pontuação e classificação automática (baixa/média/alta). Prospecções "Alta" geram tarefa automática no Kanban.
+- **Estoque** — rastreamento individual de equipamentos (nº de série, MAC, patrimônio): Disponível → Retirada → Instalação → Recolhimento → Devolução → Análise/Baixa. Consumíveis (cabos, conectores etc.) seguem o mesmo padrão de custódia usado nos equipamentos: Entrada na sede → Retirar para Técnico → Usar/Consumir → Devolver à Sede. Aba "Visão Geral" com resumo quantitativo por status, categoria e produto. Admin edita produtos e categorias já cadastrados (antes só era possível desativar). Alerta de estoque baixo, busca com paginação na lista de itens disponíveis, e exportação para Excel.
+- **Prospecção Comercial** — cadastro de leads com checklist de pontuação e classificação automática (baixa/média/alta). Prospecções "Alta" geram tarefa automática no Kanban. Uma prospecção já cadastrada pode ser reaberta para consultar as respostas do checklist (com pontuação individual, somente leitura) e editar os dados de contato e o status.
 - **Tickets** — atendimento de suporte com respostas ao cliente, notas internas privadas, e portal público de consulta (sem login), protegido contra força bruta.
 - **Scripts de Atendimento** — biblioteca de textos prontos por setor (Comercial, Financeiro, Atendimento Geral), organizados por categoria, com busca e cópia rápida. Edição restrita ao Admin, na aba "Gerenciar".
+- **Dashboard** (Admin) — painel consolidado com um resumo executivo de cada módulo (Tarefas, Estoque, Prospecção e Tickets) reunido em abas numa única tela.
 - **Meu Perfil** — cada usuário edita o próprio nome e WhatsApp, e troca a própria senha (informando a atual).
 
 ## Papéis do sistema
@@ -46,10 +47,12 @@ npm run dev
 Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - **Núcleo:** profiles, user_roles
 - **Tarefas:** tasks, task_tags, task_comments, task_checklist_items, task_attachments, task_types, activity_logs
-- **Estoque:** produtos, categorias_produto, estoques, itens_serializados, estoque_saldo, movimentacoes_estoque
+- **Estoque:** produtos, categorias_produto, estoques, itens_serializados, estoque_saldo, consumivel_saldo_tecnico, movimentacoes_estoque
 - **Prospecção:** prospeccoes, prospeccoes_respostas
 - **Tickets:** tickets, ticket_respostas, ticket_notas_internas, ticket_consulta_tentativas
 - **Scripts de Atendimento:** scripts_atendimento
+
+Principais RPCs de Estoque: `lancar_entrada_consumivel`, `lancar_saida_consumivel`, `retirar_consumivel_para_tecnico`, `lancar_uso_consumivel`, `devolver_consumivel_sede` (ciclo de consumíveis), `resumo_estoque_por_status` (painel "Visão Geral" / Dashboard) e `buscar_itens_serializados_disponiveis` (busca + paginação server-side).
 
 ## Segurança
 
@@ -58,6 +61,11 @@ Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - Portal público de tickets com limite de tentativas (anti força-bruta) e minimização de dados pessoais.
 - Funções sensíveis de estoque e usuários rodam como RPC com validação de permissão própria (SECURITY DEFINER).
 - Admin pode editar o e-mail e redefinir a senha de qualquer usuário, via edge functions dedicadas (`update-user-email`, `reset-user-password`) que validam o papel de quem chama no servidor antes de agir.
+
+## Confiabilidade
+
+- Error Boundary global (React) captura erros não tratados em qualquer componente e mostra uma mensagem amigável com botão de recarregar, em vez de deixar a tela em branco.
+- O formulário de criação de tarefa salva um rascunho automático em `sessionStorage` (título, descrição e demais campos preenchidos) a cada alteração, recuperado automaticamente se a aba for reaberta na mesma sessão.
 
 ## Scripts disponíveis
 
