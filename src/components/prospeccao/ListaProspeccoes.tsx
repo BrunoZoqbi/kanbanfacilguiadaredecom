@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { format } from 'date-fns';
+import React, { useMemo, useState } from 'react';
+import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProspeccoes } from '@/hooks/useProspeccoes';
 import { useProspeccaoStats } from '@/hooks/useProspeccaoStats';
 import {
   CLASSIFICACAO_BADGE_CLASSES,
+  CLASSIFICACAO_CHART_COLORS,
   CLASSIFICACAO_LABELS,
   ClassificacaoProspeccao,
   STATUS_PROSPECCAO_LABELS,
@@ -14,6 +16,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 import {
   Select,
   SelectContent,
@@ -29,9 +39,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, TrendingUp, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, TrendingUp, Users, AlertCircle, CheckCircle2, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProspeccaoDetailModal from './ProspeccaoDetailModal';
+
+const CLASSIFICACAO_CHART_CONFIG: ChartConfig = {
+  baixa: { label: CLASSIFICACAO_LABELS.baixa, color: CLASSIFICACAO_CHART_COLORS.baixa },
+  media: { label: CLASSIFICACAO_LABELS.media, color: CLASSIFICACAO_CHART_COLORS.media },
+  alta: { label: CLASSIFICACAO_LABELS.alta, color: CLASSIFICACAO_CHART_COLORS.alta },
+};
+
+const SEMANAL_CHART_CONFIG: ChartConfig = {
+  quantidade: { label: 'Prospecções', color: 'hsl(var(--primary))' },
+};
 
 const ListaProspeccoes: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -42,6 +62,38 @@ const ListaProspeccoes: React.FC = () => {
   const [selectedProspeccaoId, setSelectedProspeccaoId] = useState<string | null>(null);
 
   const { stats: metrics } = useProspeccaoStats();
+
+  const classificacaoChartData = useMemo(
+    () =>
+      (['baixa', 'media', 'alta'] as ClassificacaoProspeccao[])
+        .map((classificacao) => ({
+          classificacao,
+          value: metrics[classificacao],
+          fill: CLASSIFICACAO_CHART_COLORS[classificacao],
+        }))
+        .filter((entry) => entry.value > 0),
+    [metrics]
+  );
+
+  // Últimas 8 semanas (segunda a domingo) — calculado a partir da lista já
+  // carregada no cliente (useProspeccoes não pagina), sem precisar de RPC
+  // nova.
+  const prospeccoesPorSemana = useMemo(() => {
+    const hoje = new Date();
+    const semanas = Array.from({ length: 8 }, (_, i) => {
+      const inicio = startOfWeek(subWeeks(hoje, 7 - i), { weekStartsOn: 1 });
+      const fim = endOfWeek(inicio, { weekStartsOn: 1 });
+      return { inicio, fim, semana: format(inicio, 'dd/MM', { locale: ptBR }) };
+    });
+
+    return semanas.map(({ inicio, fim, semana }) => ({
+      semana,
+      quantidade: prospeccoes.filter((p) => {
+        const criadaEm = new Date(p.created_at);
+        return criadaEm >= inicio && criadaEm <= fim;
+      }).length,
+    }));
+  }, [prospeccoes]);
 
   const filteredProspeccoes = prospeccoes.filter((p) => {
     if (classificacaoFiltro && p.classificacao !== classificacaoFiltro) return false;
@@ -98,6 +150,62 @@ const ListaProspeccoes: React.FC = () => {
               Taxa de Conversão
             </div>
             <p className="text-2xl font-bold">{metrics.taxaConversao}%</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {classificacaoChartData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <PieChartIcon className="h-4 w-4" />
+                Distribuição por Classificação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={CLASSIFICACAO_CHART_CONFIG}
+                className="mx-auto aspect-square max-h-[240px]"
+              >
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent nameKey="classificacao" hideLabel />} />
+                  <Pie
+                    data={classificacaoChartData}
+                    dataKey="value"
+                    nameKey="classificacao"
+                    innerRadius={50}
+                    strokeWidth={2}
+                  >
+                    {classificacaoChartData.map((entry) => (
+                      <Cell key={entry.classificacao} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartLegend content={<ChartLegendContent nameKey="classificacao" />} />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Prospecções por Semana (últimas 8 semanas)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={SEMANAL_CHART_CONFIG} className="w-full max-h-[240px]">
+              <BarChart data={prospeccoesPorSemana}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="semana" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="quantidade" fill="var(--color-quantidade)" radius={4} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

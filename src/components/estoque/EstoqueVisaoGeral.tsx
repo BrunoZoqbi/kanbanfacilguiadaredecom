@@ -1,6 +1,15 @@
 import React, { useMemo } from 'react';
+import { Pie, PieChart, Cell } from 'recharts';
 import { useResumoEstoque } from '@/hooks/useResumoEstoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 import {
   Accordion,
   AccordionContent,
@@ -15,7 +24,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, PackageCheck, PackageX, Boxes } from 'lucide-react';
+import { Loader2, PackageCheck, PackageX, Boxes, PieChart as PieChartIcon } from 'lucide-react';
+import { StatusItem, STATUS_ITEM_LABELS, STATUS_ITEM_CHART_COLORS } from '@/types/estoque';
+
+const STATUS_CHART_CONFIG: ChartConfig = (
+  Object.keys(STATUS_ITEM_LABELS) as StatusItem[]
+).reduce((config, status) => {
+  config[status] = { label: STATUS_ITEM_LABELS[status], color: STATUS_ITEM_CHART_COLORS[status] };
+  return config;
+}, {} as ChartConfig);
 
 const EstoqueVisaoGeral: React.FC = () => {
   const { data, isLoading } = useResumoEstoque();
@@ -32,6 +49,32 @@ const EstoqueVisaoGeral: React.FC = () => {
       },
       { totalAtivos: 0, totalBaixados: 0 }
     );
+  }, [serializados]);
+
+  // Soma de todas as categorias/produtos — o detalhamento por categoria já
+  // existe no accordion abaixo, este gráfico é só a visão geral por status.
+  const statusChartData = useMemo(() => {
+    const totals: Record<StatusItem, number> = {
+      disponivel: 0,
+      com_tecnico: 0,
+      instalado_cliente: 0,
+      analise_defeito: 0,
+      baixado: 0,
+    };
+    serializados.forEach((item) => {
+      totals.disponivel += item.disponivel;
+      totals.com_tecnico += item.com_tecnico;
+      totals.instalado_cliente += item.instalado_cliente;
+      totals.analise_defeito += item.analise_defeito;
+      totals.baixado += item.baixado;
+    });
+    return (Object.keys(totals) as StatusItem[])
+      .map((status) => ({
+        status,
+        value: totals[status],
+        fill: STATUS_ITEM_CHART_COLORS[status],
+      }))
+      .filter((entry) => entry.value > 0);
   }, [serializados]);
 
   const categorias = useMemo(() => {
@@ -78,6 +121,30 @@ const EstoqueVisaoGeral: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {statusChartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5" />
+              Itens serializados por status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={STATUS_CHART_CONFIG} className="mx-auto aspect-square max-h-[280px]">
+              <PieChart>
+                <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+                <Pie data={statusChartData} dataKey="value" nameKey="status" innerRadius={55} strokeWidth={2}>
+                  {statusChartData.map((entry) => (
+                    <Cell key={entry.status} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
