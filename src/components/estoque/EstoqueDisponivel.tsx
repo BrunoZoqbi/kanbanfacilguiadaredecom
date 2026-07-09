@@ -31,6 +31,7 @@ import RetirarParaTecnicoDialog from './RetirarParaTecnicoDialog';
 import DarBaixaDialog from './DarBaixaDialog';
 import LancarEntradaDialog from './LancarEntradaDialog';
 import LancarSaidaDialog from './LancarSaidaDialog';
+import RetirarConsumivelParaTecnicoDialog from './RetirarConsumivelParaTecnicoDialog';
 
 const LIMITE_ESTOQUE_BAIXO = 2;
 
@@ -52,6 +53,7 @@ const EstoqueDisponivel: React.FC = () => {
   const [baixaItem, setBaixaItem] = useState<ItemSerializadoWithRelations | null>(null);
   const [entradaProduto, setEntradaProduto] = useState<Produto | null>(null);
   const [saidaProduto, setSaidaProduto] = useState<Produto | null>(null);
+  const [retirarConsumivelProduto, setRetirarConsumivelProduto] = useState<Produto | null>(null);
 
   const itensDisponiveis = useMemo(
     () => itens.filter((item) => item.status === 'disponivel'),
@@ -260,6 +262,16 @@ const EstoqueDisponivel: React.FC = () => {
                         Lançar Entrada
                       </Button>
                     )}
+                    {canRetirar && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRetirarConsumivelProduto(produto)}
+                      >
+                        <UserCog className="h-4 w-4 mr-1" />
+                        Retirar para Técnico
+                      </Button>
+                    )}
                     {canLancarEntrada && (
                       <Button
                         variant="outline"
@@ -316,6 +328,17 @@ const EstoqueDisponivel: React.FC = () => {
           saldoAtual={saldoConsumiveis.find((s) => s.produto.id === saidaProduto.id)?.quantidade ?? 0}
           open={!!saidaProduto}
           onClose={() => setSaidaProduto(null)}
+        />
+      )}
+
+      {retirarConsumivelProduto && (
+        <RetirarConsumivelParaTecnicoDialog
+          produto={retirarConsumivelProduto}
+          saldoAtual={
+            saldoConsumiveis.find((s) => s.produto.id === retirarConsumivelProduto.id)?.quantidade ?? 0
+          }
+          open={!!retirarConsumivelProduto}
+          onClose={() => setRetirarConsumivelProduto(null)}
         />
       )}
     </div>

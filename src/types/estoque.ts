@@ -15,7 +15,8 @@ export type TipoMovimentoEstoque =
   | 'recolhimento'
   | 'devolucao_sede'
   | 'baixa_defeito'
-  | 'descarte';
+  | 'descarte'
+  | 'saida_consumo';
 
 export interface Produto {
   id: string;
@@ -75,6 +76,18 @@ export interface EstoqueSaldo {
 }
 
 export interface EstoqueSaldoWithProduto extends EstoqueSaldo {
+  produto?: Produto;
+}
+
+export interface ConsumivelSaldoTecnico {
+  id: string;
+  tecnico_id: string;
+  produto_id: string;
+  quantidade: number;
+  updated_at: string;
+}
+
+export interface ConsumivelSaldoTecnicoWithProduto extends ConsumivelSaldoTecnico {
   produto?: Produto;
 }
 

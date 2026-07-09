@@ -65,6 +65,38 @@ export type Database = {
         }
         Relationships: []
       }
+      consumivel_saldo_tecnico: {
+        Row: {
+          id: string
+          produto_id: string
+          quantidade: number
+          tecnico_id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          produto_id: string
+          quantidade?: number
+          tecnico_id: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          produto_id?: string
+          quantidade?: number
+          tecnico_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumivel_saldo_tecnico_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estoque_saldo: {
         Row: {
           estoque_id: string
@@ -902,6 +934,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      devolver_consumivel_sede: {
+        Args: { p_observacao?: string; p_produto_id: string; p_quantidade: number }
+        Returns: undefined
+      }
       devolver_sede: {
         Args: { p_item_id: string; p_observacao?: string }
         Returns: undefined
@@ -958,8 +994,21 @@ export type Database = {
         }
         Returns: string
       }
+      lancar_uso_consumivel: {
+        Args: { p_observacao?: string; p_produto_id: string; p_quantidade: number }
+        Returns: undefined
+      }
       reparo_concluido: {
         Args: { p_item_id: string; p_observacao?: string }
+        Returns: undefined
+      }
+      retirar_consumivel_para_tecnico: {
+        Args: {
+          p_observacao?: string
+          p_produto_id: string
+          p_quantidade: number
+          p_tecnico_id: string
+        }
         Returns: undefined
       }
       retirar_para_tecnico: {

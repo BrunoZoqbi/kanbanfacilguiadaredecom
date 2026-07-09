@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useEstoqueSaldo } from '@/hooks/useEstoqueSaldo';
+import { useProfiles } from '@/hooks/useProfiles';
+import { useConsumivelSaldoTecnico } from '@/hooks/useConsumivelSaldoTecnico';
 import { Produto } from '@/types/estoque';
 import {
   Dialog,
@@ -12,29 +13,37 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, PackageMinus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2, UserCog } from 'lucide-react';
 
-interface LancarSaidaDialogProps {
+interface RetirarConsumivelParaTecnicoDialogProps {
   produto: Produto;
-  estoqueId: string;
   saldoAtual: number;
   open: boolean;
   onClose: () => void;
 }
 
-const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
+const RetirarConsumivelParaTecnicoDialog: React.FC<RetirarConsumivelParaTecnicoDialogProps> = ({
   produto,
-  estoqueId,
   saldoAtual,
   open,
   onClose,
 }) => {
-  const { lancarSaida } = useEstoqueSaldo(estoqueId);
+  const { data: profiles = [] } = useProfiles();
+  const { retirarParaTecnico } = useConsumivelSaldoTecnico();
+  const [tecnicoId, setTecnicoId] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [observacao, setObservacao] = useState('');
   const [erro, setErro] = useState('');
 
   const handleClose = () => {
+    setTecnicoId('');
     setQuantidade('');
     setObservacao('');
     setErro('');
@@ -42,6 +51,8 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
   };
 
   const handleConfirm = async () => {
+    if (!tecnicoId) return;
+
     const valor = Number(quantidade);
     if (!quantidade.trim() || !Number.isFinite(valor) || valor <= 0) {
       setErro('Informe uma quantidade válida, maior que zero.');
@@ -49,16 +60,16 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
     }
 
     try {
-      await lancarSaida.mutateAsync({
+      await retirarParaTecnico.mutateAsync({
         produtoId: produto.id,
-        estoqueId,
+        tecnicoId,
         quantidade: valor,
         observacao: observacao.trim() || undefined,
       });
       handleClose();
     } catch (error: any) {
-      // Mensagem da própria RPC (ex: saldo insuficiente) — mantém o dialog
-      // aberto com o erro visível, em vez de fechar como se tivesse dado certo.
+      // Mensagem da própria RPC (ex: saldo insuficiente na sede) — mantém o
+      // dialog aberto com o erro visível.
       setErro(error.message);
     }
   };
@@ -68,27 +79,39 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <PackageMinus className="h-5 w-5" />
-            Lançar Saída
+            <UserCog className="h-5 w-5" />
+            Retirar para Técnico
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground space-y-1">
+          <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{produto.nome}</p>
             <p>
-              {produto.categoria} · Saldo atual: {saldoAtual} {produto.unidade_medida || 'un'}
-            </p>
-            <p>
-              Use apenas para baixa direta da sede (perda, dano, descarte) sem passar por um
-              técnico. Para enviar consumível com um técnico, use "Retirar para Técnico".
+              {produto.categoria} · Saldo na sede: {saldoAtual} {produto.unidade_medida || 'un'}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="saida-quantidade">Quantidade *</Label>
+            <Label htmlFor="retirar-consumivel-tecnico">Técnico</Label>
+            <Select value={tecnicoId} onValueChange={setTecnicoId}>
+              <SelectTrigger id="retirar-consumivel-tecnico">
+                <SelectValue placeholder="Selecione o técnico..." />
+              </SelectTrigger>
+              <SelectContent>
+                {profiles.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="retirar-consumivel-quantidade">Quantidade *</Label>
             <Input
-              id="saida-quantidade"
+              id="retirar-consumivel-quantidade"
               type="number"
               min="1"
               step="1"
@@ -103,12 +126,12 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="saida-observacao">Observação (opcional)</Label>
+            <Label htmlFor="retirar-consumivel-observacao">Observação (opcional)</Label>
             <Textarea
-              id="saida-observacao"
+              id="retirar-consumivel-observacao"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Ex: instalação cliente João Silva, OS #1234"
+              placeholder="Detalhes sobre a retirada..."
               className="min-h-[70px]"
             />
           </div>
@@ -121,10 +144,10 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
           <Button
             className="h-11 sm:h-10"
             onClick={handleConfirm}
-            disabled={lancarSaida.isPending}
+            disabled={!tecnicoId || retirarParaTecnico.isPending}
           >
-            {lancarSaida.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Confirmar Saída
+            {retirarParaTecnico.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Confirmar Retirada
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -132,4 +155,4 @@ const LancarSaidaDialog: React.FC<LancarSaidaDialogProps> = ({
   );
 };
 
-export default LancarSaidaDialog;
+export default RetirarConsumivelParaTecnicoDialog;
