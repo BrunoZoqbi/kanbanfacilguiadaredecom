@@ -30,9 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { getFileIcon } from './FileUploadZone';
-import { ArrowLeft, Save, Upload, X, Paperclip, ListChecks, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Paperclip, ListChecks, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -50,6 +49,41 @@ const taskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
+// sessionStorage (não localStorage — o rascunho é descartável e não deve
+// sobreviver entre sessões/abas diferentes) para não perder o que já foi
+// digitado se o formulário travar ou a aba for fechada por acidente.
+const DRAFT_STORAGE_KEY = 'kanban-create-task-draft';
+
+interface TaskDraft extends Partial<TaskFormValues> {
+  checklistItems?: string[];
+}
+
+const loadDraft = (): TaskDraft | null => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as TaskDraft) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveDraft = (draft: TaskDraft) => {
+  try {
+    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch {
+    // sessionStorage indisponível (modo privado, quota cheia) — o rascunho é
+    // só uma conveniência, não deve quebrar o formulário.
+  }
+};
+
+const clearDraft = () => {
+  try {
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // ver comentário em saveDraft
+  }
+};
+
 const CreateTaskForm: React.FC = () => {
   const navigate = useNavigate();
   const { profiles, tags, createTask, isLoading } = useTasks();
@@ -59,6 +93,10 @@ const CreateTaskForm: React.FC = () => {
   const queryClient = useQueryClient();
   const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
   const [isSavingExtras, setIsSavingExtras] = useState(false);
+
+  // Lido uma única vez, na montagem — não a cada render, para não sobrescrever
+  // o que o próprio usuário já digitou nesta sessão do formulário.
+  const [draft] = useState(() => loadDraft());
 
   // Gestor técnico sees every profile except admins (checked via the
   // has_role RPC, since user_roles RLS only lets a non-admin read their own
@@ -111,7 +149,7 @@ const CreateTaskForm: React.FC = () => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [checklistItems, setChecklistItems] = useState<string[]>(() => draft?.checklistItems ?? []);
   const [newChecklistItemText, setNewChecklistItemText] = useState('');
 
   const addChecklistItemLocal = () => {
@@ -128,17 +166,34 @@ const CreateTaskForm: React.FC = () => {
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      assignee_id: user?.id || '',
-      task_type: 'one_time',
-      priority: 'medium',
-      due_date: '',
-      scheduled_date: '',
-      location: '',
-      tag_ids: [],
+      title: draft?.title ?? '',
+      description: draft?.description ?? '',
+      assignee_id: draft?.assignee_id ?? user?.id ?? '',
+      task_type: draft?.task_type ?? 'one_time',
+      priority: draft?.priority ?? 'medium',
+      due_date: draft?.due_date ?? '',
+      scheduled_date: draft?.scheduled_date ?? '',
+      location: draft?.location ?? '',
+      tag_ids: draft?.tag_ids ?? [],
     },
   });
+
+  useEffect(() => {
+    if (draft && (draft.title || draft.description)) {
+      toast.info('Rascunho recuperado desta sessão.');
+    }
+    // Só na montagem — restaurar o rascunho não deve repetir o aviso a cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave do rascunho a cada mudança relevante do formulário, para não
+  // perder o que já foi digitado se a página travar ou for fechada.
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      saveDraft({ ...values, checklistItems });
+    });
+    return () => subscription.unsubscribe();
+  }, [form, checklistItems]);
 
   const onSubmit = async (values: TaskFormValues) => {
     const task = await createTask.mutateAsync({
@@ -191,6 +246,7 @@ const CreateTaskForm: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     }
 
+    clearDraft();
     navigate('/');
   };
 
@@ -387,6 +443,7 @@ const CreateTaskForm: React.FC = () => {
                           <button
                             key={tag.id}
                             type="button"
+                            aria-pressed={isSelected}
                             onClick={() => {
                               const newValue = isSelected
                                 ? field.value?.filter((id) => id !== tag.id)
@@ -404,7 +461,24 @@ const CreateTaskForm: React.FC = () => {
                               color: tag.color,
                             }}
                           >
-                            <Checkbox checked={isSelected} className="pointer-events-none" />
+                            {/* Indicador puramente visual — nunca um Checkbox interativo real
+                                aqui. O Radix Checkbox monta um <input> nativo oculto que
+                                sincroniza via um evento "click" que faz bubble no DOM; aninhado
+                                dentro deste <button> (que já trata o clique sozinho), esse
+                                evento re-disparava o onClick do próprio botão e alternava a
+                                seleção da tag infinitamente, travando a tela. */}
+                            <span
+                              aria-hidden="true"
+                              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
+                                isSelected ? '' : 'bg-transparent'
+                              }`}
+                              style={{
+                                borderColor: tag.color,
+                                backgroundColor: isSelected ? tag.color : 'transparent',
+                              }}
+                            >
+                              {isSelected && <Check className="h-3 w-3 text-white" />}
+                            </span>
                             {tag.name}
                           </button>
                         );
