@@ -1,9 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEstoqueGeral } from './useEstoqueGeral';
-import { CondicaoItem, ItemSerializadoWithRelations } from '@/types/estoque';
+import { useProdutos } from './useProdutos';
+import { CondicaoItem, ItemSerializado, ItemSerializadoWithRelations } from '@/types/estoque';
 import { toast } from 'sonner';
+
+const PAGE_SIZE = 20;
 
 interface CreateItemInput {
   produto_id: string;
@@ -42,6 +46,9 @@ export const useItensSerializados = () => {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['itens-serializados'] });
+    // Prefixo — invalida todas as combinações de busca/categoria/produto em
+    // cache da lista paginada (useItensSerializadosDisponiveis) também.
+    queryClient.invalidateQueries({ queryKey: ['itens-serializados-disponiveis'] });
     queryClient.invalidateQueries({ queryKey: ['movimentacoes-estoque'] });
   };
 
@@ -264,4 +271,63 @@ export const useItensSerializados = () => {
     voltarDisponivel,
     confirmarBaixado,
   };
+};
+
+interface UseItensSerializadosDisponiveisOptions {
+  search?: string;
+  categoria?: string;
+  produtoId?: string;
+}
+
+// Lista "Itens Serializados Disponíveis" (EstoqueDisponivel.tsx) — a única
+// tela que lista itens_serializados sem um filtro estreito de status
+// (disponível pode ser um estoque grande). Busca + paginação rodam no banco
+// via RPC (buscar_itens_serializados_disponiveis), em vez de carregar tudo e
+// filtrar no cliente como o useItensSerializados() acima faz para as outras
+// telas (Meu Estoque, Em Análise, Por Técnico — pequenas o suficiente).
+export const useItensSerializadosDisponiveis = ({
+  search = '',
+  categoria = '',
+  produtoId = '',
+}: UseItensSerializadosDisponiveisOptions = {}) => {
+  const { user } = useAuth();
+  const { produtos } = useProdutos();
+
+  const query = useInfiniteQuery({
+    queryKey: ['itens-serializados-disponiveis', search, categoria, produtoId],
+    queryFn: async ({ pageParam }) => {
+      const { data, error } = await supabase.rpc('buscar_itens_serializados_disponiveis', {
+        p_search: search.trim() || undefined,
+        p_categoria: categoria || undefined,
+        p_produto_id: produtoId || undefined,
+        p_limit: PAGE_SIZE,
+        p_offset: pageParam,
+      });
+
+      if (error) throw error;
+
+      const itensPagina = (data || []) as ItemSerializado[];
+      return {
+        itens: itensPagina,
+        nextOffset: itensPagina.length === PAGE_SIZE ? pageParam + PAGE_SIZE : undefined,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    enabled: !!user,
+  });
+
+  // Produtos já ficam todos em cache local (useProdutos) — mais simples
+  // resolver o relacionamento aqui do que fazer o RPC devolver o join.
+  const itens = useMemo<ItemSerializadoWithRelations[]>(() => {
+    const paginas = query.data?.pages ?? [];
+    return paginas.flatMap((pagina) =>
+      pagina.itens.map((item) => ({
+        ...item,
+        produto: produtos.find((p) => p.id === item.produto_id),
+      }))
+    );
+  }, [query.data, produtos]);
+
+  return { ...query, itens };
 };
