@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTickets } from '@/hooks/useTickets';
@@ -12,17 +11,10 @@ import {
   PRIORIDADE_TICKET_LABELS,
   StatusTicket,
   STATUS_TICKET_BADGE_CLASSES,
-  STATUS_TICKET_CHART_COLORS,
   STATUS_TICKET_LABELS,
 } from '@/types/tickets';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
 import {
   Select,
   SelectContent,
@@ -38,17 +30,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { BarChart3, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateTicketDialog from './CreateTicketDialog';
 import TicketDetailModal from './TicketDetailModal';
-
-const STATUS_CHART_CONFIG: ChartConfig = (
-  Object.keys(STATUS_TICKET_LABELS) as StatusTicket[]
-).reduce((config, status) => {
-  config[status] = { label: STATUS_TICKET_LABELS[status], color: STATUS_TICKET_CHART_COLORS[status] };
-  return config;
-}, {} as ChartConfig);
+import TicketsStatusBarChart, { buildTicketsStatusChartData } from './TicketsStatusBarChart';
 
 const TicketList: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -56,16 +42,7 @@ const TicketList: React.FC = () => {
   const { data: profiles = [] } = useProfiles();
   const { stats } = useTicketStats();
 
-  const statusChartData = useMemo(
-    () =>
-      (Object.keys(STATUS_TICKET_LABELS) as StatusTicket[]).map((status) => ({
-        status,
-        label: STATUS_TICKET_LABELS[status],
-        value: stats.porStatus[status],
-        fill: STATUS_TICKET_CHART_COLORS[status],
-      })),
-    [stats]
-  );
+  const statusChartData = useMemo(() => buildTicketsStatusChartData(stats), [stats]);
 
   const [statusFiltro, setStatusFiltro] = useState('');
   const [prioridadeFiltro, setPrioridadeFiltro] = useState('');
@@ -101,39 +78,7 @@ const TicketList: React.FC = () => {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Chamados por Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Barras horizontais — labels de status são longos (ex: "Aguardando
-              cliente") e cabem melhor no eixo Y em telas estreitas do que
-              rotacionados no eixo X. */}
-          <ChartContainer config={STATUS_CHART_CONFIG} className="w-full max-h-[260px]">
-            <BarChart data={statusChartData} layout="vertical" margin={{ left: 8 }}>
-              <CartesianGrid horizontal={false} />
-              <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
-              <YAxis
-                type="category"
-                dataKey="status"
-                tickLine={false}
-                axisLine={false}
-                width={110}
-                tickFormatter={(status: StatusTicket) => STATUS_TICKET_LABELS[status]}
-              />
-              <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
-              <Bar dataKey="value" radius={4}>
-                {statusChartData.map((entry) => (
-                  <Cell key={entry.status} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+      <TicketsStatusBarChart data={statusChartData} />
 
       <Card>
         <CardContent className="pt-6">
