@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BarChart3,
   CheckCircle2,
@@ -23,8 +24,14 @@ import {
   ListTodo,
   FileDown,
   FileSpreadsheet,
+  Boxes,
+  Target,
+  Ticket as TicketIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import DashboardEstoqueResumo from './DashboardEstoqueResumo';
+import DashboardProspeccaoResumo from './DashboardProspeccaoResumo';
+import DashboardTicketsResumo from './DashboardTicketsResumo';
 
 const AdminDashboard: React.FC = () => {
   const { tasks, profiles, isLoading } = useTasks();
@@ -155,9 +162,31 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <h2 className="text-2xl font-bold font-display">Dashboard</h2>
+
+      <Tabs defaultValue="tarefas">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="tarefas" className="flex items-center gap-2">
+            <ListTodo className="h-4 w-4" />
+            Tarefas
+          </TabsTrigger>
+          <TabsTrigger value="estoque" className="flex items-center gap-2">
+            <Boxes className="h-4 w-4" />
+            Estoque
+          </TabsTrigger>
+          <TabsTrigger value="prospeccao" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Prospecção
+          </TabsTrigger>
+          <TabsTrigger value="tickets" className="flex items-center gap-2">
+            <TicketIcon className="h-4 w-4" />
+            Tickets
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tarefas" className="mt-6 space-y-6">
       {/* Period selector and export buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold font-display">Dashboard</h2>
+      <div className="flex items-center justify-end flex-wrap gap-4">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExportPDF}>
             <FileDown className="h-4 w-4 mr-2" />
@@ -411,6 +440,20 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="estoque" className="mt-6">
+          <DashboardEstoqueResumo />
+        </TabsContent>
+
+        <TabsContent value="prospeccao" className="mt-6">
+          <DashboardProspeccaoResumo />
+        </TabsContent>
+
+        <TabsContent value="tickets" className="mt-6">
+          <DashboardTicketsResumo />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

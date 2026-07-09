@@ -4,6 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTickets } from '@/hooks/useTickets';
+import { useTicketStats } from '@/hooks/useTicketStats';
 import {
   PrioridadeTicket,
   PRIORIDADE_TICKET_BADGE_CLASSES,
@@ -38,6 +39,7 @@ const TicketList: React.FC = () => {
   const { isAdmin } = useAuth();
   const { tickets, isLoading } = useTickets();
   const { data: profiles = [] } = useProfiles();
+  const { stats } = useTicketStats();
 
   const [statusFiltro, setStatusFiltro] = useState('');
   const [prioridadeFiltro, setPrioridadeFiltro] = useState('');
@@ -60,6 +62,17 @@ const TicketList: React.FC = () => {
           </p>
         </div>
         <CreateTicketDialog />
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {(Object.keys(STATUS_TICKET_LABELS) as StatusTicket[]).map((status) => (
+          <Card key={status}>
+            <CardContent className="pt-6">
+              <div className="text-muted-foreground text-sm mb-1">{STATUS_TICKET_LABELS[status]}</div>
+              <p className="text-2xl font-bold">{stats.porStatus[status]}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
