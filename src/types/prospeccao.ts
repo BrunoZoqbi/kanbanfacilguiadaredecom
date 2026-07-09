@@ -54,6 +54,14 @@ export const CLASSIFICACAO_BADGE_CLASSES: Record<ClassificacaoProspeccao, string
   alta: 'bg-green-500/15 text-green-600 border-green-500/30',
 };
 
+// Mesmo hex das classes acima (Tailwind default bg-*-500), para o gráfico
+// de pizza de classificação usar exatamente a cor do badge.
+export const CLASSIFICACAO_CHART_COLORS: Record<ClassificacaoProspeccao, string> = {
+  baixa: '#ef4444', // red-500
+  media: '#f59e0b', // amber-500
+  alta: '#22c55e', // green-500
+};
+
 export interface ChecklistOpcao {
   label: string;
   pontos: number;

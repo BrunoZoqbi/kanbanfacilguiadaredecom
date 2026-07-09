@@ -161,3 +161,16 @@ export const STATUS_ITEM_LABELS: Record<StatusItem, string> = {
   analise_defeito: 'Em análise (defeito)',
   baixado: 'Baixado',
 };
+
+// Hex do Tailwind default (bg-*-500) — mesma família de cor usada nos
+// badges de status de outros módulos (ex: verde para bom/concluído,
+// vermelho para ruim/baixa, âmbar para atenção/em andamento), para o
+// gráfico de status da Visão Geral do Estoque conversar visualmente com
+// o resto do app.
+export const STATUS_ITEM_CHART_COLORS: Record<StatusItem, string> = {
+  disponivel: '#22c55e', // green-500
+  com_tecnico: '#3b82f6', // blue-500
+  instalado_cliente: '#a855f7', // purple-500
+  analise_defeito: '#f59e0b', // amber-500
+  baixado: '#ef4444', // red-500
+};

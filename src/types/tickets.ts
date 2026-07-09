@@ -58,6 +58,16 @@ export const STATUS_TICKET_BADGE_CLASSES: Record<StatusTicket, string> = {
   fechado: 'bg-gray-500/15 text-gray-600 border-gray-500/30',
 };
 
+// Mesmo hex das classes acima (Tailwind default bg-*-500/bg-gray-500),
+// para o gráfico de barras por status usar exatamente a cor do badge.
+export const STATUS_TICKET_CHART_COLORS: Record<StatusTicket, string> = {
+  aberto: '#3b82f6', // blue-500
+  em_andamento: '#f59e0b', // amber-500
+  aguardando_cliente: '#a855f7', // purple-500
+  resolvido: '#22c55e', // green-500
+  fechado: '#6b7280', // gray-500
+};
+
 export const PRIORIDADE_TICKET_LABELS: Record<PrioridadeTicket, string> = {
   baixa: 'Baixa',
   media: 'Média',
