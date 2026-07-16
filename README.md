@@ -76,7 +76,7 @@ Principais RPCs de Estoque: `lancar_entrada_consumivel`, `lancar_saida_consumive
 
 ## Documentação
 
-Manual de uso e POPs operacionais mantidos separadamente pela consultoria (Zoqbi).
+Manual de uso e POPs operacionais mantidos separadamente pela consultoria responsável.
 
 ---
-Projeto desenvolvido por Zoqbi (Bruno Zoqbi) para a Fibron – Raul Soares.
+Projeto desenvolvido sob demanda para uso interno da empresa.

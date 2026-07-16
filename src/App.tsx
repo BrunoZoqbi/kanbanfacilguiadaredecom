@@ -12,8 +12,8 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import MyTasks from "./pages/MyTasks";
 import CreateTask from "./pages/CreateTask";
-import Calendar from "./pages/Calendar";
-import ConsultaTicket from "./pages/ConsultaTicket";
+const Calendar = lazy(() => import("./pages/Calendar"));
+const ConsultaTicket = lazy(() => import("./pages/ConsultaTicket"));
 import NotFound from "./pages/NotFound";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
