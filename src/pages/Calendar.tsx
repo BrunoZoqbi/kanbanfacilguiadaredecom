@@ -15,14 +15,23 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useTasks } from '@/hooks/useTasks';
+import { useProfiles } from '@/hooks/useProfiles';
 import AppLayout from '@/components/layout/AppLayout';
 import TaskDetailModal from '@/components/tasks/TaskDetailModal';
 import { TaskWithRelations } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, CalendarDays, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const priorityColors = {
@@ -33,34 +42,46 @@ const priorityColors = {
 };
 
 const Calendar: React.FC = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const isGestorTecnico = useIsGestorTecnico();
+  const canSeeAll = isAdmin || isGestorTecnico;
+
   const { tasks, isLoading: tasksLoading } = useTasks();
+  const { data: profiles = [] } = useProfiles();
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState('');
+
+  // Admin/Gestor Técnico: veem todos + filtro opcional por responsável.
+  // Outros papéis: só as próprias tarefas, sem opção de ver outras.
+  const filteredTasks = useMemo(() => {
+    if (canSeeAll) {
+      return selectedAssigneeId
+        ? tasks.filter((t) => t.assignee_id === selectedAssigneeId)
+        : tasks;
+    }
+    return tasks.filter((t) => t.assignee_id === user?.id);
+  }, [tasks, canSeeAll, selectedAssigneeId, user?.id]);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const startDate = startOfWeek(monthStart, { locale: ptBR });
     const endDate = endOfWeek(monthEnd, { locale: ptBR });
-    
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, TaskWithRelations[]> = {};
-    
-    tasks.forEach((task) => {
+    filteredTasks.forEach((task) => {
       const dateKey = format(new Date(task.due_date), 'yyyy-MM-dd');
-      if (!map[dateKey]) {
-        map[dateKey] = [];
-      }
+      if (!map[dateKey]) map[dateKey] = [];
       map[dateKey].push(task);
     });
-
     return map;
-  }, [tasks]);
+  }, [filteredTasks]);
 
   const selectedDateTasks = useMemo(() => {
     if (!selectedDate) return [];
@@ -109,6 +130,28 @@ const Calendar: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
+            {canSeeAll && (
+              <div className="mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Select
+                  value={selectedAssigneeId || 'all'}
+                  onValueChange={(v) => setSelectedAssigneeId(v === 'all' ? '' : v)}
+                >
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Todos os responsáveis" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os responsáveis</SelectItem>
+                    {profiles.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {tasksLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
