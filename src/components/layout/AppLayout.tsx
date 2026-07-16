@@ -164,12 +164,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <Menu className="h-6 w-6" />
           </button>
 
-          <div className="hidden lg:block">
-            <h1 className="text-lg font-semibold font-display">
-              {navigation.find((n) => n.href === location.pathname)?.name || 'Fibrontec'}
-            </h1>
-          </div>
-
           <div className="flex items-center gap-3">
             <NotificationBell />
             
