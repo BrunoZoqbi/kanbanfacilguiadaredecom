@@ -278,6 +278,10 @@ const KanbanBoard: React.FC = () => {
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+        onOpenTask={(id) => {
+          const t = tasks.find((t) => t.id === id);
+          if (t) setSelectedTask(t);
+        }}
       />
     </div>
   );

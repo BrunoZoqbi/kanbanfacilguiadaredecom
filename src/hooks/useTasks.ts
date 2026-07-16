@@ -93,6 +93,13 @@ export const useTasks = () => {
           due_date: task.due_date!,
           scheduled_date: task.scheduled_date,
           location: task.location,
+          recurrence_type: task.recurrence_type ?? 'none',
+          recurrence_days: task.recurrence_days ?? null,
+          recurrence_time: task.recurrence_time ?? null,
+          recurrence_interval: task.recurrence_interval ?? 1,
+          recurrence_end_date: task.recurrence_end_date ?? null,
+          recurrence_end_after: task.recurrence_end_after ?? null,
+          parent_task_id: task.parent_task_id ?? null,
         }])
         .select()
         .single();

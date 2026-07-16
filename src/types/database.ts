@@ -1,6 +1,7 @@
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskType = 'daily' | 'one_time';
 export type TaskStatus = 'todo' | 'doing' | 'done';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 export type AppRole = 'admin' | 'user' | 'gestor_tecnico' | 'gestor_comercial';
 
 export interface Profile {
@@ -51,6 +52,13 @@ export interface Task {
   position: number;
   created_at: string;
   updated_at: string;
+  recurrence_type: RecurrenceType;
+  recurrence_days: number[] | null;
+  recurrence_time: string | null;
+  recurrence_interval: number;
+  recurrence_end_date: string | null;
+  recurrence_end_after: number | null;
+  parent_task_id: string | null;
 }
 
 export interface TaskWithRelations extends Task {
