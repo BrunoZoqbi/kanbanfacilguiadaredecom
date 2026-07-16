@@ -15,8 +15,7 @@ export const useRealtimeTasks = () => {
           schema: 'public',
           table: 'tasks',
         },
-        (payload) => {
-          console.log('Realtime task update:', payload);
+        (_payload) => {
           // Invalidate tasks query to refetch data
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
           queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
