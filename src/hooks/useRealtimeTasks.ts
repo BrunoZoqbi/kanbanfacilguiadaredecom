@@ -19,6 +19,7 @@ export const useRealtimeTasks = () => {
           console.log('Realtime task update:', payload);
           // Invalidate tasks query to refetch data
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
         }
       )
       .subscribe();

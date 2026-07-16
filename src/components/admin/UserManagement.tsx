@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivityLog } from '@/hooks/useActivityLog';
+import { useUsersInfinite, UserWithRoleAndEmail } from '@/hooks/useUsersInfinite';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import CreateUserForm from './CreateUserForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -11,6 +13,13 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -45,15 +54,6 @@ import {
 import { toast } from 'sonner';
 import { AppRole } from '@/types/database';
 
-interface UserWithRole {
-  id: string;
-  full_name: string;
-  is_active: boolean;
-  phone_whatsapp: string | null;
-  created_at: string;
-  role: AppRole;
-}
-
 const roleLabels: Record<AppRole, string> = {
   admin: 'Admin',
   gestor_tecnico: 'Gestor Técnico',
@@ -66,10 +66,12 @@ const UserManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLog();
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+  const [roleFilter, setRoleFilter] = useState<AppRole | ''>('');
   const [updatingUsers, setUpdatingUsers] = useState<Set<string>>(new Set());
 
   // Edit dialog state
-  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [editingUser, setEditingUser] = useState<UserWithRoleAndEmail | null>(null);
   const [editFullName, setEditFullName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -83,38 +85,13 @@ const UserManagement: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: async () => {
-      // Fetch profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('full_name');
-
-      if (profilesError) throw profilesError;
-
-      // Fetch roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
-
-      if (rolesError) throw rolesError;
-
-      // Combine data
-      return profiles.map((profile) => {
-        const userRole = roles.find((r) => r.user_id === profile.id);
-        return {
-          ...profile,
-          role: userRole?.role || 'user',
-        } as UserWithRole;
-      });
-    },
-  });
-
-  const filteredUsers = users.filter((user) =>
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const {
+    users: filteredUsers,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useUsersInfinite({ search: debouncedSearchTerm, role: roleFilter });
 
   const setUserUpdating = (userId: string, isUpdating: boolean) => {
     setUpdatingUsers((prev) => {
@@ -128,7 +105,7 @@ const UserManagement: React.FC = () => {
     });
   };
 
-  const toggleUserActive = async (user: UserWithRole) => {
+  const toggleUserActive = async (user: UserWithRoleAndEmail) => {
     setUserUpdating(user.id, true);
     try {
       const newStatus = !user.is_active;
@@ -148,6 +125,7 @@ const UserManagement: React.FC = () => {
 
       toast.success(`Usuário ${newStatus ? 'ativado' : 'desativado'}!`);
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-infinite'] });
     } catch (error: any) {
       toast.error('Erro: ' + error.message);
     } finally {
@@ -160,7 +138,7 @@ const UserManagement: React.FC = () => {
   // so any existing role rows are cleared before inserting the new one (or
   // left cleared to fall back to plain 'user').
   const setUserRole = async (
-    user: UserWithRole,
+    user: UserWithRoleAndEmail,
     targetRole: 'admin' | 'gestor_tecnico' | 'gestor_comercial'
   ) => {
     setUserUpdating(user.id, true);
@@ -193,6 +171,7 @@ const UserManagement: React.FC = () => {
 
       toast.success(`Função alterada para ${roleLabels[newRole]}!`);
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-infinite'] });
     } catch (error: any) {
       toast.error('Erro: ' + error.message);
     } finally {
@@ -211,12 +190,13 @@ const UserManagement: React.FC = () => {
 
       toast.success('Telefone atualizado!');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-infinite'] });
     } catch (error: any) {
       toast.error('Erro: ' + error.message);
     }
   };
 
-  const openEditDialog = async (user: UserWithRole) => {
+  const openEditDialog = async (user: UserWithRoleAndEmail) => {
     setEditingUser(user);
     setEditFullName(user.full_name);
     setEditPhone(user.phone_whatsapp || '');
@@ -283,6 +263,7 @@ const UserManagement: React.FC = () => {
 
       toast.success('Usuário atualizado!');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-infinite'] });
       closeEditDialog();
     } catch (error: any) {
       toast.error('Erro ao atualizar usuário: ' + error.message);
@@ -333,7 +314,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (user: UserWithRole) => {
+  const handleDeleteUser = async (user: UserWithRoleAndEmail) => {
     setUserUpdating(user.id, true);
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('delete-user', {
@@ -356,20 +337,13 @@ const UserManagement: React.FC = () => {
 
       toast.success(`Usuário "${user.full_name}" excluído!`);
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-infinite'] });
     } catch (error: any) {
       toast.error('Erro ao excluir usuário: ' + error.message);
     } finally {
       setUserUpdating(user.id, false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -387,19 +361,43 @@ const UserManagement: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar usuários..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search + role filter */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative sm:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, e-mail ou WhatsApp..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Select
+            value={roleFilter || 'all'}
+            onValueChange={(v) => setRoleFilter(v === 'all' ? '' : (v as AppRole))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Papel" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os papéis</SelectItem>
+              {(Object.keys(roleLabels) as AppRole[]).map((r) => (
+                <SelectItem key={r} value={r}>
+                  {roleLabels[r]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Users list */}
-        <div className="w-full border rounded-lg divide-y max-h-[500px] overflow-y-auto overflow-x-hidden">
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+        <div className="w-full border rounded-lg divide-y overflow-x-hidden">
           {filteredUsers.map((user) => {
             const isUpdating = updatingUsers.has(user.id);
             return (
@@ -554,12 +552,22 @@ const UserManagement: React.FC = () => {
             );
           })}
 
-          {filteredUsers.length === 0 && (
+          {filteredUsers.length === 0 && !isLoading && (
             <div className="p-8 text-center text-muted-foreground">
               Nenhum usuário encontrado
             </div>
           )}
         </div>
+        )}
+
+        {!isLoading && hasNextPage && (
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+              {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Carregar mais
+            </Button>
+          </div>
+        )}
         </CardContent>
       </Card>
 

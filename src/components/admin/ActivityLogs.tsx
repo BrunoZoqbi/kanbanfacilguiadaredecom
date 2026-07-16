@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useActivityLogsInfinite } from '@/hooks/useActivityLogsInfinite';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -16,17 +15,6 @@ import {
 import { Loader2, Activity, Search, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-interface ActivityLog {
-  id: string;
-  user_id: string;
-  action: string;
-  entity_type: string;
-  entity_id: string | null;
-  details: Record<string, any> | null;
-  created_at: string;
-  user_name?: string;
-}
 
 const actionLabels: Record<string, { label: string; color: string }> = {
   create: { label: 'Criou', color: 'bg-green-500' },
@@ -54,45 +42,22 @@ const entityLabels: Record<string, string> = {
 
 const ActivityLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   const [filterAction, setFilterAction] = useState<string>('all');
   const [filterEntity, setFilterEntity] = useState<string>('all');
 
-  const { data: logs = [], isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['activity-logs'],
-    queryFn: async () => {
-      const { data: logsData, error: logsError } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (logsError) throw logsError;
-
-      // Fetch user names
-      const userIds = [...new Set(logsData.map((l) => l.user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
-
-      const profileMap = new Map(profiles?.map((p) => [p.id, p.full_name]) || []);
-
-      return logsData.map((log) => ({
-        ...log,
-        user_name: profileMap.get(log.user_id) || 'Usuário desconhecido',
-      })) as ActivityLog[];
-    },
-  });
-
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      JSON.stringify(log.details || {}).toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesAction = filterAction === 'all' || log.action === filterAction;
-    const matchesEntity = filterEntity === 'all' || log.entity_type === filterEntity;
-
-    return matchesSearch && matchesAction && matchesEntity;
+  const {
+    logs: filteredLogs,
+    isLoading,
+    refetch,
+    isRefetching,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useActivityLogsInfinite({
+    search: debouncedSearchTerm,
+    action: filterAction === 'all' ? '' : filterAction,
+    entityType: filterEntity === 'all' ? '' : filterEntity,
   });
 
   const formatDetails = (details: Record<string, any> | null): string => {
@@ -170,7 +135,7 @@ const ActivityLogs: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <ScrollArea className="h-[400px] border rounded-lg">
+          <div className="border rounded-lg">
             <div className="divide-y">
               {filteredLogs.map((log) => {
                 const actionInfo = actionLabels[log.action] || { label: log.action, color: 'bg-gray-500' };
@@ -209,7 +174,16 @@ const ActivityLogs: React.FC = () => {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
+        )}
+
+        {!isLoading && hasNextPage && (
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+              {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Carregar mais
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

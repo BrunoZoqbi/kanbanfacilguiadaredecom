@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
+import { useTasksInfinite } from '@/hooks/useTasksInfinite';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
@@ -44,13 +46,22 @@ import { TaskTypeRecord } from '@/types/database';
 
 const AdminPage: React.FC = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
-  const { tasks, profiles, tags, isLoading } = useTasks();
+  const { profiles, tags } = useTasks();
   const queryClient = useQueryClient();
-  
+
   // Bulk reassignment state
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [newAssignee, setNewAssignee] = useState('');
   const [isReassigning, setIsReassigning] = useState(false);
+  const [taskSearch, setTaskSearch] = useState('');
+  const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
+  const {
+    tasks,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useTasksInfinite({ light: true, search: debouncedTaskSearch, pageSize: 20 });
   
   // Tag management state
   const [newTagName, setNewTagName] = useState('');
@@ -101,6 +112,9 @@ const AdminPage: React.FC = () => {
     );
   };
 
+  // Com a lista paginada, "selecionar todos" seleciona só as tarefas já
+  // carregadas na tela — não existe mais um conjunto "todas as tarefas do
+  // banco" disponível no cliente de uma vez.
   const selectAllTasks = () => {
     if (selectedTasks.length === tasks.length) {
       setSelectedTasks([]);
@@ -128,6 +142,7 @@ const AdminPage: React.FC = () => {
       setSelectedTasks([]);
       setNewAssignee('');
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
     } catch (error: any) {
       toast.error('Erro ao reatribuir: ' + error.message);
     } finally {
@@ -320,6 +335,13 @@ const AdminPage: React.FC = () => {
                 <CardTitle className="text-base">Reatribuir Tarefas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Input
+                  placeholder="Buscar por título ou descrição da tarefa..."
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  className="max-w-md"
+                />
+
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -327,7 +349,8 @@ const AdminPage: React.FC = () => {
                       onCheckedChange={selectAllTasks}
                     />
                     <span className="text-sm">
-                      {selectedTasks.length} de {tasks.length} selecionada(s)
+                      {selectedTasks.length} de {tasks.length}{hasNextPage ? '+' : ''} selecionada(s)
+                      {hasNextPage && ' (carregadas)'}
                     </span>
                   </div>
 
@@ -390,6 +413,19 @@ const AdminPage: React.FC = () => {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {hasNextPage && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Carregar mais
+                    </Button>
                   </div>
                 )}
               </CardContent>

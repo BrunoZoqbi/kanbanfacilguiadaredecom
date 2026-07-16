@@ -49,6 +49,7 @@ export const useItensSerializados = () => {
     // Prefixo — invalida todas as combinações de busca/categoria/produto em
     // cache da lista paginada (useItensSerializadosDisponiveis) também.
     queryClient.invalidateQueries({ queryKey: ['itens-serializados-disponiveis'] });
+    queryClient.invalidateQueries({ queryKey: ['itens-instalados'] });
     queryClient.invalidateQueries({ queryKey: ['movimentacoes-estoque'] });
   };
 
@@ -319,6 +320,53 @@ export const useItensSerializadosDisponiveis = ({
 
   // Produtos já ficam todos em cache local (useProdutos) — mais simples
   // resolver o relacionamento aqui do que fazer o RPC devolver o join.
+  const itens = useMemo<ItemSerializadoWithRelations[]>(() => {
+    const paginas = query.data?.pages ?? [];
+    return paginas.flatMap((pagina) =>
+      pagina.itens.map((item) => ({
+        ...item,
+        produto: produtos.find((p) => p.id === item.produto_id),
+      }))
+    );
+  }, [query.data, produtos]);
+
+  return { ...query, itens };
+};
+
+interface UseItensInstaladosOptions {
+  search?: string;
+}
+
+// Lista "Itens Instalados em Cliente" (LancarRecolhimento.tsx) — mesmo
+// padrão de useItensSerializadosDisponiveis acima: busca + paginação rodam
+// no banco via RPC (buscar_itens_instalados) em vez de carregar tudo e
+// filtrar status === 'instalado_cliente' no cliente.
+export const useItensInstalados = ({ search = '' }: UseItensInstaladosOptions = {}) => {
+  const { user } = useAuth();
+  const { produtos } = useProdutos();
+
+  const query = useInfiniteQuery({
+    queryKey: ['itens-instalados', search],
+    queryFn: async ({ pageParam }) => {
+      const { data, error } = await supabase.rpc('buscar_itens_instalados', {
+        p_search: search.trim() || undefined,
+        p_limit: PAGE_SIZE,
+        p_offset: pageParam,
+      });
+
+      if (error) throw error;
+
+      const itensPagina = (data || []) as ItemSerializado[];
+      return {
+        itens: itensPagina,
+        nextOffset: itensPagina.length === PAGE_SIZE ? pageParam + PAGE_SIZE : undefined,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    enabled: !!user,
+  });
+
   const itens = useMemo<ItemSerializadoWithRelations[]>(() => {
     const paginas = query.data?.pages ?? [];
     return paginas.flatMap((pagina) =>

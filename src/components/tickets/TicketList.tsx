@@ -3,8 +3,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles } from '@/hooks/useProfiles';
-import { useTickets } from '@/hooks/useTickets';
+import { useTicketsInfinite } from '@/hooks/useTicketsInfinite';
 import { useTicketStats } from '@/hooks/useTicketStats';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   PrioridadeTicket,
   PRIORIDADE_TICKET_BADGE_CLASSES,
@@ -15,6 +16,8 @@ import {
 } from '@/types/tickets';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -30,7 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateTicketDialog from './CreateTicketDialog';
 import TicketDetailModal from './TicketDetailModal';
@@ -38,7 +41,6 @@ import TicketsStatusBarChart, { buildTicketsStatusChartData } from './TicketsSta
 
 const TicketList: React.FC = () => {
   const { isAdmin } = useAuth();
-  const { tickets, isLoading } = useTickets();
   const { data: profiles = [] } = useProfiles();
   const { stats } = useTicketStats();
 
@@ -46,14 +48,24 @@ const TicketList: React.FC = () => {
 
   const [statusFiltro, setStatusFiltro] = useState('');
   const [prioridadeFiltro, setPrioridadeFiltro] = useState('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
-  const selectedTicket = tickets.find((t) => t.id === selectedTicketId) ?? null;
 
-  const filteredTickets = tickets.filter((t) => {
-    if (statusFiltro && t.status !== statusFiltro) return false;
-    if (prioridadeFiltro && t.prioridade !== prioridadeFiltro) return false;
-    return true;
+  const {
+    tickets: filteredTickets,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useTicketsInfinite({
+    search: debouncedSearch,
+    status: statusFiltro as any,
+    prioridade: prioridadeFiltro as any,
+    pageSize: 20,
   });
+
+  const selectedTicket = filteredTickets.find((t) => t.id === selectedTicketId) ?? null;
 
   return (
     <div className="space-y-6">
@@ -82,7 +94,17 @@ const TicketList: React.FC = () => {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por cliente, CPF/contrato, telefone ou problema..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
             <Select value={statusFiltro || 'all'} onValueChange={(v) => setStatusFiltro(v === 'all' ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -119,7 +141,9 @@ const TicketList: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Chamados ({filteredTickets.length})</CardTitle>
+          <CardTitle className="text-base">
+            Chamados ({filteredTickets.length}{hasNextPage ? '+' : ''})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -186,6 +210,15 @@ const TicketList: React.FC = () => {
 
           {!isLoading && filteredTickets.length === 0 && (
             <div className="p-8 text-center text-muted-foreground">Nenhum ticket encontrado</div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Carregar mais
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
