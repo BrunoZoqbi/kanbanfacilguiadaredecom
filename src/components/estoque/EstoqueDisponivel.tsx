@@ -8,6 +8,7 @@ import { useCategoriasProduto } from '@/hooks/useCategoriasProduto';
 import { useProdutos } from '@/hooks/useProdutos';
 import { useEstoqueDisponivelPorProduto } from '@/hooks/useEstoqueDisponivelPorProduto';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { CONDICAO_LABELS, ItemSerializadoWithRelations, Produto } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,10 +38,16 @@ import LancarEntradaDialog from './LancarEntradaDialog';
 import LancarSaidaDialog from './LancarSaidaDialog';
 import RetirarConsumivelParaTecnicoDialog from './RetirarConsumivelParaTecnicoDialog';
 
-const LIMITE_ESTOQUE_BAIXO = 2;
+// Fallback usado enquanto a configuração ainda não carregou do banco —
+// mesmo valor do limite padrão inserido pela migration (system_configs).
+const LIMITE_ESTOQUE_BAIXO_PADRAO = 2;
 
 const EstoqueDisponivel: React.FC = () => {
   const { isAdmin } = useAuth();
+  const { value: limiteEstoqueBaixoConfig } = useSystemConfig('estoque_baixo_limite');
+  const limiteEstoqueBaixo = limiteEstoqueBaixoConfig
+    ? Number(limiteEstoqueBaixoConfig)
+    : LIMITE_ESTOQUE_BAIXO_PADRAO;
   const isGestorTecnico = useIsGestorTecnico();
   const canRetirar = isAdmin || isGestorTecnico;
   const canDarBaixa = isAdmin || isGestorTecnico;
@@ -187,7 +194,7 @@ const EstoqueDisponivel: React.FC = () => {
                       <Badge variant="outline" className="text-xs">
                         {CONDICAO_LABELS[item.condicao]}
                       </Badge>
-                      {(quantidadeDisponivelPorProduto.get(item.produto_id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
+                      {(quantidadeDisponivelPorProduto.get(item.produto_id) ?? 0) <= limiteEstoqueBaixo && (
                         <Badge variant="destructive" className="text-xs">
                           <PackageX className="h-3 w-3 mr-1" />
                           Estoque baixo
@@ -275,7 +282,7 @@ const EstoqueDisponivel: React.FC = () => {
                       <Badge variant="secondary" className="text-xs">
                         {produto.categoria}
                       </Badge>
-                      {(quantidadeDisponivelPorProduto.get(produto.id) ?? 0) <= LIMITE_ESTOQUE_BAIXO && (
+                      {(quantidadeDisponivelPorProduto.get(produto.id) ?? 0) <= limiteEstoqueBaixo && (
                         <Badge variant="destructive" className="text-xs">
                           <PackageX className="h-3 w-3 mr-1" />
                           Estoque baixo

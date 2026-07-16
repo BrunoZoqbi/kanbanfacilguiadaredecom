@@ -117,7 +117,7 @@ const EstoqueVisaoGeral: React.FC = () => {
                                 <TableHead>Produto</TableHead>
                                 <TableHead className="text-right">Disponível</TableHead>
                                 <TableHead className="text-right">Com Técnico</TableHead>
-                                <TableHead className="text-right">Instalado</TableHead>
+                                <TableHead className="text-right">Em Clientes</TableHead>
                                 <TableHead className="text-right">Em Análise</TableHead>
                                 <TableHead className="text-right">Total</TableHead>
                               </TableRow>
