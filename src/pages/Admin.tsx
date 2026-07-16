@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
 import UserManagement from '@/components/admin/UserManagement';
 import ActivityLogs from '@/components/admin/ActivityLogs';
+import SystemSettings from '@/components/admin/SystemSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Users, Tags, Loader2, Plus, Trash2, Save, Activity, ListChecks } from 'lucide-react';
+import { Settings, Users, Tags, Loader2, Plus, Trash2, Save, Activity, ListChecks, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskTypeRecord } from '@/types/database';
 
@@ -320,6 +321,10 @@ const AdminPage: React.FC = () => {
             <TabsTrigger value="logs" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Logs
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Configurações
             </TabsTrigger>
           </TabsList>
 
@@ -668,6 +673,10 @@ const AdminPage: React.FC = () => {
           {/* Activity Logs */}
           <TabsContent value="logs" className="mt-6">
             <ActivityLogs />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <SystemSettings />
           </TabsContent>
         </Tabs>
 
