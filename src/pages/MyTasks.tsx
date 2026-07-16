@@ -4,10 +4,12 @@ import { format, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
+import { useTasksInfinite } from '@/hooks/useTasksInfinite';
 import AppLayout from '@/components/layout/AppLayout';
 import TaskDetailModal from '@/components/tasks/TaskDetailModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2,
@@ -36,7 +38,9 @@ const statusConfig: Record<TaskStatus, { label: string; icon: React.ElementType;
 
 const MyTasks: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const { tasks, isLoading: tasksLoading } = useTasks();
+  // Fetch completo mantido só para os contadores das abas (badges) — a lista
+  // renderizada abaixo usa useTasksInfinite, paginada por aba.
+  const { tasks } = useTasks();
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [activeTab, setActiveTab] = useState<TaskStatus | 'all'>('all');
 
@@ -44,17 +48,26 @@ const MyTasks: React.FC = () => {
     return tasks.filter((task) => task.assignee_id === user?.id);
   }, [tasks, user]);
 
-  const filteredTasks = useMemo(() => {
-    if (activeTab === 'all') return myTasks;
-    return myTasks.filter((task) => task.status === activeTab);
-  }, [myTasks, activeTab]);
-
   const taskCounts = useMemo(() => ({
     all: myTasks.length,
     todo: myTasks.filter((t) => t.status === 'todo').length,
     doing: myTasks.filter((t) => t.status === 'doing').length,
     done: myTasks.filter((t) => t.status === 'done').length,
   }), [myTasks]);
+
+  const {
+    tasks: filteredTasks,
+    isLoading: tasksLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useTasksInfinite({
+    assigneeId: user?.id || '',
+    status: activeTab !== 'all' ? activeTab : undefined,
+    ascending: true,
+    pageSize: 20,
+    enabled: !!user,
+  });
 
   if (authLoading) {
     return (
@@ -190,6 +203,19 @@ const MyTasks: React.FC = () => {
                     </Card>
                   );
                 })}
+
+                {hasNextPage && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Carregar mais
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>

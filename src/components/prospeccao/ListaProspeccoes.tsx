@@ -3,7 +3,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProspeccoes } from '@/hooks/useProspeccoes';
+import { useProspeccoesInfinite } from '@/hooks/useProspeccoesInfinite';
 import { useProspeccaoStats } from '@/hooks/useProspeccaoStats';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   CLASSIFICACAO_BADGE_CLASSES,
   CLASSIFICACAO_LABELS,
@@ -29,7 +31,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, TrendingUp, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, TrendingUp, Users, AlertCircle, CheckCircle2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProspeccaoDetailModal from './ProspeccaoDetailModal';
 import ProspeccaoClassificacaoPieChart, {
@@ -39,24 +42,36 @@ import ProspeccaoSemanalBarChart, { buildProspeccoesPorSemana } from './Prospecc
 
 const ListaProspeccoes: React.FC = () => {
   const { isAdmin } = useAuth();
-  const { prospeccoes, isLoading, updateStatus, updateObservacoes } = useProspeccoes();
+  // Fetch completo mantido só para o gráfico semanal (precisa do conjunto
+  // inteiro) e para as mutações — a lista renderizada abaixo usa
+  // useProspeccoesInfinite, paginada e com busca server-side.
+  const { prospeccoes: allProspeccoes, updateStatus, updateObservacoes } = useProspeccoes();
 
   const [classificacaoFiltro, setClassificacaoFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState('');
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedProspeccaoId, setSelectedProspeccaoId] = useState<string | null>(null);
 
   const { stats: metrics } = useProspeccaoStats();
 
   const classificacaoChartData = useMemo(() => buildClassificacaoChartData(metrics), [metrics]);
-  const prospeccoesPorSemana = useMemo(() => buildProspeccoesPorSemana(prospeccoes), [prospeccoes]);
+  const prospeccoesPorSemana = useMemo(() => buildProspeccoesPorSemana(allProspeccoes), [allProspeccoes]);
 
-  const filteredProspeccoes = prospeccoes.filter((p) => {
-    if (classificacaoFiltro && p.classificacao !== classificacaoFiltro) return false;
-    if (statusFiltro && p.status !== statusFiltro) return false;
-    return true;
+  const {
+    prospeccoes: filteredProspeccoes,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useProspeccoesInfinite({
+    search: debouncedSearch,
+    classificacao: classificacaoFiltro as any,
+    status: statusFiltro as any,
+    pageSize: 20,
   });
 
-  const selectedProspeccao = prospeccoes.find((p) => p.id === selectedProspeccaoId) || null;
+  const selectedProspeccao = filteredProspeccoes.find((p) => p.id === selectedProspeccaoId) || null;
 
   return (
     <div className="space-y-6">
@@ -118,7 +133,17 @@ const ListaProspeccoes: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, telefone ou endereço..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
             <Select
               value={classificacaoFiltro || 'all'}
               onValueChange={(v) => setClassificacaoFiltro(v === 'all' ? '' : v)}
@@ -157,7 +182,9 @@ const ListaProspeccoes: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {isAdmin ? 'Todas as Prospecções' : 'Minhas Prospecções'} ({filteredProspeccoes.length})
+            {isAdmin ? 'Todas as Prospecções' : 'Minhas Prospecções'} (
+            {filteredProspeccoes.length}
+            {hasNextPage ? '+' : ''})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -334,6 +361,15 @@ const ListaProspeccoes: React.FC = () => {
           {!isLoading && filteredProspeccoes.length === 0 && (
             <div className="p-8 text-center text-muted-foreground">
               Nenhuma prospecção encontrada
+            </div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Carregar mais
+              </Button>
             </div>
           )}
         </CardContent>

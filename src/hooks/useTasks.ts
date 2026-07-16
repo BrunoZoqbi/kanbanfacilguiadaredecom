@@ -10,6 +10,14 @@ export const useTasks = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLog();
 
+  // 'tasks-infinite' é prefixo — invalida todas as combinações de
+  // status/busca/filtro em cache das listas paginadas (useTasksInfinite:
+  // coluna "Feito" do Kanban, Minhas Tarefas, Reatribuir em Massa) também.
+  const invalidateTasks = () => {
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
+  };
+
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks', user?.id, isAdmin],
     queryFn: async () => {
@@ -103,7 +111,7 @@ export const useTasks = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
       logActivity({
         action: 'create',
         entityType: 'task',
@@ -145,7 +153,7 @@ export const useTasks = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
       logActivity({
         action: 'update',
         entityType: 'task',
@@ -174,7 +182,7 @@ export const useTasks = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
     },
     onError: (error) => {
       toast.error('Erro ao mover tarefa: ' + error.message);
@@ -192,7 +200,7 @@ export const useTasks = () => {
       return id;
     },
     onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
       logActivity({
         action: 'delete',
         entityType: 'task',
@@ -218,7 +226,7 @@ export const useTasks = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
       toast.success('Comentário adicionado!');
     },
   });
@@ -233,7 +241,7 @@ export const useTasks = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
     },
   });
 
@@ -249,7 +257,7 @@ export const useTasks = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      invalidateTasks();
       toast.success('Item adicionado!');
     },
   });

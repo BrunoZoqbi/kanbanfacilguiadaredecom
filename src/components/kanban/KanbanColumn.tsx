@@ -12,6 +12,12 @@ interface KanbanColumnProps {
   tasks: TaskWithRelations[];
   profiles: Profile[];
   onTaskClick: (task: TaskWithRelations) => void;
+  // Quando a coluna é paginada (ex: "Feito"), indica que há mais itens além
+  // dos já carregados — o badge de contagem passa a exibir "N+" em vez de N.
+  hasMore?: boolean;
+  // Conteúdo extra renderizado após a lista de tarefas — usado para o botão
+  // "Carregar mais" nas colunas paginadas.
+  footer?: React.ReactNode;
 }
 
 const columnConfig: Record<TaskStatus, { icon: React.ElementType; bgClass: string }> = {
@@ -20,7 +26,7 @@ const columnConfig: Record<TaskStatus, { icon: React.ElementType; bgClass: strin
   done: { icon: CheckCircle2, bgClass: 'bg-column-done' },
 };
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, profiles, onTaskClick }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, profiles, onTaskClick, hasMore, footer }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   const config = columnConfig[id];
   const Icon = config.icon;
@@ -47,7 +53,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, profiles,
           <h2 className="font-semibold text-foreground">{title}</h2>
         </div>
         <span className="flex items-center justify-center h-6 min-w-6 px-2 rounded-full bg-foreground/10 text-xs font-medium">
-          {tasks.length}
+          {tasks.length}{hasMore ? '+' : ''}
         </span>
       </div>
 
@@ -58,13 +64,15 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, tasks, profiles,
             <TaskCard key={task.id} task={task} profiles={profiles} onClick={() => onTaskClick(task)} />
           ))}
         </SortableContext>
-        
+
         {tasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Icon className="h-8 w-8 mb-2 opacity-50" />
             <p className="text-sm">Nenhuma tarefa</p>
           </div>
         )}
+
+        {footer}
       </div>
     </div>
   );

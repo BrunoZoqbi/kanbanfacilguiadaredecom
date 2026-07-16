@@ -1,26 +1,31 @@
-import React, { useMemo, useState } from 'react';
-import { useItensSerializados } from '@/hooks/useItensSerializados';
+import React, { useState } from 'react';
+import { useItensInstalados } from '@/hooks/useItensSerializados';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { ItemSerializadoWithRelations } from '@/types/estoque';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ClipboardList, MapPin, User, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, ClipboardList, MapPin, User, FileText, Search } from 'lucide-react';
 import LancarRecolhimentoDialog from './LancarRecolhimentoDialog';
 
 const LancarRecolhimento: React.FC = () => {
-  const { itens, isLoading } = useItensSerializados();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const {
+    itens: itensInstalados,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useItensInstalados({ search: debouncedSearch });
   const [alvo, setAlvo] = useState<ItemSerializadoWithRelations | null>(null);
-
-  const itensInstalados = useMemo(
-    () => itens.filter((item) => item.status === 'instalado_cliente'),
-    [itens]
-  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <ClipboardList className="h-5 w-5" />
-          Itens Instalados em Cliente ({itensInstalados.length})
+          Itens Instalados em Cliente ({itensInstalados.length}{hasNextPage ? '+' : ''})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -28,6 +33,16 @@ const LancarRecolhimento: React.FC = () => {
           Selecione um item e um técnico para lançar a tarefa de recolhimento. Isso cria a tarefa
           no Kanban e já move o item para o estoque do técnico.
         </p>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por cliente, endereço, produto, número de série ou MAC..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -70,6 +85,15 @@ const LancarRecolhimento: React.FC = () => {
                 Nenhum item instalado em cliente no momento
               </div>
             )}
+          </div>
+        )}
+
+        {hasNextPage && (
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+              {isFetchingNextPage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Carregar mais
+            </Button>
           </div>
         )}
       </CardContent>

@@ -35,6 +35,7 @@ export const useTickets = () => {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
   };
 
   const createTicket = useMutation({

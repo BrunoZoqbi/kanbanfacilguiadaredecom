@@ -10,14 +10,17 @@ import {
   useSensors,
   closestCorners,
 } from '@dnd-kit/core';
-import { TaskWithRelations, TaskStatus } from '@/types/database';
+import { TaskWithRelations, TaskStatus, TaskPriority } from '@/types/database';
 import { useTasks } from '@/hooks/useTasks';
+import { useTasksInfinite } from '@/hooks/useTasksInfinite';
 import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import KanbanColumn from './KanbanColumn';
 import TaskCard from './TaskCard';
 import TaskFilters, { TaskFiltersState } from './TaskFilters';
 import TaskDetailModal from '../tasks/TaskDetailModal';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { isPast, isToday, differenceInHours } from 'date-fns';
 
 const columns: { id: TaskStatus; title: string }[] = [
@@ -42,6 +45,22 @@ const KanbanBoard: React.FC = () => {
     type: '',
     tag: '',
     dateFilter: '',
+  });
+
+  // Coluna "Feito" só cresce (é um arquivo histórico) — paginada
+  // separadamente via useTasksInfinite, ordenada da mais recente para a mais
+  // antiga. As colunas "A Fazer"/"Fazendo" continuam usando o fetch completo
+  // de useTasks(), já que hoje não crescem sem limite.
+  const doneColumn = useTasksInfinite({
+    status: 'done',
+    search: filters.search,
+    assigneeId: filters.assignee || undefined,
+    priority: (filters.priority || '') as TaskPriority | '',
+    taskType: filters.type || '',
+    tagId: filters.tag || undefined,
+    dateFilter: (filters.dateFilter || '') as 'today' | 'overdue' | 'upcoming' | '',
+    ascending: false,
+    pageSize: 20,
   });
 
   const sensors = useSensors(
@@ -129,6 +148,17 @@ const KanbanBoard: React.FC = () => {
     return grouped;
   }, [filteredTasks]);
 
+  // Para renderização: "done" usa a lista paginada; "todo"/"doing" mantêm o
+  // agrupamento completo. tasksByStatus (acima) continua sendo a fonte para
+  // cálculo de posição no drag-and-drop, já que useTasks() ainda busca todas
+  // as tarefas — assim a posição de destino nunca colide mesmo com a coluna
+  // "Feito" parcialmente carregada na tela.
+  const columnTasks: Record<TaskStatus, TaskWithRelations[]> = {
+    todo: tasksByStatus.todo,
+    doing: tasksByStatus.doing,
+    done: doneColumn.tasks,
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find((t) => t.id === event.active.id);
     if (task) setActiveTask(task);
@@ -213,9 +243,27 @@ const KanbanBoard: React.FC = () => {
               <KanbanColumn
                 id={column.id}
                 title={column.title}
-                tasks={tasksByStatus[column.id]}
+                tasks={columnTasks[column.id]}
                 profiles={profiles}
                 onTaskClick={handleTaskClick}
+                hasMore={column.id === 'done' ? doneColumn.hasNextPage : false}
+                footer={
+                  column.id === 'done' && doneColumn.hasNextPage ? (
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => doneColumn.fetchNextPage()}
+                        disabled={doneColumn.isFetchingNextPage}
+                      >
+                        {doneColumn.isFetchingNextPage && (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        Carregar mais
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
               />
             </div>
           ))}

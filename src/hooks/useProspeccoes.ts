@@ -49,6 +49,7 @@ export const useProspeccoes = () => {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['prospeccoes'] });
+    queryClient.invalidateQueries({ queryKey: ['prospeccoes-infinite'] });
   };
 
   const createProspeccao = useMutation({
