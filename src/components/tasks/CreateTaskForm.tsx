@@ -5,12 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useDropzone } from 'react-dropzone';
 import { useQueryClient } from '@tanstack/react-query';
+import { addDays, addMonths, addWeeks, startOfWeek } from 'date-fns';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from '@/types/database';
+import { Profile, RecurrenceType } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,9 +32,19 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFileIcon } from './FileUploadZone';
-import { ArrowLeft, Save, Upload, X, Paperclip, ListChecks, Plus, Check } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Paperclip, ListChecks, Plus, Check, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+const DAYS_OF_WEEK = [
+  { value: 0, label: 'Dom' },
+  { value: 1, label: 'Seg' },
+  { value: 2, label: 'Ter' },
+  { value: 3, label: 'Qua' },
+  { value: 4, label: 'Qui' },
+  { value: 5, label: 'Sex' },
+  { value: 6, label: 'Sáb' },
+];
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório').max(200, 'Título muito longo'),
@@ -45,13 +56,17 @@ const taskSchema = z.object({
   scheduled_date: z.string().optional(),
   location: z.string().max(500, 'Local muito longo').optional(),
   tag_ids: z.array(z.string()).optional(),
+  recurrence_type: z.enum(['none', 'daily', 'weekly', 'monthly']).default('none'),
+  recurrence_interval: z.coerce.number().int().min(1).default(1),
+  recurrence_days: z.array(z.number()).default([]),
+  recurrence_time: z.string().optional(),
+  recurrence_end_mode: z.enum(['never', 'date', 'after']).default('never'),
+  recurrence_end_date: z.string().optional(),
+  recurrence_end_after: z.coerce.number().int().min(1).optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
-// sessionStorage (não localStorage — o rascunho é descartável e não deve
-// sobreviver entre sessões/abas diferentes) para não perder o que já foi
-// digitado se o formulário travar ou a aba for fechada por acidente.
 const DRAFT_STORAGE_KEY = 'kanban-create-task-draft';
 
 interface TaskDraft extends Partial<TaskFormValues> {
@@ -71,8 +86,7 @@ const saveDraft = (draft: TaskDraft) => {
   try {
     sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
   } catch {
-    // sessionStorage indisponível (modo privado, quota cheia) — o rascunho é
-    // só uma conveniência, não deve quebrar o formulário.
+    // sessionStorage indisponível — rascunho é conveniência, não deve quebrar o form.
   }
 };
 
@@ -80,9 +94,72 @@ const clearDraft = () => {
   try {
     sessionStorage.removeItem(DRAFT_STORAGE_KEY);
   } catch {
-    // ver comentário em saveDraft
+    // ver saveDraft
   }
 };
+
+function computeInstanceDates(
+  baseDate: Date,
+  recurrenceType: Exclude<RecurrenceType, 'none'>,
+  interval: number,
+  days: number[],
+  endDate: Date | null,
+  endAfter: number | null,
+): Date[] {
+  const maxCount = endAfter ? Math.min(endAfter, 4) : 4;
+  const result: Date[] = [];
+
+  if (recurrenceType === 'daily') {
+    let k = 1;
+    while (result.length < maxCount) {
+      const d = addDays(baseDate, k * interval);
+      if (endDate && d > endDate) break;
+      result.push(d);
+      k++;
+    }
+  } else if (recurrenceType === 'weekly') {
+    const sortedDays = [...days].sort((a, b) => a - b);
+    if (sortedDays.length === 0) return result;
+
+    // Começa da semana que contém baseDate (domingo = 0)
+    const weekStart = startOfWeek(baseDate, { weekStartsOn: 0 });
+    let cycleIndex = 0;
+
+    outer: for (;;) {
+      const currentWeekStart = addWeeks(weekStart, cycleIndex * interval);
+      for (const dow of sortedDays) {
+        const candidate = addDays(currentWeekStart, dow);
+        if (candidate <= baseDate) continue;
+        if (endDate && candidate > endDate) break outer;
+        result.push(candidate);
+        if (result.length >= maxCount) break outer;
+      }
+      cycleIndex++;
+      if (cycleIndex > 104) break; // limite de segurança: 2 anos
+    }
+  } else if (recurrenceType === 'monthly') {
+    let k = 1;
+    while (result.length < maxCount) {
+      const d = addMonths(baseDate, k * interval);
+      if (endDate && d > endDate) break;
+      result.push(d);
+      k++;
+    }
+  }
+
+  return result;
+}
+
+function applyRecurrenceTime(date: Date, timeStr: string | undefined, fallback: Date): Date {
+  const result = new Date(date);
+  if (timeStr) {
+    const [h, m] = timeStr.split(':').map(Number);
+    result.setHours(h, m, 0, 0);
+  } else {
+    result.setHours(fallback.getHours(), fallback.getMinutes(), 0, 0);
+  }
+  return result;
+}
 
 const CreateTaskForm: React.FC = () => {
   const navigate = useNavigate();
@@ -93,14 +170,10 @@ const CreateTaskForm: React.FC = () => {
   const queryClient = useQueryClient();
   const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
   const [isSavingExtras, setIsSavingExtras] = useState(false);
+  const [showRecurrence, setShowRecurrence] = useState(false);
 
-  // Lido uma única vez, na montagem — não a cada render, para não sobrescrever
-  // o que o próprio usuário já digitou nesta sessão do formulário.
   const [draft] = useState(() => loadDraft());
 
-  // Gestor técnico sees every profile except admins (checked via the
-  // has_role RPC, since user_roles RLS only lets a non-admin read their own
-  // role row). Admins keep the full, unfiltered list.
   const [assignableProfiles, setAssignableProfiles] = useState<Profile[]>(profiles);
 
   useEffect(() => {
@@ -142,7 +215,7 @@ const CreateTaskForm: React.FC = () => {
       'image/png': ['.png'],
       'application/pdf': ['.pdf'],
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
   });
 
   const removePendingAttachment = (index: number) => {
@@ -175,19 +248,30 @@ const CreateTaskForm: React.FC = () => {
       scheduled_date: draft?.scheduled_date ?? '',
       location: draft?.location ?? '',
       tag_ids: draft?.tag_ids ?? [],
+      recurrence_type: draft?.recurrence_type ?? 'none',
+      recurrence_interval: draft?.recurrence_interval ?? 1,
+      recurrence_days: draft?.recurrence_days ?? [],
+      recurrence_time: draft?.recurrence_time ?? '',
+      recurrence_end_mode: draft?.recurrence_end_mode ?? 'never',
+      recurrence_end_date: draft?.recurrence_end_date ?? '',
+      recurrence_end_after: draft?.recurrence_end_after ?? undefined,
     },
   });
+
+  const recurrenceType = form.watch('recurrence_type');
+  const recurrenceEndMode = form.watch('recurrence_end_mode');
+
+  useEffect(() => {
+    if (recurrenceType !== 'none') setShowRecurrence(true);
+  }, [recurrenceType]);
 
   useEffect(() => {
     if (draft && (draft.title || draft.description)) {
       toast.info('Rascunho recuperado desta sessão.');
     }
-    // Só na montagem — restaurar o rascunho não deve repetir o aviso a cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Autosave do rascunho a cada mudança relevante do formulário, para não
-  // perder o que já foi digitado se a página travar ou for fechada.
   useEffect(() => {
     const subscription = form.watch((values) => {
       saveDraft({ ...values, checklistItems });
@@ -196,6 +280,8 @@ const CreateTaskForm: React.FC = () => {
   }, [form, checklistItems]);
 
   const onSubmit = async (values: TaskFormValues) => {
+    const isRecurring = values.recurrence_type !== 'none';
+
     const task = await createTask.mutateAsync({
       title: values.title,
       description: values.description || null,
@@ -206,6 +292,13 @@ const CreateTaskForm: React.FC = () => {
       scheduled_date: values.scheduled_date ? new Date(values.scheduled_date).toISOString() : null,
       location: values.location || null,
       tag_ids: values.tag_ids,
+      recurrence_type: values.recurrence_type,
+      recurrence_days: isRecurring ? (values.recurrence_days ?? []) : null,
+      recurrence_time: isRecurring ? (values.recurrence_time || null) : null,
+      recurrence_interval: isRecurring ? (values.recurrence_interval ?? 1) : 1,
+      recurrence_end_date: isRecurring && values.recurrence_end_mode === 'date' ? (values.recurrence_end_date || null) : null,
+      recurrence_end_after: isRecurring && values.recurrence_end_mode === 'after' ? (values.recurrence_end_after ?? null) : null,
+      parent_task_id: null,
     });
 
     const hasExtras = pendingAttachments.length > 0 || checklistItems.length > 0;
@@ -243,12 +336,62 @@ const CreateTaskForm: React.FC = () => {
       }
 
       setIsSavingExtras(false);
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    }
+
+    // Gera instâncias imediatas para tarefas recorrentes
+    if (isRecurring) {
+      const baseDate = new Date(task.due_date);
+      const endDate = values.recurrence_end_mode === 'date' && values.recurrence_end_date
+        ? new Date(values.recurrence_end_date)
+        : null;
+      const endAfter = values.recurrence_end_mode === 'after'
+        ? (values.recurrence_end_after ?? null)
+        : null;
+
+      const dates = computeInstanceDates(
+        baseDate,
+        values.recurrence_type as Exclude<RecurrenceType, 'none'>,
+        values.recurrence_interval ?? 1,
+        values.recurrence_days ?? [],
+        endDate,
+        endAfter,
+      );
+
+      if (dates.length > 0) {
+        const instances = dates.map((d) => ({
+          title: task.title,
+          description: task.description,
+          assignee_id: task.assignee_id,
+          created_by_id: user!.id,
+          task_type: task.task_type,
+          priority: task.priority,
+          location: task.location,
+          due_date: applyRecurrenceTime(d, values.recurrence_time, baseDate).toISOString(),
+          parent_task_id: task.id,
+          recurrence_type: 'none' as const,
+          recurrence_interval: 1,
+        }));
+
+        const { error } = await supabase.from('tasks').insert(instances);
+        if (error) {
+          toast.error('Erro ao criar instâncias recorrentes: ' + error.message);
+        } else {
+          toast.success(`${dates.length} instância(s) recorrente(s) criada(s)!`);
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
+        }
+      }
     }
 
     clearDraft();
     navigate('/');
   };
+
+  const recurrenceIntervalLabel = recurrenceType === 'daily'
+    ? 'dia(s)'
+    : recurrenceType === 'weekly'
+    ? 'semana(s)'
+    : 'mês/meses';
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -303,8 +446,7 @@ const CreateTaskForm: React.FC = () => {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Assignee — locked to self for regular users; admins see
-                    everyone, gestor técnico sees everyone except admins */}
+                {/* Assignee */}
                 {(isAdmin || isGestorTecnico) && assignableProfiles.length > 0 && (
                   <FormField
                     control={form.control}
@@ -340,8 +482,8 @@ const CreateTaskForm: React.FC = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger>
@@ -364,8 +506,8 @@ const CreateTaskForm: React.FC = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Prioridade</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         value={field.value}
                       >
                         <SelectTrigger>
@@ -461,12 +603,9 @@ const CreateTaskForm: React.FC = () => {
                               color: tag.color,
                             }}
                           >
-                            {/* Indicador puramente visual — nunca um Checkbox interativo real
-                                aqui. O Radix Checkbox monta um <input> nativo oculto que
-                                sincroniza via um evento "click" que faz bubble no DOM; aninhado
-                                dentro deste <button> (que já trata o clique sozinho), esse
-                                evento re-disparava o onClick do próprio botão e alternava a
-                                seleção da tag infinitamente, travando a tela. */}
+                            {/* Indicador puramente visual — nunca um Checkbox interativo real.
+                                Ver comentário completo no histórico: Radix Checkbox dentro de
+                                <button> dispara evento sintético com bubble que causa loop infinito. */}
                             <span
                               aria-hidden="true"
                               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
@@ -488,6 +627,219 @@ const CreateTaskForm: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Recorrência — seção colapsável */}
+              <div className="border rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowRecurrence((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium bg-muted/40 hover:bg-muted/70 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Recorrência
+                    {recurrenceType !== 'none' && (
+                      <span className="text-xs text-primary font-semibold">(ativa)</span>
+                    )}
+                  </span>
+                  {showRecurrence ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {showRecurrence && (
+                  <div className="px-4 pb-4 pt-3 space-y-4">
+                    {/* Tipo de recorrência */}
+                    <FormField
+                      control={form.control}
+                      name="recurrence_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Repetir</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Não repetir</SelectItem>
+                              <SelectItem value="daily">Diariamente</SelectItem>
+                              <SelectItem value="weekly">Semanalmente</SelectItem>
+                              <SelectItem value="monthly">Mensalmente</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {recurrenceType !== 'none' && (
+                      <>
+                        {/* Intervalo */}
+                        <FormField
+                          control={form.control}
+                          name="recurrence_interval"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>A cada</FormLabel>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    className="w-20"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                                  />
+                                </FormControl>
+                                <span className="text-sm text-muted-foreground">{recurrenceIntervalLabel}</span>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Dias da semana (apenas weekly) */}
+                        {recurrenceType === 'weekly' && (
+                          <FormField
+                            control={form.control}
+                            name="recurrence_days"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Dias da semana</FormLabel>
+                                <div className="flex flex-wrap gap-2">
+                                  {DAYS_OF_WEEK.map((day) => {
+                                    const selected = field.value?.includes(day.value);
+                                    return (
+                                      <button
+                                        key={day.value}
+                                        type="button"
+                                        onClick={() => {
+                                          const next = selected
+                                            ? field.value.filter((d) => d !== day.value)
+                                            : [...field.value, day.value];
+                                          field.onChange(next);
+                                        }}
+                                        className={cn(
+                                          'w-10 h-10 rounded-full text-xs font-medium border transition-colors',
+                                          selected
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-transparent text-muted-foreground border-border hover:border-primary/50'
+                                        )}
+                                      >
+                                        {day.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                        {/* Horário das instâncias */}
+                        <FormField
+                          control={form.control}
+                          name="recurrence_time"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Horário das instâncias</FormLabel>
+                              <FormControl>
+                                <Input type="time" className="w-36" {...field} />
+                              </FormControl>
+                              <p className="text-xs text-muted-foreground">
+                                Deixe em branco para usar o mesmo horário do prazo acima.
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Condição de término */}
+                        <FormField
+                          control={form.control}
+                          name="recurrence_end_mode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Terminar</FormLabel>
+                              <div className="space-y-2">
+                                {[
+                                  { value: 'never', label: 'Sem fim (gera 4 instâncias)' },
+                                  { value: 'date', label: 'Até uma data' },
+                                  { value: 'after', label: 'Após N ocorrências' },
+                                ].map((opt) => (
+                                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-sm">
+                                    <input
+                                      type="radio"
+                                      name="recurrence_end_mode"
+                                      value={opt.value}
+                                      checked={field.value === opt.value}
+                                      onChange={() => field.onChange(opt.value)}
+                                      className="accent-primary"
+                                    />
+                                    {opt.label}
+                                  </label>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {recurrenceEndMode === 'date' && (
+                          <FormField
+                            control={form.control}
+                            name="recurrence_end_date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Data de término</FormLabel>
+                                <FormControl>
+                                  <Input type="date" className="w-44" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                        {recurrenceEndMode === 'after' && (
+                          <FormField
+                            control={form.control}
+                            name="recurrence_end_after"
+                            render={({ field }) => {
+                              const n = Number(field.value) || 1;
+                              const nowCount = Math.min(n, 4);
+                              return (
+                                <FormItem>
+                                  <FormLabel>Número total de ocorrências</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      max={52}
+                                      className="w-20"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">
+                                    {n > 4
+                                      ? `As primeiras 4 instâncias serão criadas agora. As demais (até ${n} no total) poderão ser geradas pelo botão "Gerar mais instâncias" no template.`
+                                      : `${nowCount} instância(s) serão criadas imediatamente.`}
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Attachments */}
               <div>
