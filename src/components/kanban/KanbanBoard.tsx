@@ -47,21 +47,22 @@ const KanbanBoard: React.FC = () => {
     dateFilter: '',
   });
 
-  // Coluna "Feito" só cresce (é um arquivo histórico) — paginada
-  // separadamente via useTasksInfinite, ordenada da mais recente para a mais
-  // antiga. As colunas "A Fazer"/"Fazendo" continuam usando o fetch completo
-  // de useTasks(), já que hoje não crescem sem limite.
-  const doneColumn = useTasksInfinite({
-    status: 'done',
+  // Todas as três colunas usam useTasksInfinite para paginação server-side.
+  // useTasks() continua com fetch completo para Dashboard, exportações e
+  // lógica de posição no drag-and-drop (tasksByStatus).
+  const sharedColumnParams = {
     search: filters.search,
     assigneeId: filters.assignee || undefined,
     priority: (filters.priority || '') as TaskPriority | '',
     taskType: filters.type || '',
     tagId: filters.tag || undefined,
     dateFilter: (filters.dateFilter || '') as 'today' | 'overdue' | 'upcoming' | '',
-    ascending: false,
     pageSize: 20,
-  });
+  };
+
+  const todoColumn = useTasksInfinite({ ...sharedColumnParams, status: 'todo', ascending: true });
+  const doingColumn = useTasksInfinite({ ...sharedColumnParams, status: 'doing', ascending: true });
+  const doneColumn = useTasksInfinite({ ...sharedColumnParams, status: 'done', ascending: false });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -148,14 +149,12 @@ const KanbanBoard: React.FC = () => {
     return grouped;
   }, [filteredTasks]);
 
-  // Para renderização: "done" usa a lista paginada; "todo"/"doing" mantêm o
-  // agrupamento completo. tasksByStatus (acima) continua sendo a fonte para
-  // cálculo de posição no drag-and-drop, já que useTasks() ainda busca todas
-  // as tarefas — assim a posição de destino nunca colide mesmo com a coluna
-  // "Feito" parcialmente carregada na tela.
+  // Renderização: todas as colunas usam listas paginadas.
+  // tasksByStatus (de useTasks()) continua sendo usado para o drag-and-drop,
+  // já que precisa do conjunto completo para calcular posições corretamente.
   const columnTasks: Record<TaskStatus, TaskWithRelations[]> = {
-    todo: tasksByStatus.todo,
-    doing: tasksByStatus.doing,
+    todo: todoColumn.tasks,
+    doing: doingColumn.tasks,
     done: doneColumn.tasks,
   };
 
@@ -235,38 +234,45 @@ const KanbanBoard: React.FC = () => {
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-1 md:grid-cols-3">
-          {columns.map((column) => (
-            <div
-              key={column.id}
-              className="w-[85vw] max-w-sm shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink"
-            >
-              <KanbanColumn
-                id={column.id}
-                title={column.title}
-                tasks={columnTasks[column.id]}
-                profiles={profiles}
-                onTaskClick={handleTaskClick}
-                hasMore={column.id === 'done' ? doneColumn.hasNextPage : false}
-                footer={
-                  column.id === 'done' && doneColumn.hasNextPage ? (
-                    <div className="flex justify-center pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => doneColumn.fetchNextPage()}
-                        disabled={doneColumn.isFetchingNextPage}
-                      >
-                        {doneColumn.isFetchingNextPage && (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        )}
-                        Carregar mais
-                      </Button>
-                    </div>
-                  ) : undefined
-                }
-              />
-            </div>
-          ))}
+          {columns.map((column) => {
+            const colData = column.id === 'todo'
+              ? todoColumn
+              : column.id === 'doing'
+              ? doingColumn
+              : doneColumn;
+            return (
+              <div
+                key={column.id}
+                className="w-[85vw] max-w-sm shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink"
+              >
+                <KanbanColumn
+                  id={column.id}
+                  title={column.title}
+                  tasks={columnTasks[column.id]}
+                  profiles={profiles}
+                  onTaskClick={handleTaskClick}
+                  hasMore={colData.hasNextPage ?? false}
+                  footer={
+                    colData.hasNextPage ? (
+                      <div className="flex justify-center pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => colData.fetchNextPage()}
+                          disabled={colData.isFetchingNextPage}
+                        >
+                          {colData.isFetchingNextPage && (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          )}
+                          Carregar mais
+                        </Button>
+                      </div>
+                    ) : undefined
+                  }
+                />
+              </div>
+            );
+          })}
         </div>
 
         <DragOverlay>

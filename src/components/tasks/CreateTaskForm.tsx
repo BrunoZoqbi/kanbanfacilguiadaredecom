@@ -808,22 +808,31 @@ const CreateTaskForm: React.FC = () => {
                           <FormField
                             control={form.control}
                             name="recurrence_end_after"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Número de ocorrências (máx. 4)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    max={4}
-                                    className="w-20"
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                            render={({ field }) => {
+                              const n = Number(field.value) || 1;
+                              const nowCount = Math.min(n, 4);
+                              return (
+                                <FormItem>
+                                  <FormLabel>Número total de ocorrências</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      max={52}
+                                      className="w-20"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">
+                                    {n > 4
+                                      ? `As primeiras 4 instâncias serão criadas agora. As demais (até ${n} no total) poderão ser geradas pelo botão "Gerar mais instâncias" no template.`
+                                      : `${nowCount} instância(s) serão criadas imediatamente.`}
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
                           />
                         )}
                       </>

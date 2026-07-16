@@ -82,7 +82,7 @@ interface EditDraft {
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, onOpenTask }) => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, role } = useAuth();
   const { addComment, toggleChecklistItem, addChecklistItem, deleteTask, updateTask } = useTasks();
   const { deleteFile } = useFileUpload();
   const queryClient = useQueryClient();
@@ -93,6 +93,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const [pendingEditScope, setPendingEditScope] = useState<'single' | 'future' | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isGeneratingInstances, setIsGeneratingInstances] = useState(false);
 
   if (!task) return null;
 
@@ -103,6 +104,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
   const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'done';
   const isInstance = !!task.parent_task_id;
   const isTemplate = !task.parent_task_id && task.recurrence_type !== 'none';
+  const canGenerateInstances =
+    isTemplate && ['admin', 'gestor_tecnico', 'gestor_comercial'].includes(role ?? '');
 
   const startEditing = () => {
     setEditDraft({
@@ -177,6 +180,28 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
       setPendingEditScope('single');
     } else {
       saveEdit('single');
+    }
+  };
+
+  const handleGenerateInstances = async () => {
+    setIsGeneratingInstances(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gerar-instancias-recorrentes', {
+        body: { task_id: task.id },
+      });
+      if (error) throw error;
+      const created = data?.created ?? 0;
+      if (created === 0) {
+        toast.info(data?.message ?? 'Nenhuma instância nova a gerar.');
+      } else {
+        toast.success(`${created} instância(s) recorrente(s) gerada(s)!`);
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
+      }
+    } catch (e: any) {
+      toast.error('Erro ao gerar instâncias: ' + e.message);
+    } finally {
+      setIsGeneratingInstances(false);
     }
   };
 
@@ -572,6 +597,27 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
                 </Button>
               </div>
             </div>
+
+            {/* Gerar mais instâncias (templates de recorrência) */}
+            {canGenerateInstances && (
+              <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Gera as próximas 4 instâncias a partir da última existente.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateInstances}
+                    disabled={isGeneratingInstances}
+                  >
+                    <RefreshCw className={cn('h-4 w-4 mr-2', isGeneratingInstances && 'animate-spin')} />
+                    {isGeneratingInstances ? 'Gerando...' : 'Gerar mais instâncias'}
+                  </Button>
+                </div>
+              </>
+            )}
 
             {/* Admin actions */}
             {isAdmin && (
