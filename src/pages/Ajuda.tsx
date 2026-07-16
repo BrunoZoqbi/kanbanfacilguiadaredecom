@@ -34,7 +34,7 @@ const extrairTexto = (node: React.ReactNode): string => {
 
 // Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
-const ULTIMA_ATUALIZACAO = '09/07/2026';
+const ULTIMA_ATUALIZACAO = '16/07/2026';
 
 interface SecaoAjuda {
   id: string;
@@ -74,13 +74,30 @@ const Ajuda: React.FC = () => {
             criar — já é possível anexar PDF/foto e criar um checklist no momento da criação.
           </li>
           <li>
-            Arraste o cartão entre as colunas "A Fazer", "Fazendo" e "Feito".
+            <strong className="font-medium text-foreground">Rascunho automático:</strong> se o
+            formulário for fechado ou a página recarregar antes de salvar, os dados já digitados são
+            recuperados automaticamente ao reabrir.
+          </li>
+          <li>
+            Arraste o cartão entre as colunas{' '}
+            <strong className="font-medium text-foreground">"A Fazer"</strong>,{' '}
+            <strong className="font-medium text-foreground">"Fazendo"</strong> e{' '}
+            <strong className="font-medium text-foreground">"Feito"</strong>.
+          </li>
+          <li>
+            A coluna <strong className="font-medium text-foreground">"Feito"</strong> usa
+            paginação — clique em{' '}
+            <strong className="font-medium text-foreground">"Carregar mais"</strong> para ver
+            tarefas mais antigas sem travar o carregamento inicial.
           </li>
           <li>
             Use os filtros (Responsável, Prioridade, Tipo, Prazo) para encontrar tarefas
             rapidamente.
           </li>
-          <li>"Minhas Tarefas" mostra só o que está atribuído a você.</li>
+          <li>
+            <strong className="font-medium text-foreground">"Minhas Tarefas"</strong> mostra só o
+            que está atribuído a você, com busca e paginação para históricos longos.
+          </li>
           <li>
             O Calendário mostra as tarefas por data, com pontos coloridos indicando a prioridade.
           </li>
@@ -93,35 +110,61 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            <strong className="font-medium text-foreground">Fluxo do equipamento (item serializado):</strong>{' '}
+            <strong className="font-medium text-foreground">
+              Fluxo do equipamento (item serializado):
+            </strong>{' '}
             Disponível (na sede) → Retirado por um técnico → Instalado no cliente → Recolhido
             (vira tarefa automaticamente) → Devolvido à sede → Em Análise (se com defeito) →
             Reparado ou Baixa definitiva.
           </p>
           <p>
             <strong className="font-medium text-foreground">Fluxo do consumível</strong> (cabo,
-            conector e outros itens sem número de série): Entrada na sede → Retirar para Técnico →
-            Usar/Consumir (baixa o saldo do técnico) → Devolver à Sede (o que sobrou). O mesmo
-            padrão de custódia do equipamento, só que por quantidade em vez de unidade.
+            conector e outros itens sem número de série):{' '}
+            <strong className="font-medium text-foreground">Entrada na sede</strong> →{' '}
+            <strong className="font-medium text-foreground">Retirar para Técnico</strong> (vai para
+            o saldo do técnico) →{' '}
+            <strong className="font-medium text-foreground">Usar/Consumir em campo</strong> (desconta
+            do saldo do técnico) →{' '}
+            <strong className="font-medium text-foreground">Devolver à Sede</strong> o que sobrar.
+            A custódia é rastreada por quantidade, não por unidade individual.
           </p>
           <div>
-            <p className="font-medium text-foreground mb-1">Gestor Técnico</p>
+            <p className="font-medium text-foreground mb-1">Gestor Técnico / Admin</p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>Cadastra produtos e itens na aba "Cadastro".</li>
               <li>
-                Retira equipamento ou consumível para um técnico na aba "Disponível" (um selo
-                "Estoque baixo" aparece quando restam 2 unidades ou menos). O campo de busca
-                encontra itens por série, patrimônio, MAC ou nome do cliente vinculado.
+                Na aba <strong className="font-medium text-foreground">"Disponível"</strong>, retira
+                equipamento ou consumível para um técnico. O campo de busca encontra itens por
+                série, patrimônio, MAC ou nome do cliente vinculado. Um selo{' '}
+                <strong className="font-medium text-foreground">"Estoque baixo"</strong> aparece
+                quando o saldo disponível fica igual ou abaixo do limite configurado em Gerenciar
+                &gt; Configurações.
               </li>
-              <li>Lança recolhimento — já cria a tarefa e move o item automaticamente.</li>
+              <li>
+                Lança recolhimento na aba{' '}
+                <strong className="font-medium text-foreground">"Lançar Recolhimento"</strong> (com
+                busca e paginação nos itens instalados em cliente) — já cria a tarefa e move o item
+                automaticamente.
+              </li>
               <li>Decide reparo ou baixa na aba "Em Análise".</li>
               <li>
-                A aba <strong className="font-medium text-foreground">"Visão Geral"</strong> mostra
-                o resumo quantitativo de todo o estoque por status, categoria e produto.
+                A aba{' '}
+                <strong className="font-medium text-foreground">"Visão Geral"</strong> (só Admin e
+                Gestor Técnico) exibe o resumo quantitativo de todo o estoque por status, categoria
+                e produto — com gráfico alternável entre pizza e barras (o toggle fica no canto
+                superior direito de cada gráfico e a preferência é salva automaticamente).
               </li>
               <li>
-                O botão <strong className="font-medium text-foreground">"Exportar Relatório"</strong>{' '}
-                gera uma planilha Excel completa.
+                A aba{' '}
+                <strong className="font-medium text-foreground">"Por Técnico"</strong> mostra uma
+                lista expansível: clique no nome do técnico para ver o que ele tem em posse —
+                serializados e consumíveis aparecem em seções separadas. Técnicos sem nenhum item
+                ficam ocultos.
+              </li>
+              <li>
+                O botão{' '}
+                <strong className="font-medium text-foreground">"Exportar Relatório"</strong> gera
+                uma planilha Excel completa.
               </li>
             </ul>
           </div>
@@ -148,8 +191,9 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Toque em <strong className="font-medium text-foreground">"Nova Prospecção"</strong> e
-            preencha os dados do contato (visita ou ligação).
+            Toque em{' '}
+            <strong className="font-medium text-foreground">"Nova Prospecção"</strong> e preencha
+            os dados do contato (visita ou ligação).
           </li>
           <li>
             Responda o checklist de 7 perguntas — pontuação e classificação (Baixa/Média/Alta) são
@@ -157,15 +201,17 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             Prospecções "Alta" geram uma tarefa automaticamente no Kanban, com prazo de 2 dias,
-            para você não perder o timing de contato.
+            para não perder o timing de contato.
           </li>
           <li>
-            Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista.
+            Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista. Use o campo de
+            busca e a paginação para navegar em históricos longos.
           </li>
           <li>
-            Toque numa prospecção já cadastrada para reabri-la: você pode consultar as respostas
-            do checklist com a pontuação de cada uma (somente leitura — o checklist em si não pode
-            ser refeito, para não recalcular a pontuação) e editar os dados de contato e o status.
+            Clique numa prospecção já cadastrada para reabri-la: consulte as respostas do checklist
+            com a pontuação individual de cada pergunta (somente leitura — o checklist em si não
+            pode ser refeito, para não recalcular a pontuação) e edite os dados de contato e o
+            status.
           </li>
         </ul>
       ),
@@ -177,7 +223,14 @@ const Ajuda: React.FC = () => {
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
             Toque em <strong className="font-medium text-foreground">"Novo Ticket"</strong> para
-            registrar um chamado de suporte.
+            registrar um chamado de suporte. Use a busca e a paginação para navegar em históricos
+            longos.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Módulo compartilhado:</strong> Gestor
+            Técnico trata chamados técnicos (suporte, conexão, instalação); Gestor Comercial trata
+            chamados comerciais e financeiros (cobrança, negociação, cancelamento). Ambos têm visão
+            ampla de todos os tickets.
           </li>
           <li>
             Use a aba "Respostas" para se comunicar com o cliente (ele acompanha essas mensagens
@@ -189,7 +242,7 @@ const Ajuda: React.FC = () => {
           </li>
           <li>Ao resolver, toque em "Marcar como Resolvido".</li>
           <li>
-            O cliente consulta seu próprio chamado, sem login, em{' '}
+            O cliente consulta o próprio chamado, sem login, em{' '}
             <code className="text-xs bg-muted px-1 py-0.5 rounded">/consulta-ticket</code>,
             informando o número do ticket e o CPF ou telefone cadastrado.
           </li>
@@ -205,7 +258,10 @@ const Ajuda: React.FC = () => {
             Textos prontos para copiar e colar no WhatsApp, organizados em 3 abas por setor:
             Comercial, Financeiro e Atendimento Geral.
           </li>
-          <li>Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção, Cobrança).</li>
+          <li>
+            Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção,
+            Cobrança).
+          </li>
           <li>
             Use o campo de busca para encontrar um script pelo título ou conteúdo, e o botão{' '}
             <strong className="font-medium text-foreground">"Copiar"</strong> para colar direto na
@@ -219,6 +275,39 @@ const Ajuda: React.FC = () => {
       ),
     },
     {
+      id: 'calendario',
+      titulo: 'Calendário',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Visualize tarefas organizadas por data. Pontos coloridos nos dias indicam a prioridade
+            de cada tarefa (verde = baixa, amarelo = média, laranja = alta, vermelho = crítica).
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Admin e Gestor Técnico:</strong> um
+            filtro <strong className="font-medium text-foreground">"Responsável"</strong> aparece no
+            topo do calendário — selecione qualquer pessoa para ver só as tarefas dela, ou deixe em
+            branco para ver todas.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">
+              Gestor Comercial e Usuário comum:
+            </strong>{' '}
+            o calendário mostra apenas as próprias tarefas, sem opção de ver tarefas de outras
+            pessoas.
+          </li>
+          <li>
+            Clique em um dia para listar as tarefas daquela data no painel lateral. Toque numa
+            tarefa para abrir o detalhe completo.
+          </li>
+          <li>
+            Dias com tarefas atrasadas (ainda não concluídas) exibem um ponto vermelho piscando no
+            canto superior direito da célula.
+          </li>
+        </ul>
+      ),
+    },
+    {
       id: 'perfil',
       titulo: 'Meu Perfil',
       conteudo: (
@@ -226,7 +315,15 @@ const Ajuda: React.FC = () => {
           <li>Edite seu nome completo e WhatsApp a qualquer momento.</li>
           <li>
             Para trocar a senha, informe a senha atual e a nova senha — por segurança, e-mail e
-            papel não podem ser alterados por aqui (fale com o administrador).
+            papel não podem ser alterados por aqui.
+          </li>
+          <li>
+            Se precisar alterar o e-mail ou ter a senha redefinida por outra pessoa, solicite ao
+            Admin — que pode fazer isso em{' '}
+            <strong className="font-medium text-foreground">
+              Gerenciar &gt; Usuários &gt; Editar
+            </strong>
+            .
           </li>
         </ul>
       ),
@@ -238,15 +335,76 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Painel consolidado com abas para Tarefas, Estoque, Prospecção e Tickets — um resumo
-            executivo de cada módulo, sem precisar entrar em cada tela separadamente.
+            Painel consolidado com abas para Tarefas, Estoque, Prospecção e Tickets — resumo
+            executivo de cada módulo sem precisar entrar em cada tela separadamente.
           </li>
           <li>
-            A aba "Tarefas" mantém o detalhamento completo (ranking por usuário, taxa de
-            conclusão no prazo, exportação em PDF/Excel). As demais abas mostram só os números
-            principais — o detalhamento continua na tela própria de cada módulo.
+            A aba "Tarefas" mantém o detalhamento completo (ranking por usuário, taxa de conclusão
+            no prazo, exportação em PDF/Excel).
+          </li>
+          <li>
+            As abas Estoque, Prospecção e Tickets exibem gráficos visuais — alterne entre pizza e
+            barras usando o toggle no canto superior direito de cada gráfico. A preferência é salva
+            automaticamente por gráfico e persiste ao navegar entre páginas.
           </li>
         </ul>
+      ),
+    },
+    {
+      id: 'gerenciar',
+      titulo: 'Gerenciar (Admin)',
+      visivelPara: () => isAdmin,
+      conteudo: (
+        <div className="space-y-4 text-sm text-muted-foreground">
+          <div>
+            <p className="font-medium text-foreground mb-1">Usuários</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                Busca por nome, e-mail ou WhatsApp + filtro por papel + paginação para navegar em
+                equipes grandes.
+              </li>
+              <li>
+                Ação "Editar": permite alterar o e-mail e redefinir a senha de qualquer usuário
+                diretamente pelo painel Admin, sem precisar que a pessoa faça isso por conta
+                própria.
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Reatribuir em Massa</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                Busca + paginação para encontrar tarefas. O botão{' '}
+                <strong className="font-medium text-foreground">"Selecionar todos"</strong>{' '}
+                seleciona apenas os itens visíveis na página atual — carregue mais itens antes de
+                selecionar se precisar de um conjunto maior.
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Logs</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                Histórico de ações do sistema com paginação em lotes de 30 entradas. Use a busca
+                para filtrar por ação ou usuário.
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Configurações</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                Define o{' '}
+                <strong className="font-medium text-foreground">
+                  limite numérico de "Estoque baixo"
+                </strong>
+                : quando o saldo disponível de um produto (serializado ou consumível) fica igual ou
+                abaixo desse valor, o selo de alerta aparece na aba "Disponível" do Estoque. O
+                valor padrão é 2, mas pode ser ajustado a qualquer momento.
+              </li>
+            </ul>
+          </div>
+        </div>
       ),
     },
     {
@@ -258,28 +416,27 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            <strong className="font-medium text-foreground">Admin:</strong> acesso total a todos
-            os módulos e usuários.
+            <strong className="font-medium text-foreground">Admin:</strong> acesso total a todos os
+            módulos e usuários. Também define o limite de alerta de estoque baixo em Gerenciar &gt;
+            Configurações, edita e-mails e redefine senhas de outros usuários em Gerenciar &gt;
+            Usuários.
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
-            Estoque (retirada, recolhimento), vê as tarefas da equipe técnica e tem visão ampla de
-            todos os Tickets — na prática, responde principalmente pelos chamados técnicos
+            Estoque (retirada, recolhimento, baixa), vê as tarefas da equipe técnica e tem visão
+            ampla de todos os Tickets — na prática, responde principalmente pelos chamados técnicos
             (suporte, conexão, instalação).
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia
             Prospecção Comercial e também tem visão ampla de todos os Tickets — na prática,
-            responde principalmente pelos chamados comerciais e financeiros (cobrança,
-            negociação, cancelamento).
+            responde principalmente pelos chamados comerciais e financeiros (cobrança, negociação,
+            cancelamento).
           </li>
           <li>
             <strong className="font-medium text-foreground">Usuário comum:</strong> vê e cria
-            apenas as próprias tarefas, e usa Estoque/Tickets apenas nos itens atribuídos a si.
-          </li>
-          <li>
-            O admin pode editar o e-mail e redefinir a senha de qualquer usuário diretamente pela
-            tela Editar, dentro de Gerenciar &gt; Usuários.
+            apenas as próprias tarefas; no Estoque e Tickets, só acessa os itens atribuídos a si;
+            no Calendário, vê apenas as próprias tarefas.
           </li>
         </ul>
       ),
