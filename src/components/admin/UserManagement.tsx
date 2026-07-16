@@ -88,10 +88,18 @@ const UserManagement: React.FC = () => {
   const {
     users: filteredUsers,
     isLoading,
+    isError,
+    error,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
   } = useUsersInfinite({ search: debouncedSearchTerm, role: roleFilter });
+
+  React.useEffect(() => {
+    if (isError && error) {
+      toast.error('Erro ao carregar usuários: ' + (error as any)?.message);
+    }
+  }, [isError, error]);
 
   const setUserUpdating = (userId: string, isUpdating: boolean) => {
     setUpdatingUsers((prev) => {
@@ -366,7 +374,7 @@ const UserManagement: React.FC = () => {
           <div className="relative sm:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, e-mail ou WhatsApp..."
+              placeholder="Buscar por nome ou WhatsApp..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -395,6 +403,10 @@ const UserManagement: React.FC = () => {
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : isError ? (
+          <div className="p-6 text-center text-destructive text-sm border border-destructive/30 rounded-lg bg-destructive/5">
+            Erro ao carregar usuários: {(error as any)?.message ?? 'Erro desconhecido'}
           </div>
         ) : (
         <div className="w-full border rounded-lg divide-y overflow-x-hidden">
