@@ -34,7 +34,7 @@ const extrairTexto = (node: React.ReactNode): string => {
 
 // Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
-const ULTIMA_ATUALIZACAO = '16/07/2026';
+const ULTIMA_ATUALIZACAO = '17/07/2026';
 
 interface SecaoAjuda {
   id: string;
@@ -100,6 +100,20 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             O Calendário mostra as tarefas por data, com pontos coloridos indicando a prioridade.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Tarefas Recorrentes:</strong> ao criar
+            uma tarefa, expanda a seção{' '}
+            <strong className="font-medium text-foreground">"Recorrência"</strong> para configurar
+            repetição (Diária, Semanal ou Mensal). Defina o intervalo, os dias da semana (para
+            semanal), o horário e quando termina (nunca, em uma data, ou após N ocorrências). O
+            sistema cria automaticamente as primeiras 4 instâncias. Para gerar mais, abra o{' '}
+            <strong className="font-medium text-foreground">template</strong> no Kanban e use o
+            botão{' '}
+            <strong className="font-medium text-foreground">"Gerar mais instâncias"</strong>{' '}
+            (visível para Admin e Gestores). Tarefas instância exibem o badge{' '}
+            <strong className="font-medium text-foreground">"Recorrente"</strong> e um link para o
+            template original.
           </li>
         </ul>
       ),
