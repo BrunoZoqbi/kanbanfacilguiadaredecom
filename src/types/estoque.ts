@@ -107,6 +107,30 @@ export interface MovimentacaoEstoque {
   created_at: string;
 }
 
+// Retorno de buscar_movimentacoes_estoque() — linha já com os joins
+// resolvidos no servidor, usada na aba "Histórico" (EstoqueHistorico.tsx).
+export interface MovimentacaoEstoqueHistorico {
+  id: string;
+  created_at: string;
+  tipo_movimento: TipoMovimentoEstoque;
+  produto_nome: string;
+  numero_serie: string | null;
+  tecnico_nome: string | null;
+  quantidade: number;
+  observacao: string | null;
+}
+
+export const TIPO_MOVIMENTO_LABELS: Record<TipoMovimentoEstoque, string> = {
+  entrada_compra: 'Entrada (Compra)',
+  retirada_tecnico: 'Retirada para Técnico',
+  instalacao: 'Instalação em Cliente',
+  recolhimento: 'Recolhimento',
+  devolucao_sede: 'Devolução à Sede',
+  baixa_defeito: 'Baixa por Defeito',
+  descarte: 'Descarte',
+  saida_consumo: 'Uso/Consumo',
+};
+
 // Retorno de resumo_estoque_por_status() — painel quantitativo de Estoque
 // (EstoqueVisaoGeral.tsx).
 export interface ResumoEstoqueSerializado {

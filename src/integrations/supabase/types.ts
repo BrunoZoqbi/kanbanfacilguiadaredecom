@@ -523,6 +523,24 @@ export type Database = {
         }
         Relationships: []
       }
+      system_configs: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string | null
@@ -720,8 +738,15 @@ export type Database = {
           id: string
           item_serializado_id: string | null
           location: string | null
+          parent_task_id: string | null
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
+          recurrence_days: number[] | null
+          recurrence_end_after: number | null
+          recurrence_end_date: string | null
+          recurrence_interval: number
+          recurrence_time: string | null
+          recurrence_type: Database["public"]["Enums"]["recurrence_type"]
           scheduled_date: string | null
           status: Database["public"]["Enums"]["task_status"]
           task_type: Database["public"]["Enums"]["task_type"]
@@ -738,8 +763,15 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           location?: string | null
+          parent_task_id?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence_days?: number[] | null
+          recurrence_end_after?: number | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number
+          recurrence_time?: string | null
+          recurrence_type?: Database["public"]["Enums"]["recurrence_type"]
           scheduled_date?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           task_type?: Database["public"]["Enums"]["task_type"]
@@ -756,8 +788,15 @@ export type Database = {
           id?: string
           item_serializado_id?: string | null
           location?: string | null
+          parent_task_id?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence_days?: number[] | null
+          recurrence_end_after?: number | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number
+          recurrence_time?: string | null
+          recurrence_type?: Database["public"]["Enums"]["recurrence_type"]
           scheduled_date?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           task_type?: Database["public"]["Enums"]["task_type"]
@@ -772,7 +811,38 @@ export type Database = {
             referencedRelation: "itens_serializados"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      ticket_consulta_tentativas: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string | null
+          numero_ticket: number
+          sucesso: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          numero_ticket: number
+          sucesso: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          numero_ticket?: number
+          sucesso?: boolean
+        }
+        Relationships: []
       }
       ticket_notas_internas: {
         Row: {
@@ -846,7 +916,7 @@ export type Database = {
           atendente_id: string | null
           cpf_ou_contrato: string
           created_at: string
-          created_by_id: string
+          created_by_id: string | null
           descricao: string
           id: string
           nome_cliente: string
@@ -863,7 +933,7 @@ export type Database = {
           atendente_id?: string | null
           cpf_ou_contrato: string
           created_at?: string
-          created_by_id: string
+          created_by_id?: string | null
           descricao: string
           id?: string
           nome_cliente: string
@@ -880,7 +950,7 @@ export type Database = {
           atendente_id?: string | null
           cpf_ou_contrato?: string
           created_at?: string
-          created_by_id?: string
+          created_by_id?: string | null
           descricao?: string
           id?: string
           nome_cliente?: string
@@ -918,9 +988,76 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_get_user_email: {
-        Args: { p_user_id: string }
-        Returns: string
+      admin_buscar_logs: {
+        Args: {
+          p_action?: string
+          p_entity_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          details: Json
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      admin_buscar_usuarios: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_role?: string
+          p_search?: string
+        }
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone_whatsapp: string
+          role: string
+        }[]
+      }
+      admin_get_user_email: { Args: { p_user_id: string }; Returns: string }
+      buscar_itens_instalados: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: {
+          cliente_vinculado: string | null
+          condicao: Database["public"]["Enums"]["condicao_item"]
+          created_at: string
+          data_entrada: string
+          estoque_atual_id: string | null
+          fabricante: string | null
+          fornecedor: string | null
+          garantia_ate: string | null
+          id: string
+          local_instalacao: string | null
+          mac_address: string | null
+          modelo: string | null
+          nota_fiscal: string | null
+          numero_serie: string | null
+          observacoes: string | null
+          os_vinculada: string | null
+          patrimonio: string | null
+          produto_id: string
+          status: Database["public"]["Enums"]["status_item"]
+          tecnico_atual_id: string | null
+          ultima_movimentacao_em: string
+          updated_at: string
+          valor_aquisicao: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "itens_serializados"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       buscar_itens_serializados_disponiveis: {
         Args: {
@@ -955,6 +1092,30 @@ export type Database = {
           updated_at: string
           valor_aquisicao: number | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "itens_serializados"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      buscar_movimentacoes_estoque: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_tipo?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          numero_serie: string
+          observacao: string
+          produto_nome: string
+          quantidade: number
+          tecnico_nome: string
+          tipo_movimento: Database["public"]["Enums"]["tipo_movimento_estoque"]
+        }[]
       }
       confirmar_baixa_definitiva: {
         Args: { p_item_id: string; p_observacao?: string }
@@ -969,7 +1130,11 @@ export type Database = {
         Returns: undefined
       }
       devolver_consumivel_sede: {
-        Args: { p_observacao?: string; p_produto_id: string; p_quantidade: number }
+        Args: {
+          p_observacao?: string
+          p_produto_id: string
+          p_quantidade: number
+        }
         Returns: undefined
       }
       devolver_sede: {
@@ -999,6 +1164,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_gestor_comercial: { Args: never; Returns: boolean }
       is_gestor_tecnico: { Args: never; Returns: boolean }
+      is_user_active: { Args: never; Returns: boolean }
       lancar_entrada_consumivel: {
         Args: {
           p_estoque_id: string
@@ -1029,7 +1195,11 @@ export type Database = {
         Returns: string
       }
       lancar_uso_consumivel: {
-        Args: { p_observacao?: string; p_produto_id: string; p_quantidade: number }
+        Args: {
+          p_observacao?: string
+          p_produto_id: string
+          p_quantidade: number
+        }
         Returns: undefined
       }
       reparo_concluido: {
@@ -1056,6 +1226,7 @@ export type Database = {
       classificacao_prospeccao: "baixa" | "media" | "alta"
       condicao_item: "novo" | "usado" | "recondicionado"
       prioridade_ticket: "baixa" | "media" | "alta" | "urgente"
+      recurrence_type: "none" | "daily" | "weekly" | "monthly"
       setor_script: "comercial" | "financeiro" | "atendimento_geral"
       status_item:
         | "disponivel"
@@ -1215,6 +1386,7 @@ export const Constants = {
       classificacao_prospeccao: ["baixa", "media", "alta"],
       condicao_item: ["novo", "usado", "recondicionado"],
       prioridade_ticket: ["baixa", "media", "alta", "urgente"],
+      recurrence_type: ["none", "daily", "weekly", "monthly"],
       setor_script: ["comercial", "financeiro", "atendimento_geral"],
       status_item: [
         "disponivel",

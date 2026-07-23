@@ -15,9 +15,10 @@ import CadastroProdutos from '@/components/estoque/CadastroProdutos';
 import CadastroItemSerializado from '@/components/estoque/CadastroItemSerializado';
 import GestaoCategorias from '@/components/estoque/GestaoCategorias';
 import ItensEmAnalise from '@/components/estoque/ItensEmAnalise';
+import EstoqueHistorico from '@/components/estoque/EstoqueHistorico';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
+import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, FileSpreadsheet, LayoutDashboard, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Estoque: React.FC = () => {
@@ -110,6 +111,12 @@ const Estoque: React.FC = () => {
                 Em Análise
               </TabsTrigger>
             )}
+            {canManageStock && (
+              <TabsTrigger value="historico" className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Histórico
+              </TabsTrigger>
+            )}
             {isAdmin && (
               <TabsTrigger value="cadastro" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
@@ -147,6 +154,12 @@ const Estoque: React.FC = () => {
           {canManageStock && (
             <TabsContent value="em-analise" className="mt-6">
               <ItensEmAnalise />
+            </TabsContent>
+          )}
+
+          {canManageStock && (
+            <TabsContent value="historico" className="mt-6">
+              <EstoqueHistorico />
             </TabsContent>
           )}
 
