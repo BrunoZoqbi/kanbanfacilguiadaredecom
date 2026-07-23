@@ -115,6 +115,23 @@ export const useTasks = () => {
         await supabase.from('task_tags').insert(tagInserts);
       }
 
+      // Notifica o responsável, exceto quando a pessoa atribui a tarefa a
+      // si mesma. Fire-and-forget: uma falha aqui não deve impedir a
+      // criação da tarefa em si.
+      if (data.assignee_id && data.assignee_id !== user!.id) {
+        supabase
+          .rpc('criar_notificacao', {
+            p_user_id: data.assignee_id,
+            p_tipo: 'tarefa_atribuida',
+            p_titulo: 'Nova tarefa atribuída a você',
+            p_mensagem: data.title,
+            p_link: '/',
+          })
+          .then(({ error: notifError }) => {
+            if (notifError) console.error('Erro ao criar notificação de tarefa atribuída:', notifError);
+          });
+      }
+
       return data;
     },
     onSuccess: (data) => {

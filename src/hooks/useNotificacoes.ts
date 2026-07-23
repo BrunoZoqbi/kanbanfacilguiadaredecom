@@ -1,20 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PAGE_SIZE = 20;
-
-// Código Postgres para "relation does not exist" — a tabela `notifications`
-// ainda não existe no banco (chega num próximo prompt); até lá, o sino e a
-// página de Histórico toleram a ausência devolvendo 0 / lista vazia em vez
-// de quebrar a UI.
-const RELATION_DOES_NOT_EXIST = '42P01';
-
-// `notifications` não está no schema gerado (Database) porque a tabela
-// ainda não existe — daí o cast: supabase.from() só aceita nomes de tabela
-// já conhecidos do tipo.
-const notificationsTable = () => (supabase.from as any)('notifications');
 
 export interface NotificacaoRow {
   id: string;
@@ -27,21 +16,51 @@ export interface NotificacaoRow {
   created_at: string;
 }
 
+const invalidateNotificacoes = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: ['notificacoes-infinite'] });
+  queryClient.invalidateQueries({ queryKey: ['notificacoes-nao-lidas-count'] });
+};
+
 export const useNotificacoesNaoLidasCount = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Realtime: fica aqui porque useNotificacoesNaoLidasCount é chamado
+  // globalmente pelo AppLayout — qualquer INSERT em notifications para o
+  // usuário logado atualiza tanto o badge do sino quanto a lista da página
+  // /notificacoes (se estiver montada), sem precisar recarregar a página.
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => invalidateNotificacoes(queryClient)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   return useQuery({
     queryKey: ['notificacoes-nao-lidas-count', user?.id],
     queryFn: async () => {
-      const { count, error } = await notificationsTable()
+      const { count, error } = await supabase
+        .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user!.id)
         .eq('lida', false);
 
-      if (error) {
-        if (error.code === RELATION_DOES_NOT_EXIST) return 0;
-        throw error;
-      }
+      if (error) throw error;
       return count ?? 0;
     },
     enabled: !!user,
@@ -56,18 +75,14 @@ export const useNotificacoesInfinite = () => {
   const query = useInfiniteQuery({
     queryKey: ['notificacoes-infinite', user?.id],
     queryFn: async ({ pageParam }) => {
-      const { data, error } = await notificationsTable()
+      const { data, error } = await supabase
+        .from('notifications')
         .select('*')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);
 
-      if (error) {
-        if (error.code === RELATION_DOES_NOT_EXIST) {
-          return { notificacoes: [] as NotificacaoRow[], nextOffset: undefined };
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       const notificacoes = (data || []) as NotificacaoRow[];
       return {
@@ -80,29 +95,25 @@ export const useNotificacoesInfinite = () => {
     enabled: !!user,
   });
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['notificacoes-infinite'] });
-    queryClient.invalidateQueries({ queryKey: ['notificacoes-nao-lidas-count'] });
-  };
-
   const marcarComoLida = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await notificationsTable().update({ lida: true }).eq('id', id);
-      if (error && error.code !== RELATION_DOES_NOT_EXIST) throw error;
+      const { error } = await supabase.from('notifications').update({ lida: true }).eq('id', id);
+      if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: () => invalidateNotificacoes(queryClient),
   });
 
   const marcarTodasComoLidas = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      const { error } = await notificationsTable()
+      const { error } = await supabase
+        .from('notifications')
         .update({ lida: true })
         .eq('user_id', user.id)
         .eq('lida', false);
-      if (error && error.code !== RELATION_DOES_NOT_EXIST) throw error;
+      if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: () => invalidateNotificacoes(queryClient),
   });
 
   const notificacoes = useMemo(
