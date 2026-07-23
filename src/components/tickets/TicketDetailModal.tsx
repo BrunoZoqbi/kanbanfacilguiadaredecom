@@ -60,7 +60,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ ticket, open, onC
 
   const handleAddResposta = () => {
     if (!novaResposta.trim()) return;
-    addResposta.mutate({ ticket_id: ticket.id, texto: novaResposta.trim() });
+    addResposta.mutate({ ticket_id: ticket.id, texto: novaResposta.trim(), created_by_id: ticket.created_by_id });
     setNovaResposta('');
   };
 

@@ -39,7 +39,15 @@ export const useTicketDetail = (ticketId: string | null) => {
   });
 
   const addResposta = useMutation({
-    mutationFn: async ({ ticket_id, texto }: { ticket_id: string; texto: string }) => {
+    mutationFn: async ({
+      ticket_id,
+      texto,
+      created_by_id,
+    }: {
+      ticket_id: string;
+      texto: string;
+      created_by_id?: string | null;
+    }) => {
       if (!user) throw new Error('Não autenticado');
 
       const { error } = await supabase.from('ticket_respostas').insert({
@@ -50,6 +58,23 @@ export const useTicketDetail = (ticketId: string | null) => {
       });
 
       if (error) throw error;
+
+      // Notifica quem abriu o ticket, exceto quando quem respondeu é a
+      // mesma pessoa. Fire-and-forget: uma falha aqui não deve impedir a
+      // resposta de ser registrada.
+      if (created_by_id && created_by_id !== user.id) {
+        supabase
+          .rpc('criar_notificacao', {
+            p_user_id: created_by_id,
+            p_tipo: 'ticket_resposta',
+            p_titulo: 'Resposta no seu ticket',
+            p_mensagem: texto.slice(0, 80),
+            p_link: '/tickets',
+          })
+          .then(({ error: notifError }) => {
+            if (notifError) console.error('Erro ao criar notificação de resposta de ticket:', notifError);
+          });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket_respostas', ticketId] });

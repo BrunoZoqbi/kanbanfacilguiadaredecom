@@ -330,6 +330,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          link: string | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           categoria: string
@@ -1119,6 +1160,16 @@ export type Database = {
       }
       confirmar_baixa_definitiva: {
         Args: { p_item_id: string; p_observacao?: string }
+        Returns: undefined
+      }
+      criar_notificacao: {
+        Args: {
+          p_link?: string
+          p_mensagem: string
+          p_tipo: string
+          p_titulo: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       dar_baixa_item: {
