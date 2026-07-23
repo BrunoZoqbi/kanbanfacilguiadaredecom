@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorComercial } from '@/hooks/useIsGestorComercial';
+import { useNotificacoesNaoLidasCount } from '@/hooks/useNotificacoes';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   KanbanSquare,
   ListTodo,
@@ -27,10 +23,8 @@ import {
   Settings,
   HelpCircle,
   MessageSquareText,
-  UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -42,6 +36,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: unreadCount = 0 } = useNotificacoesNaoLidasCount();
 
   const handleSignOut = async () => {
     await signOut();
@@ -64,8 +59,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     ...(isAdmin ? [
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
+    { name: 'Notificações', href: '/notificacoes', icon: Bell },
     { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
-    { name: 'Meu Perfil', href: '/perfil', icon: UserCircle },
   ];
 
   const NavLink = ({ item }: { item: typeof navigation[0] }) => {
@@ -117,21 +112,51 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
         {/* User info + Create Task Button */}
         <div className="p-4 border-b border-sidebar-border space-y-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {profile?.full_name || 'Usuário'}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60">
-                {isAdmin ? 'Administrador' : 'Usuário'}
-              </p>
-            </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/perfil"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+            >
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {profile?.full_name || 'Usuário'}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60">
+                  {isAdmin ? 'Administrador' : 'Usuário'}
+                </p>
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative flex-shrink-0 text-sidebar-foreground/80 hover:text-sidebar-foreground"
+              aria-label="Notificações"
+              onClick={() => {
+                setSidebarOpen(false);
+                navigate('/notificacoes');
+              }}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Button>
           </div>
+          <Link
+            to="/perfil"
+            onClick={() => setSidebarOpen(false)}
+            className="block pl-[52px] -mt-2 text-xs text-muted-foreground hover:text-foreground hover:underline w-fit"
+          >
+            Meu Perfil
+          </Link>
           <Button
             onClick={() => {
               setSidebarOpen(false);
@@ -150,48 +175,32 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <NavLink key={item.name} item={item} />
           ))}
         </nav>
+
+        {/* Sign out */}
+        <div className="p-4">
+          <Separator className="mb-4 bg-sidebar-border" />
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-left text-destructive hover:bg-sidebar-accent transition-colors"
+          >
+            <LogOut className="h-5 w-5" />
+            Sair
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top header */}
-        <header className="h-16 bg-card border-b flex items-center justify-between px-4 lg:px-6">
+        {/* Top header — mobile only, só o botão de abrir a sidebar (sino e
+            avatar viraram parte da sidebar em si). */}
+        <header className="h-16 bg-card border-b flex items-center px-4 lg:hidden">
           <button
-            className="lg:hidden text-foreground"
+            className="text-foreground"
             onClick={() => setSidebarOpen(true)}
             aria-label="Abrir menu"
           >
             <Menu className="h-6 w-6" />
           </button>
-
-          <div className="flex items-center gap-3">
-            <NotificationBell />
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                      {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{profile?.full_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isAdmin ? 'Administrador' : 'Usuário'}
-                  </p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </header>
 
         {/* Page content */}
