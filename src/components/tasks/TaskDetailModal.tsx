@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TaskWithRelations, TaskPriority, TaskStatus } from '@/types/database';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
+import { useAssignableProfiles } from '@/hooks/useAssignableProfiles';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -28,6 +30,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -79,12 +88,15 @@ interface EditDraft {
   description: string;
   priority: TaskPriority;
   location: string;
+  assignee_id: string;
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, onOpenTask }) => {
   const { user, isAdmin, role } = useAuth();
-  const { addComment, toggleChecklistItem, addChecklistItem, deleteTask, updateTask } = useTasks();
+  const { addComment, toggleChecklistItem, addChecklistItem, deleteTask, updateTask, profiles } = useTasks();
   const { deleteFile } = useFileUpload();
+  const isGestorTecnico = useIsGestorTecnico();
+  const assignableProfiles = useAssignableProfiles(profiles);
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
   const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -94,13 +106,34 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
   const [pendingEditScope, setPendingEditScope] = useState<'single' | 'future' | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isGeneratingInstances, setIsGeneratingInstances] = useState(false);
+  const [assigneeIsAdmin, setAssigneeIsAdmin] = useState(false);
+
+  // Espelha a checagem da RLS de tasks (is_gestor_tecnico() AND NOT
+  // has_role(assignee_id, 'admin')) — precisa saber se o responsável ATUAL
+  // é admin para decidir se o Gestor Técnico pode editar esta tarefa.
+  useEffect(() => {
+    let active = true;
+    if (!task?.assignee_id) {
+      setAssigneeIsAdmin(false);
+      return;
+    }
+    supabase
+      .rpc('has_role', { _user_id: task.assignee_id, _role: 'admin' })
+      .then(({ data }) => {
+        if (active) setAssigneeIsAdmin(!!data);
+      });
+    return () => {
+      active = false;
+    };
+  }, [task?.assignee_id]);
 
   if (!task) return null;
 
   const priority = priorityConfig[task.priority];
   const status = statusConfig[task.status];
   const StatusIcon = status.icon;
-  const canEdit = isAdmin || task.assignee_id === user?.id;
+  const canEdit =
+    isAdmin || task.assignee_id === user?.id || (isGestorTecnico && !assigneeIsAdmin);
   const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'done';
   const isInstance = !!task.parent_task_id;
   const isTemplate = !task.parent_task_id && task.recurrence_type !== 'none';
@@ -113,6 +146,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
       description: task.description ?? '',
       priority: task.priority,
       location: task.location ?? '',
+      assignee_id: task.assignee_id ?? '',
     });
     setIsEditing(true);
   };
@@ -127,11 +161,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
     if (!editDraft) return;
     setIsSavingEdit(true);
     try {
+      const novoAssigneeId = editDraft.assignee_id || null;
+      const assigneeMudou = novoAssigneeId !== (task.assignee_id ?? null);
+
       const updates = {
         title: editDraft.title,
         description: editDraft.description || null,
         priority: editDraft.priority,
         location: editDraft.location || null,
+        assignee_id: novoAssigneeId,
       };
 
       // Always update this task
@@ -140,6 +178,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
         .update(updates)
         .eq('id', task.id);
       if (err1) throw err1;
+
+      // Notifica o novo responsável, exceto quando ele é quem fez a troca.
+      // Fire-and-forget, mesmo padrão de useTasks.ts (createTask).
+      if (assigneeMudou && novoAssigneeId && novoAssigneeId !== user?.id) {
+        supabase
+          .rpc('criar_notificacao', {
+            p_user_id: novoAssigneeId,
+            p_tipo: 'tarefa_atribuida',
+            p_titulo: 'Nova tarefa atribuída a você',
+            p_mensagem: editDraft.title,
+            p_link: '/',
+          })
+          .then(({ error: notifError }) => {
+            if (notifError) console.error('Erro ao criar notificação de tarefa atribuída:', notifError);
+          });
+      }
 
       if (scope === 'future' && isInstance && task.parent_task_id) {
         // Update template
@@ -231,6 +285,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
   const handleStatusChange = (newStatus: TaskStatus) => {
     if (!canEdit) return;
     updateTask.mutate({ id: task.id, status: newStatus });
+  };
+
+  const handlePdfTextExtracted = (text: string) => {
+    const separador = '\n\n--- Conteúdo do PDF: ---\n\n';
+    const novaDescricao = task.description ? `${task.description}${separador}${text}` : text;
+    updateTask.mutate({ id: task.id, description: novaDescricao });
   };
 
   const handleDeleteAttachment = async (attachmentId: string, filePath: string) => {
@@ -336,6 +396,26 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
                     className="min-h-[80px]"
                   />
                 </div>
+                {(isAdmin || isGestorTecnico) && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Responsável</label>
+                    <Select
+                      value={editDraft.assignee_id || undefined}
+                      onValueChange={(v) => setEditDraft((d) => (d ? { ...d, assignee_id: v } : d))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assignableProfiles.map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Prioridade</label>
@@ -478,6 +558,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
                   <FileUploadZone
                     taskId={task.id}
                     onUploadComplete={() => setShowUploadZone(false)}
+                    onPdfTextExtracted={handlePdfTextExtracted}
                     compact
                   />
                 </div>

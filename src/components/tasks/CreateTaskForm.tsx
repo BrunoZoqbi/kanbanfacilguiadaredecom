@@ -9,9 +9,10 @@ import { addDays, addMonths, addWeeks, startOfWeek } from 'date-fns';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
+import { useAssignableProfiles } from '@/hooks/useAssignableProfiles';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, RecurrenceType } from '@/types/database';
+import { RecurrenceType } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -174,35 +175,7 @@ const CreateTaskForm: React.FC = () => {
 
   const [draft] = useState(() => loadDraft());
 
-  const [assignableProfiles, setAssignableProfiles] = useState<Profile[]>(profiles);
-
-  useEffect(() => {
-    let active = true;
-
-    if (isAdmin || !isGestorTecnico) {
-      setAssignableProfiles(profiles);
-      return;
-    }
-
-    (async () => {
-      const results = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data } = await supabase.rpc('has_role', {
-            _user_id: profile.id,
-            _role: 'admin',
-          });
-          return { profile, isAdminProfile: !!data };
-        })
-      );
-      if (active) {
-        setAssignableProfiles(results.filter((r) => !r.isAdminProfile).map((r) => r.profile));
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [profiles, isAdmin, isGestorTecnico]);
+  const assignableProfiles = useAssignableProfiles(profiles);
 
   const onDropAttachments = useCallback((acceptedFiles: File[]) => {
     setPendingAttachments((prev) => [...prev, ...acceptedFiles]);
