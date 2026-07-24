@@ -65,13 +65,15 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            O sino na barra lateral exibe um badge com a quantidade de notificações não lidas,
-            atualizado em tempo real via Realtime — sem precisar recarregar a página.
+            O acesso é exclusivamente pelo{' '}
+            <strong className="font-medium text-foreground">sino</strong> ao lado do nome na
+            barra lateral — não há item de menu "Notificações" separado. O sino exibe um badge
+            com a quantidade de não lidas, atualizado em tempo real via Realtime, e leva à página
+            completa ao ser clicado.
           </li>
           <li>
-            A página <strong className="font-medium text-foreground">"Notificações"</strong> lista
-            o histórico completo, mais recentes primeiro, com paginação. Toque numa notificação
-            para marcá-la como lida e abrir o que ela se refere; use{' '}
+            A página lista o histórico completo, mais recentes primeiro, com paginação. Toque numa
+            notificação para marcá-la como lida e abrir o que ela se refere; use{' '}
             <strong className="font-medium text-foreground">"Marcar todas como lidas"</strong> para
             limpar tudo de uma vez.
           </li>
@@ -509,18 +511,26 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Biblioteca de documentos e manuais da empresa: POPs operacionais, documentos jurídicos
-            (LGPD), identidade de marca e código de conduta.
+            Biblioteca de documentos e manuais da empresa — 31 documentos organizados em 9
+            categorias (Atendimento, Comercial, Cultura, Gestão, Jurídico, Marca, Operacional, RH,
+            Segurança), cada uma exibida como um item de accordion com a contagem de documentos ao
+            lado do nome.
           </li>
           <li>
-            Os documentos são exibidos em cards agrupados por categoria (Operacional, Jurídico,
-            Marca, RH). Use o campo de busca para filtrar por título ou descrição.
+            Use o campo de busca para filtrar por título ou descrição — as categorias com
+            resultado expandem automaticamente e as sem correspondência ficam ocultas. Fora da
+            busca, "Operacional" abre por padrão na primeira visita; depois disso, o conjunto de
+            categorias abertas é lembrado entre visitas.
           </li>
           <li>
             O botão{' '}
-            <strong className="font-medium text-foreground">"Abrir"</strong> abre o documento em
-            nova aba — documentos ainda sem link exibem o botão desabilitado até que um endereço
-            seja cadastrado.
+            <strong className="font-medium text-foreground">"Abrir"</strong> leva ao documento: em
+            nova aba para links externos, ou dentro do próprio sistema para documentos internos
+            como a{' '}
+            <strong className="font-medium text-foreground">Matriz RACI</strong> (categoria
+            Gestão) — uma tabela interativa de responsabilidades por cargo, com cabeçalhos fixos,
+            cores por letra (R/A/C/I) e exportação em PDF. Documentos ainda sem link exibem o
+            botão desabilitado até que um endereço seja cadastrado.
           </li>
           <li>
             Admin cria, edita, ativa ou desativa documentos em{' '}
