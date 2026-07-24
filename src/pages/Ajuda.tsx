@@ -89,8 +89,9 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Exclusivo para Admin. Painel consolidado com 4 abas:{' '}
+            Exclusivo para Admin. Painel consolidado com 5 abas:{' '}
             <strong className="font-medium text-foreground">Tarefas</strong>,{' '}
+            <strong className="font-medium text-foreground">Reagendamentos</strong>,{' '}
             <strong className="font-medium text-foreground">Estoque</strong>,{' '}
             <strong className="font-medium text-foreground">Prospecção</strong> e{' '}
             <strong className="font-medium text-foreground">Tickets</strong> — resumo executivo de
@@ -101,6 +102,14 @@ const Ajuda: React.FC = () => {
             por usuário e taxa de conclusão no prazo, com exportação em{' '}
             <strong className="font-medium text-foreground">PDF</strong> e{' '}
             <strong className="font-medium text-foreground">Excel</strong>.
+          </li>
+          <li>
+            A aba <strong className="font-medium text-foreground">"Reagendamentos"</strong> mede o
+            cumprimento de prazo: cards com o total de tarefas cumpridas no prazo, reagendadas e
+            atrasadas (com percentuais), um gráfico de distribuição por motivo de reagendamento e
+            uma tabela de desempenho por usuário — ordenada pela taxa de cumprimento, pior
+            desempenho primeiro, com linha expansível mostrando as tarefas reagendadas de cada
+            pessoa. Filtro de período (30/60/90 dias ou personalizado) no topo da aba.
           </li>
           <li>
             Todas as abas têm gráficos completos — alterne entre pizza e barras usando o toggle no
@@ -154,6 +163,13 @@ const Ajuda: React.FC = () => {
             <strong className="font-medium text-foreground">Trocar responsável:</strong> Admin e
             Gestor Técnico podem alterar o responsável de uma tarefa já criada, no painel de
             edição — o novo responsável recebe uma notificação automática.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Reagendamento:</strong> ao alterar o
+            prazo de uma tarefa já criada, o sistema pede obrigatoriamente o motivo do
+            reagendamento (Pedido do Técnico, Pedido do Cliente, Condição Externa ou Outro), com um
+            campo de observação opcional. Essas informações alimentam a aba "Reagendamentos" do
+            Dashboard.
           </li>
           <li>
             <strong className="font-medium text-foreground">Rascunho automático:</strong> se o
@@ -553,10 +569,11 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
-            Estoque completo (cadastro, retirada, recolhimento, baixa, histórico) e as tarefas da
-            equipe técnica — pode editar título, descrição, prioridade, checklist, anexos, tags e
-            responsável de qualquer tarefa da equipe, exceto tarefas atribuídas a um Admin. Tem
-            visão ampla de todos os Tickets, respondendo principalmente pelos chamados técnicos
+            Estoque completo (cadastro, retirada, recolhimento, baixa, histórico), incluindo criar
+            e editar produtos e categorias de produto, e as tarefas da equipe técnica — pode editar
+            título, descrição, prioridade, prazo (com motivo de reagendamento), checklist, anexos,
+            tags e responsável de qualquer tarefa da equipe, exceto tarefas atribuídas a um Admin.
+            Tem visão ampla de todos os Tickets, respondendo principalmente pelos chamados técnicos
             (suporte, conexão, instalação).
           </li>
           <li>
