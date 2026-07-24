@@ -46,7 +46,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const navigation = [
-    { name: 'Notificações', href: '/notificacoes', icon: Bell },
     ...(isAdmin ? [
       { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     ] : []),
