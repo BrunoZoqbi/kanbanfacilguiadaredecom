@@ -29,7 +29,7 @@ import {
   Ticket as TicketIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import DashboardEstoqueResumo from './DashboardEstoqueResumo';
+import EstoqueVisaoGeral from '@/components/estoque/EstoqueVisaoGeral';
 import DashboardProspeccaoResumo from './DashboardProspeccaoResumo';
 import DashboardTicketsResumo from './DashboardTicketsResumo';
 
@@ -446,7 +446,7 @@ const AdminDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="estoque" className="mt-6">
-          <DashboardEstoqueResumo />
+          <EstoqueVisaoGeral />
         </TabsContent>
 
         <TabsContent value="prospeccao" className="mt-6">
