@@ -25,6 +25,8 @@ const Ajuda = lazy(() => import("./pages/Ajuda"));
 const Scripts = lazy(() => import("./pages/Scripts"));
 const Perfil = lazy(() => import("./pages/Perfil"));
 const Notificacoes = lazy(() => import("./pages/Notificacoes"));
+const Documentos = lazy(() => import("./pages/Documentos"));
+const Recursos = lazy(() => import("./pages/Recursos"));
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
                 <Route path="/ajuda" element={<Ajuda />} />
                 <Route path="/perfil" element={<Perfil />} />
                 <Route path="/notificacoes" element={<Notificacoes />} />
+                <Route path="/documentos" element={<Documentos />} />
+                <Route path="/recursos" element={<Recursos />} />
                 <Route path="/consulta-ticket" element={<ConsultaTicket />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

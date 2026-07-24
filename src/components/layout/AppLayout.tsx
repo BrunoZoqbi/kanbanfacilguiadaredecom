@@ -23,6 +23,8 @@ import {
   Settings,
   HelpCircle,
   MessageSquareText,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -60,6 +62,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     ...(isAdmin ? [
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
+    { name: 'Documentos', href: '/documentos', icon: FileText },
+    { name: 'Recursos', href: '/recursos', icon: ExternalLink },
     { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
   ];
 

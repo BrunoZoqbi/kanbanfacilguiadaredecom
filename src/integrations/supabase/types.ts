@@ -525,6 +525,75 @@ export type Database = {
           },
         ]
       }
+      recursos_documentos: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          ordem: number
+          titulo: string
+          url: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+          url: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      recursos_links: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          ordem: number
+          titulo: string
+          url: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+          url: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+          url?: string
+        }
+        Relationships: []
+      }
       scripts_atendimento: {
         Row: {
           ativo: boolean
