@@ -34,7 +34,7 @@ const extrairTexto = (node: React.ReactNode): string => {
 
 // Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
-const ULTIMA_ATUALIZACAO = '17/07/2026';
+const ULTIMA_ATUALIZACAO = '23/07/2026';
 
 interface SecaoAjuda {
   id: string;
@@ -72,6 +72,17 @@ const Ajuda: React.FC = () => {
           <li>
             Toque em <strong className="font-medium text-foreground">"Nova Tarefa"</strong> para
             criar — já é possível anexar PDF/foto e criar um checklist no momento da criação.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Anexo de PDF:</strong> ao anexar um
+            PDF, o texto é extraído automaticamente e inserido na descrição da tarefa — o arquivo
+            em si não é armazenado. Se o PDF não tiver texto extraível (ex: escaneado), o sistema
+            oferece anexar o arquivo normalmente.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Trocar responsável:</strong> Admin e
+            Gestor Técnico podem alterar o responsável de uma tarefa já criada, no painel de
+            edição — o novo responsável recebe uma notificação automática.
           </li>
           <li>
             <strong className="font-medium text-foreground">Rascunho automático:</strong> se o
@@ -180,6 +191,16 @@ const Ajuda: React.FC = () => {
                 <strong className="font-medium text-foreground">"Exportar Relatório"</strong> gera
                 uma planilha Excel completa.
               </li>
+              <li>
+                A aba{' '}
+                <strong className="font-medium text-foreground">
+                  "Histórico de Movimentações"
+                </strong>{' '}
+                (só Admin e Gestor Técnico) lista todas as entradas, saídas, retiradas, devoluções
+                e baixas registradas no Estoque, mais recentes primeiro. Busque por produto,
+                número de série, técnico ou observação, filtre por tipo de movimento, e use
+                "Carregar mais" para navegar em históricos longos (lotes de 30).
+              </li>
             </ul>
           </div>
           <div>
@@ -284,6 +305,31 @@ const Ajuda: React.FC = () => {
           <li>
             Admin edita, cria, ativa/desativa e reordena os scripts na aba{' '}
             <strong className="font-medium text-foreground">"Gerenciar"</strong>.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'notificacoes',
+      titulo: 'Notificações',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            O sino na barra lateral mostra um selo com a quantidade de notificações não lidas,
+            atualizado em tempo real (sem precisar recarregar a página). Toque nele para ir até{' '}
+            <strong className="font-medium text-foreground">"Notificações"</strong>.
+          </li>
+          <li>
+            A página <strong className="font-medium text-foreground">"Notificações"</strong> lista
+            o histórico completo, mais recentes primeiro, com paginação. Toque numa notificação
+            para marcá-la como lida e abrir o que ela se refere; use{' '}
+            <strong className="font-medium text-foreground">"Marcar todas como lidas"</strong> para
+            limpar tudo de uma vez.
+          </li>
+          <li>
+            Você recebe uma notificação automaticamente quando: uma tarefa é atribuída a você, o
+            ticket que você abriu recebe uma resposta, ou (Admin/Gestor Técnico) o estoque de um
+            produto fica baixo.
           </li>
         </ul>
       ),
@@ -437,9 +483,11 @@ const Ajuda: React.FC = () => {
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
-            Estoque (retirada, recolhimento, baixa), vê as tarefas da equipe técnica e tem visão
+            Estoque (retirada, recolhimento, baixa) e o Histórico de Movimentações, tem visão
             ampla de todos os Tickets — na prática, responde principalmente pelos chamados técnicos
-            (suporte, conexão, instalação).
+            (suporte, conexão, instalação) — e gerencia as tarefas da equipe técnica: pode editar
+            título, descrição, prioridade, checklist, anexos, tags e responsável de qualquer
+            tarefa da equipe, exceto tarefas atribuídas a um Admin.
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia
