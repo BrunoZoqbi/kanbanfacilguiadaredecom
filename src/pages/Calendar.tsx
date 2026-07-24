@@ -109,6 +109,14 @@ const Calendar: React.FC = () => {
 
   return (
     <AppLayout>
+      <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+          <CalendarDays className="h-6 w-6" />
+          Calendário
+        </h1>
+        <p className="text-muted-foreground">Visualize tarefas por data</p>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
         <Card className="lg:col-span-2">
@@ -297,6 +305,7 @@ const Calendar: React.FC = () => {
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
       />
+      </div>
     </AppLayout>
   );
 };

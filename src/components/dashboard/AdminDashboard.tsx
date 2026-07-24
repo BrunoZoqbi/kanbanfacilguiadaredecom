@@ -162,7 +162,10 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-display">Dashboard</h2>
+      <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+        <BarChart3 className="h-6 w-6" />
+        Dashboard
+      </h1>
 
       <Tabs defaultValue="tarefas">
         <TabsList className="flex-wrap h-auto">

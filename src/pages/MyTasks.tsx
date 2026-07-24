@@ -19,6 +19,7 @@ import {
   Calendar,
   MapPin,
   AlertTriangle,
+  ListTodo,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskWithRelations, TaskPriority, TaskStatus } from '@/types/database';
@@ -85,7 +86,10 @@ const MyTasks: React.FC = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Minhas Tarefas</h1>
+          <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+            <ListTodo className="h-6 w-6" />
+            Minhas Tarefas
+          </h1>
           <p className="text-muted-foreground">
             Você tem {taskCounts.todo + taskCounts.doing} tarefas pendentes
           </p>
