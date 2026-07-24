@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import { useRecursosDocumentos, RecursoDocumento } from '@/hooks/useRecursosDocumentos';
@@ -62,7 +62,13 @@ function DynamicIcon({ name, className }: { name: string | null; className?: str
 }
 
 function DocumentoCard({ item }: { item: RecursoDocumento }) {
+  const navigate = useNavigate();
   const isPlaceholder = item.url === '#';
+  // Documentos "internos" (ex: Matriz RACI) apontam para uma rota do
+  // próprio sistema em vez de um link externo — navegam na mesma aba via
+  // React Router em vez de abrir em nova aba.
+  const isRotaInterna = item.url.startsWith('/');
+
   return (
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-start gap-3">
@@ -81,6 +87,11 @@ function DocumentoCard({ item }: { item: RecursoDocumento }) {
       </div>
       {isPlaceholder ? (
         <Button size="sm" variant="outline" className="w-full" disabled>
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Abrir
+        </Button>
+      ) : isRotaInterna ? (
+        <Button size="sm" variant="outline" className="w-full" onClick={() => navigate(item.url)}>
           <ExternalLink className="mr-2 h-4 w-4" />
           Abrir
         </Button>
