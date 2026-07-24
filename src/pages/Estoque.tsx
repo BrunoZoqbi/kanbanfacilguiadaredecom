@@ -117,7 +117,7 @@ const Estoque: React.FC = () => {
                 Histórico
               </TabsTrigger>
             )}
-            {isAdmin && (
+            {canManageStock && (
               <TabsTrigger value="cadastro" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 Cadastro
@@ -163,7 +163,7 @@ const Estoque: React.FC = () => {
             </TabsContent>
           )}
 
-          {isAdmin && (
+          {canManageStock && (
             <TabsContent value="cadastro" className="mt-6">
               <Tabs defaultValue="produtos">
                 <TabsList>
