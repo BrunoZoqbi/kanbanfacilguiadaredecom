@@ -3,12 +3,21 @@ export type TaskType = 'daily' | 'one_time';
 export type TaskStatus = 'todo' | 'doing' | 'done';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 export type AppRole = 'admin' | 'user' | 'gestor_tecnico' | 'gestor_comercial';
-export type ReagendamentoMotivo = 'pedido_tecnico' | 'pedido_cliente' | 'condicao_externa' | 'outro';
+export type ReagendamentoMotivo =
+  | 'pedido_tecnico'
+  | 'pedido_cliente'
+  | 'condicao_externa'
+  | 'troca_tecnico'
+  | 'outro';
 
+// A ordem das chaves aqui define a ordem de exibição no RadioGroup do
+// modal de reagendamento (TaskDetailModal.tsx) e nas legendas dos
+// gráficos — ambos iteram Object.keys(REAGENDAMENTO_MOTIVO_LABELS).
 export const REAGENDAMENTO_MOTIVO_LABELS: Record<ReagendamentoMotivo, string> = {
   pedido_tecnico: 'Pedido do Técnico',
   pedido_cliente: 'A Pedido do Cliente',
   condicao_externa: 'Condição Externa (clima, acesso, energia)',
+  troca_tecnico: 'Troca de Técnico Responsável',
   outro: 'Outro',
 };
 
@@ -16,6 +25,7 @@ export const REAGENDAMENTO_MOTIVO_CHART_COLORS: Record<ReagendamentoMotivo, stri
   pedido_tecnico: '#3b82f6', // blue-500
   pedido_cliente: '#f59e0b', // amber-500
   condicao_externa: '#a855f7', // purple-500
+  troca_tecnico: '#ec4899', // pink-500
   outro: '#6b7280', // gray-500
 };
 

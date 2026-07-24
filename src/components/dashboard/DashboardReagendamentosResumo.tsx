@@ -75,11 +75,15 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
     });
   };
 
-  // Motivo "outro" é texto livre — o Admin precisa poder ler cada caso
-  // manualmente, já que não entra em nenhuma categoria fechada de motivo.
-  const reagendamentosOutro = useMemo(() => {
+  // Motivos "outro" e "troca_tecnico" são os que mais precisam de revisão
+  // manual do Admin: "outro" é texto livre sem categoria fechada, e uma
+  // troca de técnico responsável pode indicar um problema recorrente com
+  // a pessoa ou com a rota — ambos exigem observação preenchida para
+  // aparecer aqui (outro já garante isso via TaskDetailModal).
+  const reagendamentosQueRequeremAtencao = useMemo(() => {
     return tasks.filter((t) => {
-      if (t.reagendamento_motivo !== 'outro') return false;
+      if (t.reagendamento_motivo !== 'outro' && t.reagendamento_motivo !== 'troca_tecnico') return false;
+      if (!t.reagendamento_observacao) return false;
       if (!t.reagendamento_at) return false;
       const reagendadoEm = t.reagendamento_at.slice(0, 10);
       if (startDate && reagendadoEm < startDate) return false;
@@ -317,19 +321,19 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
         </CardContent>
       </Card>
 
-      {/* Motivo "outro" é texto livre — chama atenção do Admin para revisar
-          caso a caso, já que não cai em nenhuma categoria fechada. */}
-      {reagendamentosOutro.length > 0 && (
+      {/* Motivos "outro" e "troca_tecnico" chamam atenção do Admin para
+          revisar caso a caso — texto livre sem categoria fechada. */}
+      {reagendamentosQueRequeremAtencao.length > 0 && (
         <Card className="bg-yellow-50 border-yellow-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-900">
               <AlertTriangle className="h-5 w-5" />
-              ⚠️ Reagendamentos com motivo "Outro"
+              ⚠️ Reagendamentos que requerem atenção (Outro / Troca de Técnico)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {reagendamentosOutro.map((t) => {
+              {reagendamentosQueRequeremAtencao.map((t) => {
                 const responsavel = profiles.find((p) => p.id === t.assignee_id);
                 return (
                   <div
@@ -338,11 +342,18 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <p className="font-medium">{t.title}</p>
-                      {t.reagendamento_at && (
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {format(new Date(t.reagendamento_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {t.reagendamento_motivo && (
+                          <Badge variant="outline" className="text-xs">
+                            {REAGENDAMENTO_MOTIVO_LABELS[t.reagendamento_motivo]}
+                          </Badge>
+                        )}
+                        {t.reagendamento_at && (
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(t.reagendamento_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Responsável: {responsavel?.full_name ?? 'Sem responsável'}
