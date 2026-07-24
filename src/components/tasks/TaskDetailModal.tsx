@@ -292,8 +292,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
     }
   };
 
+  // Quando o motivo é "outro", a observação deixa de ser um detalhe
+  // opcional e vira a própria descrição do motivo — exigimos um mínimo de
+  // 5 caracteres em vez de aceitar qualquer texto vazio.
+  const reagendamentoOutroInvalido =
+    reagendamentoMotivo === 'outro' && reagendamentoObservacao.trim().length < 5;
+
   const handleConfirmReagendamento = () => {
-    if (!reagendamentoMotivo || !pendingReagendamentoScope) return;
+    if (!reagendamentoMotivo || !pendingReagendamentoScope || reagendamentoOutroInvalido) return;
     const scope = pendingReagendamentoScope;
     saveEdit(scope, { motivo: reagendamentoMotivo, observacao: reagendamentoObservacao.trim() });
   };
@@ -884,14 +890,19 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
               </RadioGroup>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reagendamento-observacao">Observação</Label>
+              <Label htmlFor="reagendamento-observacao">
+                {reagendamentoMotivo === 'outro' ? 'Motivo (obrigatório)' : 'Observação'}
+              </Label>
               <Textarea
                 id="reagendamento-observacao"
                 value={reagendamentoObservacao}
                 onChange={(e) => setReagendamentoObservacao(e.target.value)}
-                placeholder="Detalhe opcional..."
-                className="min-h-[80px]"
+                placeholder={reagendamentoMotivo === 'outro' ? 'Descreva o motivo...' : 'Detalhe opcional...'}
+                className={cn('min-h-[80px]', reagendamentoOutroInvalido && 'border-red-500 focus-visible:ring-red-500')}
               />
+              {reagendamentoOutroInvalido && (
+                <p className="text-xs text-red-500">Descreva o motivo (mínimo 5 caracteres).</p>
+              )}
             </div>
           </div>
           <AlertDialogFooter>
@@ -906,7 +917,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
             </AlertDialogCancel>
             <Button
               onClick={handleConfirmReagendamento}
-              disabled={!reagendamentoMotivo || isSavingEdit}
+              disabled={!reagendamentoMotivo || reagendamentoOutroInvalido || isSavingEdit}
             >
               Confirmar reagendamento
             </Button>
