@@ -20,7 +20,7 @@ import TaskCard from './TaskCard';
 import TaskFilters, { TaskFiltersState } from './TaskFilters';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, KanbanSquare } from 'lucide-react';
 import { isPast, isToday, differenceInHours } from 'date-fns';
 
 const columns: { id: TaskStatus; title: string }[] = [
@@ -219,6 +219,14 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+          <KanbanSquare className="h-6 w-6" />
+          Kanban
+        </h1>
+        <p className="text-muted-foreground">Tarefas da equipe</p>
+      </div>
+
       <TaskFilters
         filters={filters}
         onFiltersChange={setFilters}

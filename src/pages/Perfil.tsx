@@ -119,9 +119,11 @@ const Perfil: React.FC = () => {
   return (
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <UserIcon className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold font-display">Meu Perfil</h1>
+        <div>
+          <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+            <UserIcon className="h-6 w-6" />
+            Meu Perfil
+          </h1>
         </div>
 
         <Card>

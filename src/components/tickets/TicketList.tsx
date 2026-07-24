@@ -33,7 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, Ticket as TicketIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateTicketDialog from './CreateTicketDialog';
 import TicketDetailModal from './TicketDetailModal';
@@ -71,7 +71,10 @@ const TicketList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display">Tickets</h1>
+          <h1 className="text-2xl font-bold font-display flex items-center gap-2">
+            <TicketIcon className="h-6 w-6" />
+            Tickets
+          </h1>
           <p className="text-muted-foreground">
             {isAdmin ? 'Todos os chamados de suporte' : 'Chamados atribuídos a você'}
           </p>
