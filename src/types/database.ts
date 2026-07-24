@@ -3,6 +3,21 @@ export type TaskType = 'daily' | 'one_time';
 export type TaskStatus = 'todo' | 'doing' | 'done';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 export type AppRole = 'admin' | 'user' | 'gestor_tecnico' | 'gestor_comercial';
+export type ReagendamentoMotivo = 'pedido_tecnico' | 'pedido_cliente' | 'condicao_externa' | 'outro';
+
+export const REAGENDAMENTO_MOTIVO_LABELS: Record<ReagendamentoMotivo, string> = {
+  pedido_tecnico: 'Pedido do Técnico',
+  pedido_cliente: 'A Pedido do Cliente',
+  condicao_externa: 'Condição Externa (clima, acesso, energia)',
+  outro: 'Outro',
+};
+
+export const REAGENDAMENTO_MOTIVO_CHART_COLORS: Record<ReagendamentoMotivo, string> = {
+  pedido_tecnico: '#3b82f6', // blue-500
+  pedido_cliente: '#f59e0b', // amber-500
+  condicao_externa: '#a855f7', // purple-500
+  outro: '#6b7280', // gray-500
+};
 
 export interface Profile {
   id: string;
@@ -59,6 +74,10 @@ export interface Task {
   recurrence_end_date: string | null;
   recurrence_end_after: number | null;
   parent_task_id: string | null;
+  reagendamento_motivo: ReagendamentoMotivo | null;
+  reagendamento_count: number;
+  reagendamento_observacao: string | null;
+  reagendamento_at: string | null;
 }
 
 export interface TaskWithRelations extends Task {
