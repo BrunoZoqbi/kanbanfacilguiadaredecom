@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import { useRecursosDocumentos, RecursoDocumento } from '@/hooks/useRecursosDocumentos';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   FileText,
   Search,
@@ -29,6 +30,19 @@ import {
   Phone,
   Map as MapIcon,
   BarChart3,
+  Headphones,
+  DollarSign,
+  MessageSquare,
+  Heart,
+  Star,
+  Calendar,
+  LayoutGrid,
+  Network,
+  AlertTriangle,
+  Gift,
+  UserPlus,
+  Lock,
+  Folder,
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 
@@ -54,6 +68,33 @@ const ICON_MAP: Record<string, IconComponent> = {
   Phone,
   Map: MapIcon,
   BarChart3,
+  Headphones,
+  DollarSign,
+  MessageSquare,
+  Heart,
+  Star,
+  Calendar,
+  LayoutGrid,
+  Network,
+  AlertTriangle,
+  Gift,
+  UserPlus,
+  Lock,
+};
+
+// recursos_documentos só guarda ícone por documento, não por categoria —
+// mapeamento fixo por nome de categoria, com Folder como fallback para
+// categorias novas ainda não listadas aqui.
+const CATEGORIA_ICON_MAP: Record<string, IconComponent> = {
+  Operacional: BookOpen,
+  'Jurídico': Shield,
+  Marca: Palette,
+  RH: Users,
+  'Gestão': LayoutGrid,
+  Atendimento: Headphones,
+  Comercial: DollarSign,
+  Cultura: Heart,
+  'Segurança': Lock,
 };
 
 function DynamicIcon({ name, className }: { name: string | null; className?: string }) {
@@ -61,7 +102,12 @@ function DynamicIcon({ name, className }: { name: string | null; className?: str
   return <Icon className={className} />;
 }
 
-function DocumentoCard({ item }: { item: RecursoDocumento }) {
+function CategoriaIcon({ nome, className }: { nome: string; className?: string }) {
+  const Icon = CATEGORIA_ICON_MAP[nome] || Folder;
+  return <Icon className={className} />;
+}
+
+function DocumentoRow({ item }: { item: RecursoDocumento }) {
   const navigate = useNavigate();
   const isPlaceholder = item.url === '#';
   // Documentos "internos" (ex: Matriz RACI) apontam para uma rota do
@@ -70,47 +116,57 @@ function DocumentoCard({ item }: { item: RecursoDocumento }) {
   const isRotaInterna = item.url.startsWith('/');
 
   return (
-    <Card className="flex flex-col gap-3 p-4">
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-          <DynamicIcon name={item.icone} className="h-5 w-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold leading-tight">{item.titulo}</p>
-            <Badge variant="outline" className="text-xs shrink-0">{item.categoria}</Badge>
-          </div>
-          {item.descricao && (
-            <p className="mt-1 text-sm text-muted-foreground leading-snug">{item.descricao}</p>
-          )}
-        </div>
+    <div className="flex items-center gap-3 py-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+        <DynamicIcon name={item.icone} className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-medium leading-tight truncate">{item.titulo}</p>
+        {item.descricao && (
+          <p className="text-sm text-muted-foreground truncate">{item.descricao}</p>
+        )}
       </div>
       {isPlaceholder ? (
-        <Button size="sm" variant="outline" className="w-full" disabled>
+        <Button size="sm" variant="outline" className="shrink-0" disabled>
           <ExternalLink className="mr-2 h-4 w-4" />
           Abrir
         </Button>
       ) : isRotaInterna ? (
-        <Button size="sm" variant="outline" className="w-full" onClick={() => navigate(item.url)}>
+        <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate(item.url)}>
           <ExternalLink className="mr-2 h-4 w-4" />
           Abrir
         </Button>
       ) : (
-        <Button asChild size="sm" variant="outline" className="w-full">
+        <Button asChild size="sm" variant="outline" className="shrink-0">
           <a href={item.url} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="mr-2 h-4 w-4" />
             Abrir
           </a>
         </Button>
       )}
-    </Card>
+    </div>
   );
 }
+
+const CATEGORIAS_ABERTAS_STORAGE_KEY = 'documentos_categorias_abertas';
+const CATEGORIA_PADRAO_ABERTA = 'Operacional';
+
+const lerCategoriasAbertasSalvas = (): string[] => {
+  try {
+    const raw = localStorage.getItem(CATEGORIAS_ABERTAS_STORAGE_KEY);
+    if (!raw) return [CATEGORIA_PADRAO_ABERTA];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [CATEGORIA_PADRAO_ABERTA];
+  } catch {
+    return [CATEGORIA_PADRAO_ABERTA];
+  }
+};
 
 const Documentos: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: allItems = [], isLoading } = useRecursosDocumentos();
   const [search, setSearch] = useState('');
+  const [categoriasAbertas, setCategoriasAbertas] = useState<string[]>(lerCategoriasAbertasSalvas);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -130,6 +186,21 @@ const Documentos: React.FC = () => {
     }
     return groupMap;
   }, [filtered]);
+
+  const isSearching = search.trim().length > 0;
+  const categoriasComResultado = useMemo(() => Array.from(grouped.keys()), [grouped]);
+
+  // Persiste só o estado "manual" (fora de busca) — o auto-expand durante a
+  // busca é transitório e não deve sobrescrever a preferência do usuário.
+  useEffect(() => {
+    if (isSearching) return;
+    localStorage.setItem(CATEGORIAS_ABERTAS_STORAGE_KEY, JSON.stringify(categoriasAbertas));
+  }, [categoriasAbertas, isSearching]);
+
+  const handleAccordionChange = (value: string[]) => {
+    if (isSearching) return; // durante a busca, as categorias com resultado ficam sempre abertas
+    setCategoriasAbertas(value);
+  };
 
   if (authLoading) {
     return (
@@ -174,20 +245,35 @@ const Documentos: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {Array.from(grouped.entries()).map(([categoria, docs]) => (
-              <section key={categoria} className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {categoria}
-                </h2>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {docs.map((doc) => (
-                    <DocumentoCard key={doc.id} item={doc} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <Accordion
+                type="multiple"
+                value={isSearching ? categoriasComResultado : categoriasAbertas}
+                onValueChange={handleAccordionChange}
+                className="w-full"
+              >
+                {Array.from(grouped.entries()).map(([categoria, docs]) => (
+                  <AccordionItem key={categoria} value={categoria}>
+                    <AccordionTrigger>
+                      <span className="flex items-center gap-2">
+                        <CategoriaIcon nome={categoria} className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{categoria}</span>
+                        <Badge variant="secondary" className="ml-1">{docs.length}</Badge>
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="divide-y">
+                        {docs.map((doc) => (
+                          <DocumentoRow key={doc.id} item={doc} />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppLayout>
