@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Table2 } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Printer, Table2, Wrench, Headphones, DollarSign, Target, LayoutGrid } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+
+type IconComponent = React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 
 // Cargos, não pessoas — responsáveis por cada função podem mudar (ver
 // regra de nomenclatura em CLAUDE.md).
@@ -49,6 +53,34 @@ const AREA_BADGE_LABEL: Record<string, string> = {
   'Área Financeira': 'Financeira',
   'Área Comercial': 'Comercial',
   'Área de Gestão': 'Gestão',
+};
+
+// Ícone do header de cada área no accordion mobile.
+const AREA_ICON_MAP: Record<string, IconComponent> = {
+  'Área Técnica': Wrench,
+  'Área de Atendimento': Headphones,
+  'Área Financeira': DollarSign,
+  'Área Comercial': Target,
+  'Área de Gestão': LayoutGrid,
+};
+
+function AreaIcon({ nome, className }: { nome: string; className?: string }) {
+  const Icon = AREA_ICON_MAP[nome] || Table2;
+  return <Icon className={className} />;
+}
+
+const RACI_MOBILE_ACCORDION_STORAGE_KEY = 'raci_mobile_accordion';
+const AREA_PADRAO_ABERTA = 'Área Técnica';
+
+const lerAreasAbertasSalvas = (): string[] => {
+  try {
+    const raw = localStorage.getItem(RACI_MOBILE_ACCORDION_STORAGE_KEY);
+    if (!raw) return [AREA_PADRAO_ABERTA];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [AREA_PADRAO_ABERTA];
+  } catch {
+    return [AREA_PADRAO_ABERTA];
+  }
 };
 
 const RACI_STYLE: Record<Exclude<RaciLetra, ''>, { bg: string; text: string; label: string }> = {
@@ -357,6 +389,12 @@ const RaciBadgeSmall: React.FC<{ letra: RaciLetra }> = ({ letra }) => {
 };
 
 const MatrizRaci: React.FC = () => {
+  const [areasAbertas, setAreasAbertas] = useState<string[]>(lerAreasAbertasSalvas);
+
+  useEffect(() => {
+    localStorage.setItem(RACI_MOBILE_ACCORDION_STORAGE_KEY, JSON.stringify(areasAbertas));
+  }, [areasAbertas]);
+
   return (
     <div className="space-y-4">
       {/* CSS de impressão: paisagem para caber as 5 colunas de cargo, sem
@@ -436,48 +474,61 @@ const MatrizRaci: React.FC = () => {
         </table>
       </div>
 
-      {/* Mobile (abaixo de lg): um card por processo em vez de tabela —
-          cada card lista os 5 cargos com um badge colorido pela letra
-          RACI, agrupados por área com o mesmo separador visual da tabela. */}
-      <div className="block lg:hidden space-y-6">
-        {AREAS.map((area) => (
-          <div key={area.nome} className="space-y-3">
-            <div className="rounded-md bg-muted px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {area.nome}
-            </div>
-            <div className="space-y-3">
-              {area.linhas.map((linhaAtual) => (
-                <Card key={linhaAtual.processo}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-sm font-semibold leading-snug">
-                        {linhaAtual.processo}
-                      </CardTitle>
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {AREA_BADGE_LABEL[area.nome] ?? area.nome}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-2 gap-2">
-                      {CARGOS.map((cargo) => (
-                        <div
-                          key={cargo.key}
-                          className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5"
-                        >
-                          <span className="text-xs text-muted-foreground">
-                            {CARGO_LABEL_CURTO[cargo.key]}
-                          </span>
-                          <RaciBadgeSmall letra={linhaAtual.valores[cargo.key]} />
+      {/* Mobile (abaixo de lg): as áreas viram um accordion (mesmo padrão de
+          Documentos.tsx) — cada uma abre a lista de cards de processo já
+          existente, sem alteração no conteúdo dos cards. */}
+      <div className="block lg:hidden rounded-lg border px-3">
+        <Accordion
+          type="multiple"
+          value={areasAbertas}
+          onValueChange={setAreasAbertas}
+          className="w-full"
+        >
+          {AREAS.map((area) => (
+            <AccordionItem key={area.nome} value={area.nome}>
+              <AccordionTrigger>
+                <span className="flex items-center gap-2">
+                  <AreaIcon nome={area.nome} className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold">{AREA_BADGE_LABEL[area.nome] ?? area.nome}</span>
+                  <Badge variant="secondary" className="ml-1">{area.linhas.length}</Badge>
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3">
+                  {area.linhas.map((linhaAtual) => (
+                    <Card key={linhaAtual.processo}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-sm font-semibold leading-snug">
+                            {linhaAtual.processo}
+                          </CardTitle>
+                          <Badge variant="outline" className="shrink-0 text-xs">
+                            {AREA_BADGE_LABEL[area.nome] ?? area.nome}
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        ))}
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="grid grid-cols-2 gap-2">
+                          {CARGOS.map((cargo) => (
+                            <div
+                              key={cargo.key}
+                              className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5"
+                            >
+                              <span className="text-xs text-muted-foreground">
+                                {CARGO_LABEL_CURTO[cargo.key]}
+                              </span>
+                              <RaciBadgeSmall letra={linhaAtual.valores[cargo.key]} />
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
 
       <div className="flex flex-wrap gap-4">
