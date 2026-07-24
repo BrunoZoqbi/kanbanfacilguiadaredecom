@@ -44,22 +44,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const navigation = [
+    { name: 'Notificações', href: '/notificacoes', icon: Bell },
     ...(isAdmin ? [
       { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     ] : []),
-    { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Minhas Tarefas', href: '/my-tasks', icon: ListTodo },
-    { name: 'Tickets', href: '/tickets', icon: TicketIcon },
-    { name: 'Scripts', href: '/scripts', icon: MessageSquareText },
+    { name: 'Kanban', href: '/', icon: KanbanSquare },
     { name: 'Calendário', href: '/calendar', icon: CalendarDays },
-    { name: 'Estoque', href: '/estoque', icon: Boxes },
     ...(isAdmin || isGestorComercial ? [
       { name: 'Prospecção', href: '/prospeccao', icon: Target },
     ] : []),
+    { name: 'Scripts', href: '/scripts', icon: MessageSquareText },
+    { name: 'Tickets', href: '/tickets', icon: TicketIcon },
+    { name: 'Estoque', href: '/estoque', icon: Boxes },
     ...(isAdmin ? [
       { name: 'Gerenciar', href: '/admin', icon: Settings },
     ] : []),
-    { name: 'Notificações', href: '/notificacoes', icon: Bell },
     { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
   ];
 
