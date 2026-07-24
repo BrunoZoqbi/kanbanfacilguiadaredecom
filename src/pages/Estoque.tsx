@@ -22,7 +22,7 @@ import { Loader2, Boxes, PackageCheck, Users, Package, ClipboardList, Wrench, Fi
 import { toast } from 'sonner';
 
 const Estoque: React.FC = () => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading, role } = useAuth();
   const isGestorTecnico = useIsGestorTecnico();
   const canManageStock = isAdmin || isGestorTecnico;
   const { itens, estoqueGeral } = useItensSerializados();
@@ -52,6 +52,18 @@ const Estoque: React.FC = () => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // isLoading já cobre a maior parte disso, mas fica um guard explícito
+  // aqui: canManageStock nunca deve ser avaliado com role ainda null
+  // (usuário autenticado, papel ainda não resolvido) — do contrário as abas
+  // de Admin/Gestor Técnico somem por um instante até o role chegar.
+  if (role === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
