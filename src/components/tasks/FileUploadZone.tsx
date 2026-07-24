@@ -80,6 +80,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     }
 
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
     onUploadComplete?.();
   }, [taskId, user, uploadFile, queryClient, onUploadComplete]);
 
