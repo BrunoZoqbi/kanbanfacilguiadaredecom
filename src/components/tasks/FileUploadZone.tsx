@@ -5,6 +5,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { extractPdfText } from '@/lib/pdfText';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -26,6 +27,10 @@ interface FileUploadZoneProps {
   taskId: string;
   onUploadComplete?: () => void;
   compact?: boolean;
+  // Quando informado, PDFs não são enviados ao storage: o texto é
+  // extraído no browser e devolvido para quem chama inserir na descrição
+  // da tarefa. Sem esse callback, PDFs seguem o fluxo normal de upload.
+  onPdfTextExtracted?: (text: string) => void;
 }
 
 interface AttachmentPreview {
@@ -39,11 +44,61 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   taskId,
   onUploadComplete,
   compact = false,
+  onPdfTextExtracted,
 }) => {
   const { user } = useAuth();
   const { uploadFile, isUploading, uploadProgress } = useFileUpload();
   const queryClient = useQueryClient();
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
+  const [pdfPreview, setPdfPreview] = useState<{ file: File; text: string } | null>(null);
+  const [pdfFailedFile, setPdfFailedFile] = useState<File | null>(null);
+
+  const uploadRegular = useCallback(async (file: File) => {
+    if (!user) {
+      toast.error('Você precisa estar logado');
+      return;
+    }
+
+    const result = await uploadFile(file, taskId);
+
+    if (result) {
+      const { error } = await supabase.from('task_attachments').insert({
+        task_id: taskId,
+        file_name: result.fileName,
+        file_path: result.filePath,
+        file_type: result.fileType,
+        uploaded_by_id: user.id,
+      });
+
+      if (error) {
+        console.error('Error saving attachment:', error);
+        toast.error('Erro ao salvar anexo');
+      } else {
+        toast.success(`${result.fileName} anexado!`);
+      }
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    onUploadComplete?.();
+  }, [taskId, user, uploadFile, queryClient, onUploadComplete]);
+
+  const handlePdfFile = useCallback(async (file: File) => {
+    setIsExtractingPdf(true);
+    try {
+      const text = await extractPdfText(file);
+      if (!text) {
+        setPdfFailedFile(file);
+      } else {
+        setPdfPreview({ file, text });
+      }
+    } catch (error) {
+      console.error('Erro ao extrair texto do PDF:', error);
+      setPdfFailedFile(file);
+    } finally {
+      setIsExtractingPdf(false);
+    }
+  }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!user) {
@@ -52,32 +107,28 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     }
 
     for (const file of acceptedFiles) {
-      const result = await uploadFile(file, taskId);
-      
-      if (result) {
-        // Save attachment to database
-        const { error } = await supabase
-          .from('task_attachments')
-          .insert({
-            task_id: taskId,
-            file_name: result.fileName,
-            file_path: result.filePath,
-            file_type: result.fileType,
-            uploaded_by_id: user.id,
-          });
-
-        if (error) {
-          console.error('Error saving attachment:', error);
-          toast.error('Erro ao salvar anexo');
-        } else {
-          toast.success(`${result.fileName} anexado!`);
-        }
+      if (file.type === 'application/pdf' && onPdfTextExtracted) {
+        await handlePdfFile(file);
+      } else {
+        await uploadRegular(file);
       }
     }
+  }, [user, onPdfTextExtracted, handlePdfFile, uploadRegular]);
 
-    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  const confirmPdfText = () => {
+    if (pdfPreview) {
+      onPdfTextExtracted?.(pdfPreview.text);
+      toast.success('Texto do PDF adicionado à descrição da tarefa!');
+    }
+    setPdfPreview(null);
     onUploadComplete?.();
-  }, [taskId, user, uploadFile, queryClient, onUploadComplete]);
+  };
+
+  const uploadFailedPdfAsIs = () => {
+    const file = pdfFailedFile;
+    setPdfFailedFile(null);
+    if (file) uploadRegular(file);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -89,69 +140,124 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
-    disabled: isUploading,
+    disabled: isUploading || isExtractingPdf,
   });
+
+  const pdfDialogs = (
+    <>
+      <AlertDialog open={!!pdfPreview} onOpenChange={(o) => { if (!o) setPdfPreview(null); }}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Texto extraído do PDF</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirme para adicionar este texto à descrição da tarefa. O arquivo PDF em si não
+              é anexado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-64 overflow-y-auto rounded border bg-muted/30 p-3 text-sm whitespace-pre-wrap">
+            {pdfPreview?.text}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPdfPreview(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPdfText}>Adicionar à descrição</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!pdfFailedFile} onOpenChange={(o) => { if (!o) setPdfFailedFile(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Não foi possível extrair texto deste PDF</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esse arquivo pode ser um PDF escaneado (imagem), sem texto selecionável. Deseja
+              anexar o arquivo normalmente mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPdfFailedFile(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={uploadFailedPdfAsIs}>Anexar mesmo assim</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 
   if (compact) {
     return (
-      <div
-        {...getRootProps()}
-        className={cn(
-          'flex items-center gap-2 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors',
-          isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-        )}
-      >
-        <input {...getInputProps()} />
-        {isUploading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Enviando...</span>
-            <Progress value={uploadProgress} className="flex-1 h-2" />
-          </>
-        ) : (
-          <>
-            <Upload className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {isDragActive ? 'Solte aqui...' : 'Arraste arquivos ou clique'}
-            </span>
-          </>
-        )}
-      </div>
+      <>
+        <div
+          {...getRootProps()}
+          className={cn(
+            'flex items-center gap-2 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors',
+            isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+          )}
+        >
+          <input {...getInputProps()} />
+          {isUploading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Enviando...</span>
+              <Progress value={uploadProgress} className="flex-1 h-2" />
+            </>
+          ) : isExtractingPdf ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Lendo PDF...</span>
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {isDragActive ? 'Solte aqui...' : 'Arraste arquivos ou clique'}
+              </span>
+            </>
+          )}
+        </div>
+        {pdfDialogs}
+      </>
     );
   }
 
   return (
-    <div
-      {...getRootProps()}
-      className={cn(
-        'flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all',
-        isDragActive
-          ? 'border-primary bg-primary/5 scale-[1.02]'
-          : 'border-border hover:border-primary/50 hover:bg-muted/50'
-      )}
-    >
-      <input {...getInputProps()} />
-      
-      {isUploading ? (
-        <div className="flex flex-col items-center gap-3 w-full">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Enviando arquivo...</p>
-          <Progress value={uploadProgress} className="w-full max-w-xs h-2" />
-        </div>
-      ) : (
-        <>
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-            <Upload className="h-6 w-6 text-primary" />
+    <>
+      <div
+        {...getRootProps()}
+        className={cn(
+          'flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all',
+          isDragActive
+            ? 'border-primary bg-primary/5 scale-[1.02]'
+            : 'border-border hover:border-primary/50 hover:bg-muted/50'
+        )}
+      >
+        <input {...getInputProps()} />
+
+        {isUploading ? (
+          <div className="flex flex-col items-center gap-3 w-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Enviando arquivo...</p>
+            <Progress value={uploadProgress} className="w-full max-w-xs h-2" />
           </div>
-          <p className="text-sm font-medium mb-1">
-            {isDragActive ? 'Solte os arquivos aqui' : 'Arraste arquivos para anexar'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Imagens, PDFs e documentos (máx. 10MB)
-          </p>
-        </>
-      )}
-    </div>
+        ) : isExtractingPdf ? (
+          <div className="flex flex-col items-center gap-3 w-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Lendo PDF...</p>
+          </div>
+        ) : (
+          <>
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-sm font-medium mb-1">
+              {isDragActive ? 'Solte os arquivos aqui' : 'Arraste arquivos para anexar'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Imagens, PDFs e documentos (máx. 10MB)
+            </p>
+          </>
+        )}
+      </div>
+      {pdfDialogs}
+    </>
   );
 };
 
