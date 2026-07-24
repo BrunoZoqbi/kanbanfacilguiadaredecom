@@ -270,14 +270,17 @@ const Ajuda: React.FC = () => {
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Textos prontos para copiar e colar no WhatsApp, organizados em 3 abas por setor:{' '}
+            Textos prontos para copiar e colar no WhatsApp, organizados em 4 abas por setor:{' '}
             <strong className="font-medium text-foreground">Comercial</strong>,{' '}
-            <strong className="font-medium text-foreground">Financeiro</strong> e{' '}
-            <strong className="font-medium text-foreground">Atendimento Geral</strong>.
+            <strong className="font-medium text-foreground">Financeiro</strong>,{' '}
+            <strong className="font-medium text-foreground">Atendimento Geral</strong> e{' '}
+            <strong className="font-medium text-foreground">Suporte Técnico</strong>. O setor
+            Suporte Técnico agrupa as categorias Triagem Remota, Comunicados, Em Campo e
+            Escalonamento.
           </li>
           <li>
             Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção,
-            Cobrança).
+            Cobrança, Triagem Remota).
           </li>
           <li>
             Use o campo de busca para encontrar um script pelo título ou conteúdo, e o botão{' '}
