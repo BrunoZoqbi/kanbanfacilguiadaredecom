@@ -27,11 +27,13 @@ import {
   Boxes,
   Target,
   Ticket as TicketIcon,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EstoqueVisaoGeral from '@/components/estoque/EstoqueVisaoGeral';
 import DashboardProspeccaoResumo from './DashboardProspeccaoResumo';
 import DashboardTicketsResumo from './DashboardTicketsResumo';
+import DashboardReagendamentosResumo from './DashboardReagendamentosResumo';
 
 const AdminDashboard: React.FC = () => {
   const { tasks, profiles, isLoading } = useTasks();
@@ -172,6 +174,10 @@ const AdminDashboard: React.FC = () => {
           <TabsTrigger value="tarefas" className="flex items-center gap-2">
             <ListTodo className="h-4 w-4" />
             Tarefas
+          </TabsTrigger>
+          <TabsTrigger value="reagendamentos" className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            Reagendamentos
           </TabsTrigger>
           <TabsTrigger value="estoque" className="flex items-center gap-2">
             <Boxes className="h-4 w-4" />
@@ -443,6 +449,10 @@ const AdminDashboard: React.FC = () => {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="reagendamentos" className="mt-6">
+          <DashboardReagendamentosResumo tasks={tasks} profiles={profiles} />
         </TabsContent>
 
         <TabsContent value="estoque" className="mt-6">

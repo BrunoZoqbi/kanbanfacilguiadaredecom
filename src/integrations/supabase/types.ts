@@ -851,6 +851,12 @@ export type Database = {
           parent_task_id: string | null
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
+          reagendamento_at: string | null
+          reagendamento_count: number
+          reagendamento_motivo:
+            | Database["public"]["Enums"]["reagendamento_motivo"]
+            | null
+          reagendamento_observacao: string | null
           recurrence_days: number[] | null
           recurrence_end_after: number | null
           recurrence_end_date: string | null
@@ -876,6 +882,12 @@ export type Database = {
           parent_task_id?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          reagendamento_at?: string | null
+          reagendamento_count?: number
+          reagendamento_motivo?:
+            | Database["public"]["Enums"]["reagendamento_motivo"]
+            | null
+          reagendamento_observacao?: string | null
           recurrence_days?: number[] | null
           recurrence_end_after?: number | null
           recurrence_end_date?: string | null
@@ -901,6 +913,12 @@ export type Database = {
           parent_task_id?: string | null
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
+          reagendamento_at?: string | null
+          reagendamento_count?: number
+          reagendamento_motivo?:
+            | Database["public"]["Enums"]["reagendamento_motivo"]
+            | null
+          reagendamento_observacao?: string | null
           recurrence_days?: number[] | null
           recurrence_end_after?: number | null
           recurrence_end_date?: string | null
@@ -1327,6 +1345,20 @@ export type Database = {
         Returns: undefined
       }
       resumo_estoque_por_status: { Args: never; Returns: Json }
+      resumo_reagendamentos: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: {
+          atrasadas: number
+          cumpridas_no_prazo: number
+          pct_atrasadas: number
+          pct_cumpridas: number
+          pct_reagendadas: number
+          por_motivo: Json
+          por_usuario: Json
+          reagendadas: number
+          total_tarefas: number
+        }[]
+      }
       retirar_consumivel_para_tecnico: {
         Args: {
           p_observacao?: string
@@ -1346,8 +1378,17 @@ export type Database = {
       classificacao_prospeccao: "baixa" | "media" | "alta"
       condicao_item: "novo" | "usado" | "recondicionado"
       prioridade_ticket: "baixa" | "media" | "alta" | "urgente"
+      reagendamento_motivo:
+        | "pedido_tecnico"
+        | "pedido_cliente"
+        | "condicao_externa"
+        | "outro"
       recurrence_type: "none" | "daily" | "weekly" | "monthly"
-      setor_script: "comercial" | "financeiro" | "atendimento_geral" | "suporte_tecnico"
+      setor_script:
+        | "comercial"
+        | "financeiro"
+        | "atendimento_geral"
+        | "suporte_tecnico"
       status_item:
         | "disponivel"
         | "com_tecnico"
@@ -1506,8 +1547,19 @@ export const Constants = {
       classificacao_prospeccao: ["baixa", "media", "alta"],
       condicao_item: ["novo", "usado", "recondicionado"],
       prioridade_ticket: ["baixa", "media", "alta", "urgente"],
+      reagendamento_motivo: [
+        "pedido_tecnico",
+        "pedido_cliente",
+        "condicao_externa",
+        "outro",
+      ],
       recurrence_type: ["none", "daily", "weekly", "monthly"],
-      setor_script: ["comercial", "financeiro", "atendimento_geral", "suporte_tecnico"],
+      setor_script: [
+        "comercial",
+        "financeiro",
+        "atendimento_geral",
+        "suporte_tecnico",
+      ],
       status_item: [
         "disponivel",
         "com_tecnico",

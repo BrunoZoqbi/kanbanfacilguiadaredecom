@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TaskWithRelations, TaskPriority, TaskStatus } from '@/types/database';
+import { TaskWithRelations, TaskPriority, TaskStatus, ReagendamentoMotivo, REAGENDAMENTO_MOTIVO_LABELS } from '@/types/database';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsGestorTecnico } from '@/hooks/useIsGestorTecnico';
@@ -30,6 +30,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -89,6 +91,8 @@ interface EditDraft {
   priority: TaskPriority;
   location: string;
   assignee_id: string;
+  due_date: string;
+  scheduled_date: string;
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, onOpenTask }) => {
@@ -104,6 +108,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
   const [isEditing, setIsEditing] = useState(false);
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const [pendingEditScope, setPendingEditScope] = useState<'single' | 'future' | null>(null);
+  const [pendingReagendamentoScope, setPendingReagendamentoScope] = useState<'single' | 'future' | null>(null);
+  const [reagendamentoMotivo, setReagendamentoMotivo] = useState<ReagendamentoMotivo | ''>('');
+  const [reagendamentoObservacao, setReagendamentoObservacao] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isGeneratingInstances, setIsGeneratingInstances] = useState(false);
   const [assigneeIsAdmin, setAssigneeIsAdmin] = useState(false);
@@ -147,6 +154,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
       priority: task.priority,
       location: task.location ?? '',
       assignee_id: task.assignee_id ?? '',
+      due_date: format(new Date(task.due_date), "yyyy-MM-dd'T'HH:mm"),
+      scheduled_date: task.scheduled_date ? format(new Date(task.scheduled_date), 'yyyy-MM-dd') : '',
     });
     setIsEditing(true);
   };
@@ -155,15 +164,36 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
     setIsEditing(false);
     setEditDraft(null);
     setPendingEditScope(null);
+    setPendingReagendamentoScope(null);
+    setReagendamentoMotivo('');
+    setReagendamentoObservacao('');
   };
 
-  const saveEdit = async (scope: 'single' | 'future') => {
+  // Reagendamento = mudança no prazo (due_date) ou na data prevista
+  // (scheduled_date) — dispara o AlertDialog de motivo obrigatório.
+  const isReagendamento = (draft: EditDraft) => {
+    const newDueTime = new Date(draft.due_date).getTime();
+    const oldDueTime = new Date(task.due_date).getTime();
+    if (newDueTime !== oldDueTime) return true;
+    const oldScheduled = task.scheduled_date ? task.scheduled_date.slice(0, 10) : '';
+    return draft.scheduled_date !== oldScheduled;
+  };
+
+  const saveEdit = async (
+    scope: 'single' | 'future',
+    reagendamento?: { motivo: ReagendamentoMotivo; observacao: string }
+  ) => {
     if (!editDraft) return;
     setIsSavingEdit(true);
     try {
       const novoAssigneeId = editDraft.assignee_id || null;
       const assigneeMudou = novoAssigneeId !== (task.assignee_id ?? null);
 
+      // Campos propagáveis para template + instâncias futuras (escopo
+      // 'future'). due_date/scheduled_date ficam FORA daqui de propósito:
+      // cada instância recorrente tem seu próprio prazo já calculado pela
+      // Edge Function gerar-instancias-recorrentes — sobrescrever em massa
+      // quebraria esse cálculo (ver lição em CLAUDE.md).
       const updates = {
         title: editDraft.title,
         description: editDraft.description || null,
@@ -172,10 +202,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
         assignee_id: novoAssigneeId,
       };
 
+      const currentTaskUpdates: Record<string, unknown> = {
+        ...updates,
+        due_date: new Date(editDraft.due_date).toISOString(),
+        scheduled_date: editDraft.scheduled_date || null,
+      };
+      if (reagendamento) {
+        currentTaskUpdates.reagendamento_motivo = reagendamento.motivo;
+        currentTaskUpdates.reagendamento_observacao = reagendamento.observacao || null;
+        currentTaskUpdates.reagendamento_count = (task.reagendamento_count ?? 0) + 1;
+        currentTaskUpdates.reagendamento_at = new Date().toISOString();
+      }
+
       // Always update this task
       const { error: err1 } = await supabase
         .from('tasks')
-        .update(updates)
+        .update(currentTaskUpdates)
         .eq('id', task.id);
       if (err1) throw err1;
 
@@ -214,14 +256,29 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
 
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-infinite'] });
-      toast.success('Tarefa atualizada!');
+      toast.success(reagendamento ? 'Tarefa reagendada!' : 'Tarefa atualizada!');
       setIsEditing(false);
       setEditDraft(null);
       setPendingEditScope(null);
+      setPendingReagendamentoScope(null);
+      setReagendamentoMotivo('');
+      setReagendamentoObservacao('');
     } catch (e: any) {
       toast.error('Erro ao salvar: ' + e.message);
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  // Decide, para um dado escopo já resolvido (avulsa, ou instância recorrente
+  // após a escolha "só esta"/"esta e futuras"), se precisa abrir o modal de
+  // motivo antes de salvar de fato.
+  const proceedToSaveOrReagendamento = (scope: 'single' | 'future') => {
+    if (!editDraft) return;
+    if (isReagendamento(editDraft)) {
+      setPendingReagendamentoScope(scope);
+    } else {
+      saveEdit(scope);
     }
   };
 
@@ -231,8 +288,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
       // Show AlertDialog to choose scope
       setPendingEditScope('single');
     } else {
-      saveEdit('single');
+      proceedToSaveOrReagendamento('single');
     }
+  };
+
+  const handleConfirmReagendamento = () => {
+    if (!reagendamentoMotivo || !pendingReagendamentoScope) return;
+    const scope = pendingReagendamentoScope;
+    saveEdit(scope, { motivo: reagendamentoMotivo, observacao: reagendamentoObservacao.trim() });
   };
 
   const handleGenerateInstances = async () => {
@@ -414,6 +477,24 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
                     </Select>
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Prazo</label>
+                    <Input
+                      type="datetime-local"
+                      value={editDraft.due_date}
+                      onChange={(e) => setEditDraft((d) => d ? { ...d, due_date: e.target.value } : d)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Previsto</label>
+                    <Input
+                      type="date"
+                      value={editDraft.scheduled_date}
+                      onChange={(e) => setEditDraft((d) => d ? { ...d, scheduled_date: e.target.value } : d)}
+                    />
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Prioridade</label>
@@ -751,16 +832,83 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
             <AlertDialogCancel onClick={cancelEditing}>Cancelar</AlertDialogCancel>
             <Button
               variant="outline"
-              onClick={() => { setPendingEditScope(null); saveEdit('single'); }}
+              onClick={() => { setPendingEditScope(null); proceedToSaveOrReagendamento('single'); }}
               disabled={isSavingEdit}
             >
               Editar só esta ocorrência
             </Button>
             <Button
-              onClick={() => { setPendingEditScope(null); saveEdit('future'); }}
+              onClick={() => { setPendingEditScope(null); proceedToSaveOrReagendamento('future'); }}
               disabled={isSavingEdit}
             >
               Editar esta e todas as futuras
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog de motivo do reagendamento — obrigatório quando o prazo
+          (due_date) ou a data prevista (scheduled_date) mudam */}
+      <AlertDialog
+        open={!!pendingReagendamentoScope}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingReagendamentoScope(null);
+            setReagendamentoMotivo('');
+            setReagendamentoObservacao('');
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reagendando tarefa</AlertDialogTitle>
+            <AlertDialogDescription>
+              O prazo desta tarefa foi alterado. Informe o motivo do reagendamento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Motivo *</Label>
+              <RadioGroup
+                value={reagendamentoMotivo}
+                onValueChange={(v) => setReagendamentoMotivo(v as ReagendamentoMotivo)}
+              >
+                {(Object.keys(REAGENDAMENTO_MOTIVO_LABELS) as ReagendamentoMotivo[]).map((motivo) => (
+                  <div key={motivo} className="flex items-center gap-2">
+                    <RadioGroupItem value={motivo} id={`reagendamento-motivo-${motivo}`} />
+                    <Label htmlFor={`reagendamento-motivo-${motivo}`} className="cursor-pointer font-normal">
+                      {REAGENDAMENTO_MOTIVO_LABELS[motivo]}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reagendamento-observacao">Observação</Label>
+              <Textarea
+                id="reagendamento-observacao"
+                value={reagendamentoObservacao}
+                onChange={(e) => setReagendamentoObservacao(e.target.value)}
+                placeholder="Detalhe opcional..."
+                className="min-h-[80px]"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingReagendamentoScope(null);
+                setReagendamentoMotivo('');
+                setReagendamentoObservacao('');
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <Button
+              onClick={handleConfirmReagendamento}
+              disabled={!reagendamentoMotivo || isSavingEdit}
+            >
+              Confirmar reagendamento
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
