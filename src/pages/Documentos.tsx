@@ -27,7 +27,7 @@ import {
   Wifi,
   Mail,
   Phone,
-  Map,
+  Map as MapIcon,
   BarChart3,
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
@@ -52,7 +52,7 @@ const ICON_MAP: Record<string, IconComponent> = {
   Wifi,
   Mail,
   Phone,
-  Map,
+  Map: MapIcon,
   BarChart3,
 };
 
@@ -111,13 +111,13 @@ const Documentos: React.FC = () => {
   }, [allItems, search]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, RecursoDocumento[]>();
+    const groupMap = new Map<string, RecursoDocumento[]>();
     for (const item of filtered) {
-      const list = map.get(item.categoria) ?? [];
+      const list = groupMap.get(item.categoria) ?? [];
       list.push(item);
-      map.set(item.categoria, list);
+      groupMap.set(item.categoria, list);
     }
-    return map;
+    return groupMap;
   }, [filtered]);
 
   if (authLoading) {
