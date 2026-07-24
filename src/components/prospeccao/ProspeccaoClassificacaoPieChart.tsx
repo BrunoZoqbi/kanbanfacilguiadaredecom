@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis, PieLabelRenderProps } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -39,6 +39,20 @@ export const buildClassificacaoChartData = (stats: ProspeccaoStats): Classificac
 interface ProspeccaoClassificacaoPieChartProps {
   data: ClassificacaoChartDatum[];
 }
+
+const RADIAN = Math.PI / 180;
+const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent }: PieLabelRenderProps) => {
+  if ((percent ?? 0) < 0.06) return null;
+  const r = (outerRadius as number) * 0.65;
+  const x = (cx as number) + r * Math.cos(-midAngle! * RADIAN);
+  const y = (cy as number) + r * Math.sin(-midAngle! * RADIAN);
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+      <tspan x={x} dy="-0.5em">{value}</tspan>
+      <tspan x={x} dy="1.3em">{`${((percent ?? 0) * 100).toFixed(0)}%`}</tspan>
+    </text>
+  );
+};
 
 const ProspeccaoClassificacaoPieChart: React.FC<ProspeccaoClassificacaoPieChartProps> = ({ data }) => {
   const [chartType, setChartType] = useState<'pie' | 'bar'>(() => {
@@ -83,7 +97,7 @@ const ProspeccaoClassificacaoPieChart: React.FC<ProspeccaoClassificacaoPieChartP
           <ChartContainer config={CLASSIFICACAO_CHART_CONFIG} className="mx-auto aspect-square max-h-[240px]">
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent nameKey="classificacao" hideLabel />} />
-              <Pie data={data} dataKey="value" nameKey="classificacao" innerRadius={50} strokeWidth={2}>
+              <Pie data={data} dataKey="value" nameKey="classificacao" strokeWidth={2} label={renderPieLabel} labelLine={false}>
                 {data.map((entry) => (
                   <Cell key={entry.classificacao} fill={entry.fill} />
                 ))}
