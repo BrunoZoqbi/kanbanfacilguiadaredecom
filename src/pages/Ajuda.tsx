@@ -13,9 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { HelpCircle, Loader2, Search } from 'lucide-react';
 
-// Extrai o texto puro de um nó React (ex: o conteúdo JSX de uma seção),
-// para permitir busca por texto sem precisar duplicar o conteúdo como
-// string separada em cada seção.
+// Extrai o texto puro de um nó React para permitir busca por texto sem
+// precisar duplicar o conteúdo como string separada em cada seção.
 const extrairTexto = (node: React.ReactNode): string => {
   if (node === null || node === undefined || typeof node === 'boolean') {
     return '';
@@ -32,16 +31,12 @@ const extrairTexto = (node: React.ReactNode): string => {
   return '';
 };
 
-// Data da última edição do conteúdo abaixo (não é gerada automaticamente).
 // Atualize esta constante manualmente sempre que o texto de alguma seção mudar.
-const ULTIMA_ATUALIZACAO = '23/07/2026';
+const ULTIMA_ATUALIZACAO = '24/07/2026';
 
 interface SecaoAjuda {
   id: string;
   titulo: string;
-  // Módulo visível na navegação para todos os papéis, exceto quando
-  // `visivelPara` restringe a seção a papéis específicos (ex: Prospecção
-  // Comercial só existe para quem tem acesso ao módulo).
   visivelPara?: () => boolean;
   conteudo: React.ReactNode;
 }
@@ -65,8 +60,84 @@ const Ajuda: React.FC = () => {
 
   const secoes: SecaoAjuda[] = [
     {
-      id: 'tarefas',
-      titulo: 'Tarefas (Kanban)',
+      id: 'notificacoes',
+      titulo: 'Notificações',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            O sino na barra lateral exibe um badge com a quantidade de notificações não lidas,
+            atualizado em tempo real via Realtime — sem precisar recarregar a página.
+          </li>
+          <li>
+            A página <strong className="font-medium text-foreground">"Notificações"</strong> lista
+            o histórico completo, mais recentes primeiro, com paginação. Toque numa notificação
+            para marcá-la como lida e abrir o que ela se refere; use{' '}
+            <strong className="font-medium text-foreground">"Marcar todas como lidas"</strong> para
+            limpar tudo de uma vez.
+          </li>
+          <li>
+            Disparos automáticos: uma tarefa foi atribuída a você; o ticket que você abriu recebeu
+            uma resposta; (Admin / Gestor Técnico) o estoque de um produto ficou baixo.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'dashboard',
+      titulo: 'Dashboard (Admin)',
+      visivelPara: () => isAdmin,
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Exclusivo para Admin. Painel consolidado com 4 abas:{' '}
+            <strong className="font-medium text-foreground">Tarefas</strong>,{' '}
+            <strong className="font-medium text-foreground">Estoque</strong>,{' '}
+            <strong className="font-medium text-foreground">Prospecção</strong> e{' '}
+            <strong className="font-medium text-foreground">Tickets</strong> — resumo executivo de
+            cada módulo sem precisar entrar em cada tela separadamente.
+          </li>
+          <li>
+            A aba <strong className="font-medium text-foreground">"Tarefas"</strong> exibe ranking
+            por usuário e taxa de conclusão no prazo, com exportação em{' '}
+            <strong className="font-medium text-foreground">PDF</strong> e{' '}
+            <strong className="font-medium text-foreground">Excel</strong>.
+          </li>
+          <li>
+            Todas as abas têm gráficos completos — alterne entre pizza e barras usando o toggle no
+            canto superior direito de cada gráfico. A preferência é salva automaticamente e persiste
+            entre navegações.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'minhas-tarefas',
+      titulo: 'Minhas Tarefas',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Lista exclusiva das tarefas atribuídas a você, separadas em abas:{' '}
+            <strong className="font-medium text-foreground">Todas</strong>,{' '}
+            <strong className="font-medium text-foreground">A Fazer</strong>,{' '}
+            <strong className="font-medium text-foreground">Fazendo</strong> e{' '}
+            <strong className="font-medium text-foreground">Feitas</strong>.
+          </li>
+          <li>
+            Cada aba usa paginação por cursor — clique em{' '}
+            <strong className="font-medium text-foreground">"Carregar mais"</strong> para navegar em
+            históricos longos sem travar o carregamento inicial.
+          </li>
+          <li>
+            Tarefas com prazo vencido exibem o badge{' '}
+            <strong className="font-medium text-foreground">"Atrasada"</strong> em destaque. Toque
+            em qualquer cartão para abrir o detalhe completo.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'kanban',
+      titulo: 'Kanban',
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
@@ -96,21 +167,14 @@ const Ajuda: React.FC = () => {
             <strong className="font-medium text-foreground">"Feito"</strong>.
           </li>
           <li>
-            A coluna <strong className="font-medium text-foreground">"Feito"</strong> usa
-            paginação — clique em{' '}
+            A coluna <strong className="font-medium text-foreground">"Feito"</strong> usa paginação
+            — clique em{' '}
             <strong className="font-medium text-foreground">"Carregar mais"</strong> para ver
             tarefas mais antigas sem travar o carregamento inicial.
           </li>
           <li>
             Use os filtros (Responsável, Prioridade, Tipo, Prazo) para encontrar tarefas
             rapidamente.
-          </li>
-          <li>
-            <strong className="font-medium text-foreground">"Minhas Tarefas"</strong> mostra só o
-            que está atribuído a você, com busca e paginação para históricos longos.
-          </li>
-          <li>
-            O Calendário mostra as tarefas por data, com pontos coloridos indicando a prioridade.
           </li>
           <li>
             <strong className="font-medium text-foreground">Tarefas Recorrentes:</strong> ao criar
@@ -125,211 +189,6 @@ const Ajuda: React.FC = () => {
             (visível para Admin e Gestores). Tarefas instância exibem o badge{' '}
             <strong className="font-medium text-foreground">"Recorrente"</strong> e um link para o
             template original.
-          </li>
-        </ul>
-      ),
-    },
-    {
-      id: 'estoque',
-      titulo: 'Estoque',
-      conteudo: (
-        <div className="space-y-3 text-sm text-muted-foreground">
-          <p>
-            <strong className="font-medium text-foreground">
-              Fluxo do equipamento (item serializado):
-            </strong>{' '}
-            Disponível (na sede) → Retirado por um técnico → Instalado no cliente → Recolhido
-            (vira tarefa automaticamente) → Devolvido à sede → Em Análise (se com defeito) →
-            Reparado ou Baixa definitiva.
-          </p>
-          <p>
-            <strong className="font-medium text-foreground">Fluxo do consumível</strong> (cabo,
-            conector e outros itens sem número de série):{' '}
-            <strong className="font-medium text-foreground">Entrada na sede</strong> →{' '}
-            <strong className="font-medium text-foreground">Retirar para Técnico</strong> (vai para
-            o saldo do técnico) →{' '}
-            <strong className="font-medium text-foreground">Usar/Consumir em campo</strong> (desconta
-            do saldo do técnico) →{' '}
-            <strong className="font-medium text-foreground">Devolver à Sede</strong> o que sobrar.
-            A custódia é rastreada por quantidade, não por unidade individual.
-          </p>
-          <div>
-            <p className="font-medium text-foreground mb-1">Gestor Técnico / Admin</p>
-            <ul className="list-disc pl-5 space-y-1.5">
-              <li>Cadastra produtos e itens na aba "Cadastro".</li>
-              <li>
-                Na aba <strong className="font-medium text-foreground">"Disponível"</strong>, retira
-                equipamento ou consumível para um técnico. O campo de busca encontra itens por
-                série, patrimônio, MAC ou nome do cliente vinculado. Um selo{' '}
-                <strong className="font-medium text-foreground">"Estoque baixo"</strong> aparece
-                quando o saldo disponível fica igual ou abaixo do limite configurado em Gerenciar
-                &gt; Configurações.
-              </li>
-              <li>
-                Lança recolhimento na aba{' '}
-                <strong className="font-medium text-foreground">"Lançar Recolhimento"</strong> (com
-                busca e paginação nos itens instalados em cliente) — já cria a tarefa e move o item
-                automaticamente.
-              </li>
-              <li>Decide reparo ou baixa na aba "Em Análise".</li>
-              <li>
-                A aba{' '}
-                <strong className="font-medium text-foreground">"Visão Geral"</strong> (só Admin e
-                Gestor Técnico) exibe o resumo quantitativo de todo o estoque por status, categoria
-                e produto — com gráfico alternável entre pizza e barras (o toggle fica no canto
-                superior direito de cada gráfico e a preferência é salva automaticamente).
-              </li>
-              <li>
-                A aba{' '}
-                <strong className="font-medium text-foreground">"Por Técnico"</strong> mostra uma
-                lista expansível: clique no nome do técnico para ver o que ele tem em posse —
-                serializados e consumíveis aparecem em seções separadas. Técnicos sem nenhum item
-                ficam ocultos.
-              </li>
-              <li>
-                O botão{' '}
-                <strong className="font-medium text-foreground">"Exportar Relatório"</strong> gera
-                uma planilha Excel completa.
-              </li>
-              <li>
-                A aba{' '}
-                <strong className="font-medium text-foreground">
-                  "Histórico de Movimentações"
-                </strong>{' '}
-                (só Admin e Gestor Técnico) lista todas as entradas, saídas, retiradas, devoluções
-                e baixas registradas no Estoque, mais recentes primeiro. Busque por produto,
-                número de série, técnico ou observação, filtre por tipo de movimento, e use
-                "Carregar mais" para navegar em históricos longos (lotes de 30).
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-1">Técnico</p>
-            <ul className="list-disc pl-5 space-y-1.5">
-              <li>Acompanha os equipamentos com você em "Meu Estoque".</li>
-              <li>Use "Instalar/Usar" ao instalar um equipamento em um cliente.</li>
-              <li>Use "Devolver na Sede" ao devolver um equipamento.</li>
-              <li>
-                A seção "Consumíveis Comigo" lista o que você retirou — use "Usar/Consumir" ao
-                aplicar em campo, ou "Devolver à Sede" o que não usar.
-              </li>
-            </ul>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'prospeccao',
-      titulo: 'Prospecção Comercial',
-      // Só quem tem acesso ao módulo (mesma regra do menu em AppLayout).
-      visivelPara: () => isAdmin || isGestorComercial,
-      conteudo: (
-        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
-          <li>
-            Toque em{' '}
-            <strong className="font-medium text-foreground">"Nova Prospecção"</strong> e preencha
-            os dados do contato (visita ou ligação).
-          </li>
-          <li>
-            Responda o checklist de 7 perguntas — pontuação e classificação (Baixa/Média/Alta) são
-            calculadas automaticamente.
-          </li>
-          <li>
-            Prospecções "Alta" geram uma tarefa automaticamente no Kanban, com prazo de 2 dias,
-            para não perder o timing de contato.
-          </li>
-          <li>
-            Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista. Use o campo de
-            busca e a paginação para navegar em históricos longos.
-          </li>
-          <li>
-            Clique numa prospecção já cadastrada para reabri-la: consulte as respostas do checklist
-            com a pontuação individual de cada pergunta (somente leitura — o checklist em si não
-            pode ser refeito, para não recalcular a pontuação) e edite os dados de contato e o
-            status.
-          </li>
-        </ul>
-      ),
-    },
-    {
-      id: 'tickets',
-      titulo: 'Tickets',
-      conteudo: (
-        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
-          <li>
-            Toque em <strong className="font-medium text-foreground">"Novo Ticket"</strong> para
-            registrar um chamado de suporte. Use a busca e a paginação para navegar em históricos
-            longos.
-          </li>
-          <li>
-            <strong className="font-medium text-foreground">Módulo compartilhado:</strong> Gestor
-            Técnico trata chamados técnicos (suporte, conexão, instalação); Gestor Comercial trata
-            chamados comerciais e financeiros (cobrança, negociação, cancelamento). Ambos têm visão
-            ampla de todos os tickets.
-          </li>
-          <li>
-            Use a aba "Respostas" para se comunicar com o cliente (ele acompanha essas mensagens
-            pelo Portal Público).
-          </li>
-          <li>
-            Use "Notas Internas" para anotações que só a equipe vê — o cliente nunca acessa essa
-            aba.
-          </li>
-          <li>Ao resolver, toque em "Marcar como Resolvido".</li>
-          <li>
-            O cliente consulta o próprio chamado, sem login, em{' '}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">/consulta-ticket</code>,
-            informando o número do ticket e o CPF ou telefone cadastrado.
-          </li>
-        </ul>
-      ),
-    },
-    {
-      id: 'scripts',
-      titulo: 'Scripts de Atendimento',
-      conteudo: (
-        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
-          <li>
-            Textos prontos para copiar e colar no WhatsApp, organizados em 3 abas por setor:
-            Comercial, Financeiro e Atendimento Geral.
-          </li>
-          <li>
-            Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção,
-            Cobrança).
-          </li>
-          <li>
-            Use o campo de busca para encontrar um script pelo título ou conteúdo, e o botão{' '}
-            <strong className="font-medium text-foreground">"Copiar"</strong> para colar direto na
-            conversa.
-          </li>
-          <li>
-            Admin edita, cria, ativa/desativa e reordena os scripts na aba{' '}
-            <strong className="font-medium text-foreground">"Gerenciar"</strong>.
-          </li>
-        </ul>
-      ),
-    },
-    {
-      id: 'notificacoes',
-      titulo: 'Notificações',
-      conteudo: (
-        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
-          <li>
-            O sino na barra lateral mostra um selo com a quantidade de notificações não lidas,
-            atualizado em tempo real (sem precisar recarregar a página). Toque nele para ir até{' '}
-            <strong className="font-medium text-foreground">"Notificações"</strong>.
-          </li>
-          <li>
-            A página <strong className="font-medium text-foreground">"Notificações"</strong> lista
-            o histórico completo, mais recentes primeiro, com paginação. Toque numa notificação
-            para marcá-la como lida e abrir o que ela se refere; use{' '}
-            <strong className="font-medium text-foreground">"Marcar todas como lidas"</strong> para
-            limpar tudo de uma vez.
-          </li>
-          <li>
-            Você recebe uma notificação automaticamente quando: uma tarefa é atribuída a você, o
-            ticket que você abriu recebe uma resposta, ou (Admin/Gestor Técnico) o estoque de um
-            produto fica baixo.
           </li>
         </ul>
       ),
@@ -368,46 +227,198 @@ const Ajuda: React.FC = () => {
       ),
     },
     {
-      id: 'perfil',
-      titulo: 'Meu Perfil',
+      id: 'prospeccao',
+      titulo: 'Prospecção Comercial',
+      visivelPara: () => isAdmin || isGestorComercial,
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
-          <li>Edite seu nome completo e WhatsApp a qualquer momento.</li>
           <li>
-            Para trocar a senha, informe a senha atual e a nova senha — por segurança, e-mail e
-            papel não podem ser alterados por aqui.
+            Módulo exclusivo para{' '}
+            <strong className="font-medium text-foreground">Admin</strong> e{' '}
+            <strong className="font-medium text-foreground">Gestor Comercial</strong>. Use a busca
+            e a paginação para navegar em históricos longos.
           </li>
           <li>
-            Se precisar alterar o e-mail ou ter a senha redefinida por outra pessoa, solicite ao
-            Admin — que pode fazer isso em{' '}
-            <strong className="font-medium text-foreground">
-              Gerenciar &gt; Usuários &gt; Editar
-            </strong>
-            .
+            Toque em{' '}
+            <strong className="font-medium text-foreground">"Nova Prospecção"</strong> e preencha
+            os dados do contato (visita ou ligação).
+          </li>
+          <li>
+            Responda o checklist de 7 perguntas — pontuação e classificação (Baixa/Média/Alta) são
+            calculadas automaticamente.
+          </li>
+          <li>
+            Prospecções{' '}
+            <strong className="font-medium text-foreground">"Alta"</strong> geram uma tarefa
+            automaticamente no Kanban, com prazo de 2 dias, para não perder o timing de contato.
+          </li>
+          <li>
+            Acompanhe o status (Novo, Em negociação, Convertido, Perdido) na lista.
+          </li>
+          <li>
+            Clique numa prospecção já cadastrada para reabri-la: consulte as respostas do checklist
+            com a pontuação individual de cada pergunta (somente leitura — o checklist em si não
+            pode ser refeito, para não recalcular a pontuação) e edite os dados de contato e o
+            status.
           </li>
         </ul>
       ),
     },
     {
-      id: 'dashboard',
-      titulo: 'Dashboard (Admin)',
-      visivelPara: () => isAdmin,
+      id: 'scripts',
+      titulo: 'Scripts de Atendimento',
       conteudo: (
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
-            Painel consolidado com abas para Tarefas, Estoque, Prospecção e Tickets — resumo
-            executivo de cada módulo sem precisar entrar em cada tela separadamente.
+            Textos prontos para copiar e colar no WhatsApp, organizados em 3 abas por setor:{' '}
+            <strong className="font-medium text-foreground">Comercial</strong>,{' '}
+            <strong className="font-medium text-foreground">Financeiro</strong> e{' '}
+            <strong className="font-medium text-foreground">Atendimento Geral</strong>.
           </li>
           <li>
-            A aba "Tarefas" mantém o detalhamento completo (ranking por usuário, taxa de conclusão
-            no prazo, exportação em PDF/Excel).
+            Dentro de cada aba, os scripts são agrupados por categoria (ex: Entrada, Objeção,
+            Cobrança).
           </li>
           <li>
-            As abas Estoque, Prospecção e Tickets exibem gráficos visuais — alterne entre pizza e
-            barras usando o toggle no canto superior direito de cada gráfico. A preferência é salva
-            automaticamente por gráfico e persiste ao navegar entre páginas.
+            Use o campo de busca para encontrar um script pelo título ou conteúdo, e o botão{' '}
+            <strong className="font-medium text-foreground">"Copiar"</strong> para colar direto na
+            conversa.
+          </li>
+          <li>
+            Admin edita, cria, ativa/desativa e reordena os scripts na aba{' '}
+            <strong className="font-medium text-foreground">"Gerenciar"</strong>.
           </li>
         </ul>
+      ),
+    },
+    {
+      id: 'tickets',
+      titulo: 'Tickets',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Toque em <strong className="font-medium text-foreground">"Novo Ticket"</strong> para
+            registrar um chamado de suporte. Use a busca e a paginação para navegar em históricos
+            longos.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Visibilidade:</strong>{' '}
+            <strong className="font-medium text-foreground">Admin</strong>,{' '}
+            <strong className="font-medium text-foreground">Gestor Técnico</strong> e{' '}
+            <strong className="font-medium text-foreground">Gestor Comercial</strong> veem todos os
+            tickets.{' '}
+            <strong className="font-medium text-foreground">Usuário comum</strong> vê apenas os
+            tickets atribuídos a si.
+          </li>
+          <li>
+            <strong className="font-medium text-foreground">Módulo compartilhado:</strong> Gestor
+            Técnico responde principalmente pelos chamados técnicos (suporte, conexão, instalação);
+            Gestor Comercial pelos chamados comerciais e financeiros (cobrança, negociação,
+            cancelamento). Ambos têm visão ampla de todos os tickets.
+          </li>
+          <li>
+            Use a aba <strong className="font-medium text-foreground">"Respostas"</strong> para se
+            comunicar com o cliente (ele acompanha essas mensagens pelo Portal Público).
+          </li>
+          <li>
+            Use <strong className="font-medium text-foreground">"Notas Internas"</strong> para
+            anotações que só a equipe vê — o cliente nunca acessa essa aba.
+          </li>
+          <li>
+            Ao resolver, toque em{' '}
+            <strong className="font-medium text-foreground">"Marcar como Resolvido"</strong>.
+          </li>
+          <li>
+            O cliente consulta o próprio chamado, sem login, em{' '}
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">/consulta-ticket</code>,
+            informando o número do ticket e o CPF ou telefone cadastrado.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'estoque',
+      titulo: 'Estoque',
+      conteudo: (
+        <div className="space-y-3 text-sm text-muted-foreground">
+          <p>
+            <strong className="font-medium text-foreground">
+              Fluxo do equipamento (item serializado):
+            </strong>{' '}
+            Disponível (na sede) → Retirado por um técnico → Instalado no cliente → Recolhido
+            (vira tarefa automaticamente) → Devolvido à sede → Em Análise (se com defeito) →
+            Reparado ou Baixa definitiva.
+          </p>
+          <p>
+            <strong className="font-medium text-foreground">Fluxo do consumível</strong> (cabo,
+            conector e outros itens sem número de série):{' '}
+            <strong className="font-medium text-foreground">Entrada na sede</strong> →{' '}
+            <strong className="font-medium text-foreground">Retirar para Técnico</strong> (vai para
+            o saldo do técnico) →{' '}
+            <strong className="font-medium text-foreground">Usar/Consumir em campo</strong>{' '}
+            (desconta do saldo do técnico) →{' '}
+            <strong className="font-medium text-foreground">Devolver à Sede</strong> o que sobrar.
+            A custódia é rastreada por quantidade, não por unidade individual.
+          </p>
+          <div>
+            <p className="font-medium text-foreground mb-1">Abas disponíveis</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                <strong className="font-medium text-foreground">Visão Geral</strong> (Admin e
+                Gestor Técnico): resumo quantitativo de todo o estoque por status, categoria e
+                produto. Gráficos alternáveis entre pizza e barras — o toggle fica no canto
+                superior direito de cada gráfico e a preferência é salva automaticamente.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Disponível</strong> (todos os
+                papéis): itens prontos para retirada. Busque por série, patrimônio, MAC ou nome do
+                cliente vinculado. Um selo{' '}
+                <strong className="font-medium text-foreground">"Estoque baixo"</strong> aparece
+                quando o saldo fica igual ou abaixo do limite configurado em Gerenciar &gt;
+                Configurações.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Meu Estoque</strong> (todos os
+                papéis): equipamentos e consumíveis sob sua custódia. Use{' '}
+                <strong className="font-medium text-foreground">"Instalar/Usar"</strong> ao instalar
+                em cliente, ou{' '}
+                <strong className="font-medium text-foreground">"Devolver na Sede"</strong> ao
+                devolver.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Por Técnico</strong> (Admin e
+                Gestor Técnico): lista expansível — clique no nome do técnico para ver o que ele tem
+                em posse. Serializados e consumíveis aparecem em seções separadas. Técnicos sem
+                nenhum item ficam ocultos.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Lançar Recolhimento</strong> (Admin
+                e Gestor Técnico): registra o recolhimento de um item instalado em cliente, com
+                busca e paginação. Já cria a tarefa e move o item automaticamente.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Em Análise</strong> (todos os
+                papéis): itens aguardando decisão de reparo ou baixa. Admin e Gestor Técnico
+                registram o resultado.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Cadastro</strong> (Admin e Gestor
+                Técnico): cadastra produtos e itens serializados/consumíveis.
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Histórico de Movimentações</strong>{' '}
+                (Admin e Gestor Técnico): lista todas as entradas, saídas, retiradas, devoluções e
+                baixas, mais recentes primeiro. Busque por produto, série, técnico ou observação;
+                filtre por tipo de movimento; use "Carregar mais" para navegar em lotes de 30.
+              </li>
+            </ul>
+          </div>
+          <p>
+            O botão{' '}
+            <strong className="font-medium text-foreground">"Exportar Relatório"</strong> (Admin e
+            Gestor Técnico) gera uma planilha Excel completa.
+          </p>
+        </div>
       ),
     },
     {
@@ -424,9 +435,15 @@ const Ajuda: React.FC = () => {
                 equipes grandes.
               </li>
               <li>
-                Ação "Editar": permite alterar o e-mail e redefinir a senha de qualquer usuário
-                diretamente pelo painel Admin, sem precisar que a pessoa faça isso por conta
-                própria.
+                Ação{' '}
+                <strong className="font-medium text-foreground">"Editar"</strong>: permite alterar
+                o e-mail e redefinir a senha de qualquer usuário diretamente pelo painel Admin, sem
+                precisar que a pessoa faça isso por conta própria.
+              </li>
+              <li>
+                Ative ou desative um usuário pelo toggle{' '}
+                <strong className="font-medium text-foreground">Ativo/Inativo</strong> — usuários
+                inativos não conseguem fazer login.
               </li>
             </ul>
           </div>
@@ -477,28 +494,30 @@ const Ajuda: React.FC = () => {
         <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
           <li>
             <strong className="font-medium text-foreground">Admin:</strong> acesso total a todos os
-            módulos e usuários. Também define o limite de alerta de estoque baixo em Gerenciar &gt;
-            Configurações, edita e-mails e redefine senhas de outros usuários em Gerenciar &gt;
-            Usuários.
+            módulos e usuários. Define o limite de alerta de estoque baixo em Gerenciar &gt;
+            Configurações; edita e-mails, redefine senhas e ativa/desativa usuários em Gerenciar
+            &gt; Usuários.
           </li>
           <li>
             <strong className="font-medium text-foreground">Gestor Técnico:</strong> gerencia o
-            Estoque (retirada, recolhimento, baixa) e o Histórico de Movimentações, tem visão
-            ampla de todos os Tickets — na prática, responde principalmente pelos chamados técnicos
-            (suporte, conexão, instalação) — e gerencia as tarefas da equipe técnica: pode editar
-            título, descrição, prioridade, checklist, anexos, tags e responsável de qualquer
-            tarefa da equipe, exceto tarefas atribuídas a um Admin.
+            Estoque completo (cadastro, retirada, recolhimento, baixa, histórico) e as tarefas da
+            equipe técnica — pode editar título, descrição, prioridade, checklist, anexos, tags e
+            responsável de qualquer tarefa da equipe, exceto tarefas atribuídas a um Admin. Tem
+            visão ampla de todos os Tickets, respondendo principalmente pelos chamados técnicos
+            (suporte, conexão, instalação).
           </li>
           <li>
-            <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia
-            Prospecção Comercial e também tem visão ampla de todos os Tickets — na prática,
-            responde principalmente pelos chamados comerciais e financeiros (cobrança, negociação,
-            cancelamento).
+            <strong className="font-medium text-foreground">Gestor Comercial:</strong> gerencia a
+            Prospecção Comercial e tem visão ampla de todos os Tickets — respondendo principalmente
+            pelos chamados comerciais e financeiros (cobrança, negociação, cancelamento).
           </li>
           <li>
             <strong className="font-medium text-foreground">Usuário comum:</strong> vê e cria
-            apenas as próprias tarefas; no Estoque e Tickets, só acessa os itens atribuídos a si;
-            no Calendário, vê apenas as próprias tarefas.
+            apenas as próprias tarefas; no Estoque acessa{' '}
+            <strong className="font-medium text-foreground">Meu Estoque</strong>,{' '}
+            <strong className="font-medium text-foreground">Disponível</strong> e{' '}
+            <strong className="font-medium text-foreground">Em Análise</strong>; nos Tickets vê
+            apenas os chamados atribuídos a si; no Calendário vê apenas as próprias tarefas.
           </li>
         </ul>
       ),
