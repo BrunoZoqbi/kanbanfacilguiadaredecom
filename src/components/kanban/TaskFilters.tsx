@@ -152,7 +152,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
             style={{
               backgroundColor: `${tag.color}20`,
               color: tag.color,
-              ...(filters.tag === tag.id ? { ringColor: tag.color } : {}),
+              ...(filters.tag === tag.id ? { '--tw-ring-color': tag.color } as React.CSSProperties : {}),
             }}
           >
             {tag.name}
