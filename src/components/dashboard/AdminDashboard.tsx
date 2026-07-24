@@ -168,7 +168,7 @@ const AdminDashboard: React.FC = () => {
       </h1>
 
       <Tabs defaultValue="tarefas">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList className="flex flex-nowrap overflow-x-auto w-full h-auto">
           <TabsTrigger value="tarefas" className="flex items-center gap-2">
             <ListTodo className="h-4 w-4" />
             Tarefas
