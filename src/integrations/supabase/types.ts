@@ -1278,7 +1278,7 @@ export type Database = {
       condicao_item: "novo" | "usado" | "recondicionado"
       prioridade_ticket: "baixa" | "media" | "alta" | "urgente"
       recurrence_type: "none" | "daily" | "weekly" | "monthly"
-      setor_script: "comercial" | "financeiro" | "atendimento_geral"
+      setor_script: "comercial" | "financeiro" | "atendimento_geral" | "suporte_tecnico"
       status_item:
         | "disponivel"
         | "com_tecnico"
@@ -1438,7 +1438,7 @@ export const Constants = {
       condicao_item: ["novo", "usado", "recondicionado"],
       prioridade_ticket: ["baixa", "media", "alta", "urgente"],
       recurrence_type: ["none", "daily", "weekly", "monthly"],
-      setor_script: ["comercial", "financeiro", "atendimento_geral"],
+      setor_script: ["comercial", "financeiro", "atendimento_geral", "suporte_tecnico"],
       status_item: [
         "disponivel",
         "com_tecnico",

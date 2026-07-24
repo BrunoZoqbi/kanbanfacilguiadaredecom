@@ -41,6 +41,9 @@ const Scripts: React.FC = () => {
             <TabsTrigger value="atendimento_geral">
               {SETOR_SCRIPT_LABELS.atendimento_geral}
             </TabsTrigger>
+            <TabsTrigger value="suporte_tecnico">
+              {SETOR_SCRIPT_LABELS.suporte_tecnico}
+            </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="gerenciar" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -57,6 +60,9 @@ const Scripts: React.FC = () => {
           </TabsContent>
           <TabsContent value="atendimento_geral" className="mt-6">
             <ScriptsSetorList setor="atendimento_geral" />
+          </TabsContent>
+          <TabsContent value="suporte_tecnico" className="mt-6">
+            <ScriptsSetorList setor="suporte_tecnico" />
           </TabsContent>
 
           {isAdmin && (

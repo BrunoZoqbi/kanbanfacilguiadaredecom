@@ -1,4 +1,4 @@
-export type SetorScript = 'comercial' | 'financeiro' | 'atendimento_geral';
+export type SetorScript = 'comercial' | 'financeiro' | 'atendimento_geral' | 'suporte_tecnico';
 
 export interface ScriptAtendimento {
   id: string;
@@ -17,6 +17,7 @@ export const SETOR_SCRIPT_LABELS: Record<SetorScript, string> = {
   comercial: 'Comercial',
   financeiro: 'Financeiro',
   atendimento_geral: 'Atendimento Geral',
+  suporte_tecnico: 'Suporte Técnico',
 };
 
 const normalizarCategoria = (categoria: string): string =>
