@@ -507,9 +507,9 @@ const Ajuda: React.FC = () => {
             seja cadastrado.
           </li>
           <li>
-            Admin cria, edita, ativa ou desativa documentos diretamente na aba{' '}
-            <strong className="font-medium text-foreground">"Gerenciar"</strong> dentro desta
-            própria página — sem precisar de código ou acesso ao banco.
+            Admin cria, edita, ativa ou desativa documentos em{' '}
+            <strong className="font-medium text-foreground">Gerenciar → Configurações</strong>{' '}
+            — sem precisar de código ou acesso ao banco.
           </li>
         </ul>
       ),
@@ -530,9 +530,9 @@ const Ajuda: React.FC = () => {
             externo em nova aba.
           </li>
           <li>
-            Admin cria, edita, ativa ou desativa recursos diretamente na aba{' '}
-            <strong className="font-medium text-foreground">"Gerenciar"</strong> dentro desta
-            própria página — sem precisar de código ou acesso ao banco.
+            Admin cria, edita, ativa ou desativa recursos em{' '}
+            <strong className="font-medium text-foreground">Gerenciar → Configurações</strong>{' '}
+            — sem precisar de código ou acesso ao banco.
           </li>
         </ul>
       ),
