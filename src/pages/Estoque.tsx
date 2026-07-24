@@ -93,7 +93,7 @@ const Estoque: React.FC = () => {
               <PackageCheck className="h-4 w-4" />
               Meu Estoque
             </TabsTrigger>
-            {isAdmin && (
+            {canManageStock && (
               <TabsTrigger value="por-tecnico" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Por Técnico
@@ -117,7 +117,7 @@ const Estoque: React.FC = () => {
                 Histórico
               </TabsTrigger>
             )}
-            {isAdmin && (
+            {canManageStock && (
               <TabsTrigger value="cadastro" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 Cadastro
@@ -139,7 +139,7 @@ const Estoque: React.FC = () => {
             <MeuEstoque />
           </TabsContent>
 
-          {isAdmin && (
+          {canManageStock && (
             <TabsContent value="por-tecnico" className="mt-6">
               <EstoquePorTecnico />
             </TabsContent>
@@ -163,7 +163,7 @@ const Estoque: React.FC = () => {
             </TabsContent>
           )}
 
-          {isAdmin && (
+          {canManageStock && (
             <TabsContent value="cadastro" className="mt-6">
               <Tabs defaultValue="produtos">
                 <TabsList>

@@ -190,9 +190,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
             p_mensagem: editDraft.title,
             p_link: '/',
           })
-          .then(({ error: notifError }) => {
-            if (notifError) console.error('Erro ao criar notificação de tarefa atribuída:', notifError);
-          });
+          .then(() => {});
       }
 
       if (scope === 'future' && isInstance && task.parent_task_id) {
