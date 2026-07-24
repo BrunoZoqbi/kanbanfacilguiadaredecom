@@ -95,6 +95,21 @@ interface EditDraft {
   scheduled_date: string;
 }
 
+// Motivos de reagendamento em que a observação deixa de ser um detalhe
+// opcional e vira a própria descrição do motivo (mínimo 5 caracteres).
+const MOTIVOS_COM_OBSERVACAO_OBRIGATORIA: Partial<
+  Record<ReagendamentoMotivo, { label: string; placeholder: string }>
+> = {
+  troca_tecnico: {
+    label: 'Motivo da troca (obrigatório)',
+    placeholder: 'Informe o motivo da troca de técnico...',
+  },
+  outro: {
+    label: 'Motivo (obrigatório)',
+    placeholder: 'Descreva o motivo...',
+  },
+};
+
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, onOpenTask }) => {
   const { user, isAdmin, role } = useAuth();
   const { addComment, toggleChecklistItem, addChecklistItem, deleteTask, updateTask, profiles } = useTasks();
@@ -292,14 +307,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
     }
   };
 
-  // Quando o motivo é "outro", a observação deixa de ser um detalhe
-  // opcional e vira a própria descrição do motivo — exigimos um mínimo de
-  // 5 caracteres em vez de aceitar qualquer texto vazio.
-  const reagendamentoOutroInvalido =
-    reagendamentoMotivo === 'outro' && reagendamentoObservacao.trim().length < 5;
+  const observacaoObrigatoriaConfig = reagendamentoMotivo
+    ? MOTIVOS_COM_OBSERVACAO_OBRIGATORIA[reagendamentoMotivo]
+    : undefined;
+  const reagendamentoObservacaoInvalida =
+    !!observacaoObrigatoriaConfig && reagendamentoObservacao.trim().length < 5;
 
   const handleConfirmReagendamento = () => {
-    if (!reagendamentoMotivo || !pendingReagendamentoScope || reagendamentoOutroInvalido) return;
+    if (!reagendamentoMotivo || !pendingReagendamentoScope || reagendamentoObservacaoInvalida) return;
     const scope = pendingReagendamentoScope;
     saveEdit(scope, { motivo: reagendamentoMotivo, observacao: reagendamentoObservacao.trim() });
   };
@@ -891,16 +906,16 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
             </div>
             <div className="space-y-2">
               <Label htmlFor="reagendamento-observacao">
-                {reagendamentoMotivo === 'outro' ? 'Motivo (obrigatório)' : 'Observação'}
+                {observacaoObrigatoriaConfig?.label ?? 'Observação'}
               </Label>
               <Textarea
                 id="reagendamento-observacao"
                 value={reagendamentoObservacao}
                 onChange={(e) => setReagendamentoObservacao(e.target.value)}
-                placeholder={reagendamentoMotivo === 'outro' ? 'Descreva o motivo...' : 'Detalhe opcional...'}
-                className={cn('min-h-[80px]', reagendamentoOutroInvalido && 'border-red-500 focus-visible:ring-red-500')}
+                placeholder={observacaoObrigatoriaConfig?.placeholder ?? 'Detalhe opcional...'}
+                className={cn('min-h-[80px]', reagendamentoObservacaoInvalida && 'border-red-500 focus-visible:ring-red-500')}
               />
-              {reagendamentoOutroInvalido && (
+              {reagendamentoObservacaoInvalida && (
                 <p className="text-xs text-red-500">Descreva o motivo (mínimo 5 caracteres).</p>
               )}
             </div>
@@ -917,7 +932,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
             </AlertDialogCancel>
             <Button
               onClick={handleConfirmReagendamento}
-              disabled={!reagendamentoMotivo || reagendamentoOutroInvalido || isSavingEdit}
+              disabled={!reagendamentoMotivo || reagendamentoObservacaoInvalida || isSavingEdit}
             >
               Confirmar reagendamento
             </Button>

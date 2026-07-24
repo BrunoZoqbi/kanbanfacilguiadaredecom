@@ -1382,6 +1382,7 @@ export type Database = {
         | "pedido_tecnico"
         | "pedido_cliente"
         | "condicao_externa"
+        | "troca_tecnico"
         | "outro"
       recurrence_type: "none" | "daily" | "weekly" | "monthly"
       setor_script:
@@ -1551,6 +1552,7 @@ export const Constants = {
         "pedido_tecnico",
         "pedido_cliente",
         "condicao_externa",
+        "troca_tecnico",
         "outro",
       ],
       recurrence_type: ["none", "daily", "weekly", "monthly"],
