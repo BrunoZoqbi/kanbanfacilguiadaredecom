@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Printer, Table2 } from 'lucide-react';
 
 // Cargos, não pessoas — responsáveis por cada função podem mudar (ver
@@ -30,6 +32,24 @@ const CARGOS: { key: CargoKey; label: string }[] = [
   { key: 'atendimento_financeiro', label: 'Atendimento/Financeiro' },
   { key: 'tecnico_campo', label: 'Técnico de Campo' },
 ];
+
+// Rótulos curtos para os cards do layout mobile (espaço limitado).
+const CARGO_LABEL_CURTO: Record<CargoKey, string> = {
+  diretor_geral: 'Diretor',
+  gestao_tecnica: 'Gest. Técnico',
+  gestao_comercial: 'Gest. Comercial',
+  atendimento_financeiro: 'Atend./Financeiro',
+  tecnico_campo: 'Técnico de Campo',
+};
+
+// Rótulo curto da área para o badge do card mobile (ex: "Área Técnica" → "Técnica").
+const AREA_BADGE_LABEL: Record<string, string> = {
+  'Área Técnica': 'Técnica',
+  'Área de Atendimento': 'Atendimento',
+  'Área Financeira': 'Financeira',
+  'Área Comercial': 'Comercial',
+  'Área de Gestão': 'Gestão',
+};
 
 const RACI_STYLE: Record<Exclude<RaciLetra, ''>, { bg: string; text: string; label: string }> = {
   R: { bg: '#68DA22', text: '#FFFFFF', label: 'Responsável — executa' },
@@ -319,6 +339,23 @@ const RaciCell: React.FC<{ letra: RaciLetra }> = ({ letra }) => {
   );
 };
 
+// Badge compacto (legenda do rodapé e cargos dos cards do layout mobile).
+const RaciBadgeSmall: React.FC<{ letra: RaciLetra }> = ({ letra }) => {
+  if (!letra) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  const style = RACI_STYLE[letra];
+  return (
+    <span
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold"
+      style={{ backgroundColor: style.bg, color: style.text }}
+      title={style.label}
+    >
+      {letra}
+    </span>
+  );
+};
+
 const MatrizRaci: React.FC = () => {
   return (
     <div className="space-y-4">
@@ -347,7 +384,11 @@ const MatrizRaci: React.FC = () => {
         </Button>
       </div>
 
-      <div className="rounded-lg border overflow-auto max-h-[70vh]">
+      {/* Desktop (lg+): tabela com header e coluna "Processo" sticky. Em
+          telas menores o sticky quebra (as colunas coloridas rolam por
+          baixo da coluna fixa em vez de ao lado dela), então abaixo de lg
+          trocamos para uma lista de cards (ver bloco "block lg:hidden"). */}
+      <div className="hidden lg:block rounded-lg border overflow-auto max-h-[70vh]">
         <table className="w-full min-w-[900px] border-collapse text-sm">
           <thead>
             <tr>
@@ -395,17 +436,56 @@ const MatrizRaci: React.FC = () => {
         </table>
       </div>
 
+      {/* Mobile (abaixo de lg): um card por processo em vez de tabela —
+          cada card lista os 5 cargos com um badge colorido pela letra
+          RACI, agrupados por área com o mesmo separador visual da tabela. */}
+      <div className="block lg:hidden space-y-6">
+        {AREAS.map((area) => (
+          <div key={area.nome} className="space-y-3">
+            <div className="rounded-md bg-muted px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {area.nome}
+            </div>
+            <div className="space-y-3">
+              {area.linhas.map((linhaAtual) => (
+                <Card key={linhaAtual.processo}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold leading-snug">
+                        {linhaAtual.processo}
+                      </CardTitle>
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        {AREA_BADGE_LABEL[area.nome] ?? area.nome}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-2 gap-2">
+                      {CARGOS.map((cargo) => (
+                        <div
+                          key={cargo.key}
+                          className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5"
+                        >
+                          <span className="text-xs text-muted-foreground">
+                            {CARGO_LABEL_CURTO[cargo.key]}
+                          </span>
+                          <RaciBadgeSmall letra={linhaAtual.valores[cargo.key]} />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="flex flex-wrap gap-4">
         {(Object.keys(RACI_STYLE) as Exclude<RaciLetra, ''>[]).map((letraLegenda) => {
           const style = RACI_STYLE[letraLegenda];
           return (
             <div key={letraLegenda} className="flex items-center gap-2 text-sm">
-              <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold"
-                style={{ backgroundColor: style.bg, color: style.text }}
-              >
-                {letraLegenda}
-              </span>
+              <RaciBadgeSmall letra={letraLegenda} />
               <span className="text-muted-foreground">{style.label}</span>
             </div>
           );
