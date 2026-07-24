@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   Dialog,
   DialogContent,
@@ -63,56 +64,77 @@ const GerenciarScripts: React.FC = () => {
     <div className="space-y-6">
       {setores.map((setor) => {
         const scriptsDoSetor = scripts.filter((s) => s.setor === setor);
+        const categoriasMap = new Map<string, ScriptAtendimento[]>();
+        scriptsDoSetor.forEach((script) => {
+          const lista = categoriasMap.get(script.categoria) || [];
+          lista.push(script);
+          categoriasMap.set(script.categoria, lista);
+        });
+        const categorias = Array.from(categoriasMap.entries());
+
         return (
           <Card key={setor}>
             <CardHeader>
               <CardTitle className="text-base">{SETOR_SCRIPT_LABELS[setor]}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg divide-y">
-                {scriptsDoSetor.map((script) => (
-                  <div
-                    key={script.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium truncate max-w-full">{script.titulo}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {script.categoria}
-                        </Badge>
-                        {!script.ativo && (
-                          <Badge variant="secondary" className="text-xs">
-                            Inativo
+              {categorias.length === 0 ? (
+                <div className="border rounded-lg p-6 text-center text-sm text-muted-foreground">
+                  Nenhum script cadastrado neste setor.
+                </div>
+              ) : (
+                <Accordion type="multiple" className="w-full border rounded-lg px-3">
+                  {categorias.map(([categoria, scriptsDaCategoria]) => (
+                    <AccordionItem key={categoria} value={categoria}>
+                      <AccordionTrigger>
+                        <span className="flex items-center gap-2">
+                          <span className="font-semibold">{categoria}</span>
+                          <Badge variant="secondary" className="ml-1">
+                            {scriptsDaCategoria.length}
                           </Badge>
-                        )}
-                      </div>
-                    </div>
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="divide-y">
+                          {scriptsDaCategoria.map((script) => (
+                            <div
+                              key={script.id}
+                              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3"
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-medium truncate max-w-full">{script.titulo}</p>
+                                  {!script.ativo && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Inativo
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Ativo</span>
-                        <Switch
-                          checked={script.ativo}
-                          onCheckedChange={(checked) =>
-                            toggleAtivo.mutate({ id: script.id, ativo: checked })
-                          }
-                        />
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => abrirEdicao(script)}>
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Editar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-
-                {scriptsDoSetor.length === 0 && (
-                  <div className="p-6 text-center text-sm text-muted-foreground">
-                    Nenhum script cadastrado neste setor.
-                  </div>
-                )}
-              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Ativo</span>
+                                  <Switch
+                                    checked={script.ativo}
+                                    onCheckedChange={(checked) =>
+                                      toggleAtivo.mutate({ id: script.id, ativo: checked })
+                                    }
+                                  />
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => abrirEdicao(script)}>
+                                  <Pencil className="h-4 w-4 mr-1" />
+                                  Editar
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
             </CardContent>
           </Card>
         );
