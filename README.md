@@ -13,11 +13,13 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equip
 - **Scripts de Atendimento** — biblioteca de textos prontos por setor (Comercial, Financeiro, Atendimento Geral e **Suporte Técnico**), organizados por categoria, com busca e cópia rápida. O setor Suporte Técnico inclui as categorias Triagem Remota, Comunicados, Em Campo e Escalonamento — 18 scripts, totalizando 50 no sistema. Edição restrita ao Admin, na aba "Gerenciar".
 - **Notificações** — página `/notificacoes` com histórico completo e paginado das notificações do usuário, "Marcar todas como lidas" e marcação individual ao clicar. Disparos automáticos: tarefa atribuída a você, resposta em ticket que você abriu, e estoque baixo (para Admin/Gestor Técnico). Badge de não lidas na barra lateral atualiza em tempo real via Supabase Realtime.
 - **Dashboard** (Admin) — painel consolidado com um resumo executivo de cada módulo (Tarefas, Estoque, Prospecção e Tickets) reunido em abas numa única tela.
+- **Documentos** — biblioteca de documentos e manuais da empresa (Manual do Sistema, POPs operacionais, Política de Privacidade/LGPD, Brandbook, Código de Conduta, etc.), agrupados por categoria (Operacional, Jurídico, Marca, RH), com busca por título ou descrição e botão "Abrir" em nova aba. Admin gerencia (criar, editar, ativar/desativar) diretamente pela aba "Gerenciar" dentro da página — sem precisar de código.
+- **Recursos** — links para sistemas e ferramentas externas da operação (Portal IXC, Mundiale / Wit Desk, Meta Business Suite, App Fibron Android/iOS, Site Institucional), com busca e botão "Acessar" em nova aba. Admin gerencia diretamente pela aba "Gerenciar" — sem precisar de código.
 - **Meu Perfil** — cada usuário edita o próprio nome e WhatsApp, e troca a própria senha (informando a atual).
 
 ## Navegação / Interface
 
-Barra lateral: o bloco avatar/nome/papel é clicável e leva a "Meu Perfil" (nome com sublinhado ao passar o mouse). O sino de notificações (com badge de não lidas atualizado em tempo real) fica ao lado do nome e navega para `/notificacoes`. **Ordem dos itens do menu:** Notificações → Dashboard (Admin) → Minhas Tarefas → Kanban → Calendário → Prospecção (Admin + Gestor Comercial) → Scripts → Tickets → Estoque → Gerenciar (Admin) → Ajuda. O botão **"Sair"** fica fixo no rodapé da barra lateral, separado da navegação por uma linha divisória. No **mobile**, o cabeçalho superior exibe apenas o ícone ☰ para abrir a sidebar (logo pendente de implementação); no desktop o cabeçalho é removido.
+Barra lateral: o bloco avatar/nome/papel é clicável e leva a "Meu Perfil" (nome com sublinhado ao passar o mouse). O sino de notificações (com badge de não lidas atualizado em tempo real) fica ao lado do nome e navega para `/notificacoes`. **Ordem dos itens do menu:** Notificações → Dashboard (Admin) → Minhas Tarefas → Kanban → Calendário → Prospecção (Admin + Gestor Comercial) → Scripts → Tickets → Estoque → Gerenciar (Admin) → Documentos → Recursos → Ajuda. O botão **"Sair"** fica fixo no rodapé da barra lateral, separado da navegação por uma linha divisória. No **mobile**, o cabeçalho superior exibe apenas o ícone ☰ para abrir a sidebar (logo pendente de implementação); no desktop o cabeçalho é removido.
 
 ## Papéis do sistema
 
@@ -56,6 +58,7 @@ Migrations em `supabase/migrations/`. Principais grupos de tabelas:
 - **Prospecção:** prospeccoes, prospeccoes_respostas
 - **Tickets:** tickets, ticket_respostas, ticket_notas_internas, ticket_consulta_tentativas
 - **Scripts de Atendimento:** scripts_atendimento
+- **Documentos e Recursos:** recursos_documentos, recursos_links
 
 Principais RPCs de Estoque: `lancar_entrada_consumivel`, `lancar_saida_consumivel`, `retirar_consumivel_para_tecnico`, `lancar_uso_consumivel`, `devolver_consumivel_sede` (ciclo de consumíveis), `resumo_estoque_por_status` (painel "Visão Geral" / Dashboard) e `buscar_itens_serializados_disponiveis` (busca + paginação server-side).
 

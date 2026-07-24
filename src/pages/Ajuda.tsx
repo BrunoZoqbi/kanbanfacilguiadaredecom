@@ -488,6 +488,56 @@ const Ajuda: React.FC = () => {
       ),
     },
     {
+      id: 'documentos',
+      titulo: 'Documentos',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Biblioteca de documentos e manuais da empresa: POPs operacionais, documentos jurídicos
+            (LGPD), identidade de marca e código de conduta.
+          </li>
+          <li>
+            Os documentos são exibidos em cards agrupados por categoria (Operacional, Jurídico,
+            Marca, RH). Use o campo de busca para filtrar por título ou descrição.
+          </li>
+          <li>
+            O botão{' '}
+            <strong className="font-medium text-foreground">"Abrir"</strong> abre o documento em
+            nova aba — documentos ainda sem link exibem o botão desabilitado até que um endereço
+            seja cadastrado.
+          </li>
+          <li>
+            Admin cria, edita, ativa ou desativa documentos diretamente na aba{' '}
+            <strong className="font-medium text-foreground">"Gerenciar"</strong> dentro desta
+            própria página — sem precisar de código ou acesso ao banco.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'recursos',
+      titulo: 'Recursos',
+      conteudo: (
+        <ul className="list-disc pl-5 space-y-1.5 text-sm text-muted-foreground">
+          <li>
+            Links rápidos para sistemas e ferramentas externas usados na operação: Portal IXC,
+            Mundiale / Wit Desk, Meta Business Suite, App Fibron (Android e iOS) e Site
+            Institucional.
+          </li>
+          <li>
+            Use o campo de busca para filtrar por título ou descrição. O botão{' '}
+            <strong className="font-medium text-foreground">"Acessar"</strong> abre o sistema
+            externo em nova aba.
+          </li>
+          <li>
+            Admin cria, edita, ativa ou desativa recursos diretamente na aba{' '}
+            <strong className="font-medium text-foreground">"Gerenciar"</strong> dentro desta
+            própria página — sem precisar de código ou acesso ao banco.
+          </li>
+        </ul>
+      ),
+    },
+    {
       id: 'papeis',
       titulo: 'Papéis e Permissões',
       // Usuário comum não precisa do detalhe administrativo de papéis; quem
