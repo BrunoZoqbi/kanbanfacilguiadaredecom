@@ -19,7 +19,7 @@ Sistema de gestão interna da Fibron (Raul Soares/MG): tarefas, estoque de equip
 
 ## Navegação / Interface
 
-Barra lateral: o bloco avatar/nome/papel é clicável e leva a "Meu Perfil" (nome com sublinhado ao passar o mouse). O sino de notificações (com badge de não lidas atualizado em tempo real) fica ao lado do nome e navega para `/notificacoes`. **Ordem dos itens do menu:** Notificações → Dashboard (Admin) → Minhas Tarefas → Kanban → Calendário → Prospecção (Admin + Gestor Comercial) → Scripts → Tickets → Estoque → Gerenciar (Admin) → Documentos → Recursos → Ajuda. O botão **"Sair"** fica fixo no rodapé da barra lateral, separado da navegação por uma linha divisória. No **mobile**, o cabeçalho superior exibe apenas o ícone ☰ para abrir a sidebar (logo pendente de implementação); no desktop o cabeçalho é removido.
+Barra lateral: o bloco avatar/nome/papel é clicável e leva a "Meu Perfil" (nome com sublinhado ao passar o mouse). O sino de notificações (com badge de não lidas atualizado em tempo real) fica ao lado do nome e navega para `/notificacoes`. **Ordem dos itens do menu:** Dashboard (Admin) → Minhas Tarefas → Kanban → Calendário → Prospecção (Admin + Gestor Comercial) → Scripts → Tickets → Estoque → Gerenciar (Admin) → Documentos → Recursos → Ajuda. O item "Notificações" foi removido do menu por ser redundante com o sino, que já navega para `/notificacoes`. O botão **"Sair"** fica fixo no rodapé da barra lateral, separado da navegação por uma linha divisória. No **mobile**, o cabeçalho superior exibe apenas o ícone ☰ para abrir a sidebar (logo pendente de implementação); no desktop o cabeçalho é removido.
 
 ## Papéis do sistema
 
