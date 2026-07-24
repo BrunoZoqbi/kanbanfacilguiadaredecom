@@ -31,7 +31,7 @@ interface AppLayoutProps {
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  const { profile, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin, role, signOut } = useAuth();
   const isGestorComercial = useIsGestorComercial();
   const location = useLocation();
   const navigate = useNavigate();
@@ -128,7 +128,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   {profile?.full_name || 'Usuário'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60">
-                  {isAdmin ? 'Administrador' : 'Usuário'}
+                  {{ admin: 'Administrador', gestor_tecnico: 'Gestor Técnico', gestor_comercial: 'Gestor Comercial', user: 'Usuário' }[role ?? 'user'] ?? 'Usuário'}
                 </p>
               </div>
             </Link>
