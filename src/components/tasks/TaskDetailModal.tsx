@@ -95,19 +95,14 @@ interface EditDraft {
   scheduled_date: string;
 }
 
-// Motivos de reagendamento em que a observação deixa de ser um detalhe
-// opcional e vira a própria descrição do motivo (mínimo 5 caracteres).
-const MOTIVOS_COM_OBSERVACAO_OBRIGATORIA: Partial<
-  Record<ReagendamentoMotivo, { label: string; placeholder: string }>
-> = {
-  troca_tecnico: {
-    label: 'Motivo da troca (obrigatório)',
-    placeholder: 'Informe o motivo da troca de técnico...',
-  },
-  outro: {
-    label: 'Motivo (obrigatório)',
-    placeholder: 'Descreva o motivo...',
-  },
+// A observação é obrigatória (mínimo 5 caracteres) para qualquer motivo de
+// reagendamento, com um placeholder que guia o que descrever em cada caso.
+const REAGENDAMENTO_OBSERVACAO_PLACEHOLDER: Record<ReagendamentoMotivo, string> = {
+  pedido_tecnico: 'Qual foi o impedimento do técnico?',
+  pedido_cliente: 'O que o cliente argumentou para reagendar?',
+  condicao_externa: 'Qual condição externa impediu o atendimento?',
+  troca_tecnico: 'Por que foi necessário trocar o técnico?',
+  outro: 'Descreva o motivo...',
 };
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, onOpenTask }) => {
@@ -307,11 +302,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
     }
   };
 
-  const observacaoObrigatoriaConfig = reagendamentoMotivo
-    ? MOTIVOS_COM_OBSERVACAO_OBRIGATORIA[reagendamentoMotivo]
-    : undefined;
   const reagendamentoObservacaoInvalida =
-    !!observacaoObrigatoriaConfig && reagendamentoObservacao.trim().length < 5;
+    !!reagendamentoMotivo && reagendamentoObservacao.trim().length < 5;
 
   const handleConfirmReagendamento = () => {
     if (!reagendamentoMotivo || !pendingReagendamentoScope || reagendamentoObservacaoInvalida) return;
@@ -905,14 +897,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, open, onClose, 
               </RadioGroup>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reagendamento-observacao">
-                {observacaoObrigatoriaConfig?.label ?? 'Observação'}
-              </Label>
+              <Label htmlFor="reagendamento-observacao">Observação (obrigatório)</Label>
               <Textarea
                 id="reagendamento-observacao"
                 value={reagendamentoObservacao}
                 onChange={(e) => setReagendamentoObservacao(e.target.value)}
-                placeholder={observacaoObrigatoriaConfig?.placeholder ?? 'Detalhe opcional...'}
+                placeholder={
+                  reagendamentoMotivo ? REAGENDAMENTO_OBSERVACAO_PLACEHOLDER[reagendamentoMotivo] : ''
+                }
                 className={cn('min-h-[80px]', reagendamentoObservacaoInvalida && 'border-red-500 focus-visible:ring-red-500')}
               />
               {reagendamentoObservacaoInvalida && (
