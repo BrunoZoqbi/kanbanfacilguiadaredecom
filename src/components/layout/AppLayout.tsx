@@ -124,7 +124,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                <p className="text-sm font-medium text-sidebar-foreground truncate hover:underline">
                   {profile?.full_name || 'Usuário'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60">
@@ -150,13 +150,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               )}
             </Button>
           </div>
-          <Link
-            to="/perfil"
-            onClick={() => setSidebarOpen(false)}
-            className="block pl-[52px] -mt-2 text-xs text-muted-foreground hover:text-foreground hover:underline w-fit"
-          >
-            Meu Perfil
-          </Link>
           <Button
             onClick={() => {
               setSidebarOpen(false);
