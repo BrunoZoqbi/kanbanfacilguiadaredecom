@@ -58,15 +58,19 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
   // O RPC agrega por full_name (não expõe o assignee_id); mapeamos de volta
   // pro id via profiles para conseguir filtrar as tarefas reagendadas do
   // usuário ao expandir a linha, sem precisar de uma segunda chamada ao banco.
+  // Filtra pelo período em que o reagendamento ACONTECEU (reagendamento_at),
+  // não pelo prazo da tarefa (due_date) — uma tarefa reagendada hoje mas com
+  // vencimento futuro deve aparecer no período atual mesmo assim.
   const reagendadasPorUsuario = (fullName: string) => {
     const profile = profiles.find((p) => p.full_name === fullName);
     if (!profile) return [];
     return tasks.filter((t) => {
       if (t.assignee_id !== profile.id) return false;
       if ((t.reagendamento_count ?? 0) <= 0) return false;
-      const dueDate = t.due_date.slice(0, 10);
-      if (startDate && dueDate < startDate) return false;
-      if (endDate && dueDate > endDate) return false;
+      if (!t.reagendamento_at) return false;
+      const reagendadoEm = t.reagendamento_at.slice(0, 10);
+      if (startDate && reagendadoEm < startDate) return false;
+      if (endDate && reagendadoEm > endDate) return false;
       return true;
     });
   };
