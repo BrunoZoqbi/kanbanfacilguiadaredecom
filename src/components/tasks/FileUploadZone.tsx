@@ -72,7 +72,6 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       });
 
       if (error) {
-        console.error('Error saving attachment:', error);
         toast.error('Erro ao salvar anexo');
       } else {
         toast.success(`${result.fileName} anexado!`);
@@ -93,8 +92,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       } else {
         setPdfPreview({ file, text });
       }
-    } catch (error) {
-      console.error('Erro ao extrair texto do PDF:', error);
+    } catch {
       setPdfFailedFile(file);
     } finally {
       setIsExtractingPdf(false);
