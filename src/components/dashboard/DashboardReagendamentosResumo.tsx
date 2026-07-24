@@ -75,6 +75,19 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
     });
   };
 
+  // Motivo "outro" é texto livre — o Admin precisa poder ler cada caso
+  // manualmente, já que não entra em nenhuma categoria fechada de motivo.
+  const reagendamentosOutro = useMemo(() => {
+    return tasks.filter((t) => {
+      if (t.reagendamento_motivo !== 'outro') return false;
+      if (!t.reagendamento_at) return false;
+      const reagendadoEm = t.reagendamento_at.slice(0, 10);
+      if (startDate && reagendadoEm < startDate) return false;
+      if (endDate && reagendadoEm > endDate) return false;
+      return true;
+    });
+  }, [tasks, startDate, endDate]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -303,6 +316,47 @@ const DashboardReagendamentosResumo: React.FC<DashboardReagendamentosResumoProps
           </div>
         </CardContent>
       </Card>
+
+      {/* Motivo "outro" é texto livre — chama atenção do Admin para revisar
+          caso a caso, já que não cai em nenhuma categoria fechada. */}
+      {reagendamentosOutro.length > 0 && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-900">
+              <AlertTriangle className="h-5 w-5" />
+              ⚠️ Reagendamentos com motivo "Outro"
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {reagendamentosOutro.map((t) => {
+                const responsavel = profiles.find((p) => p.id === t.assignee_id);
+                return (
+                  <div
+                    key={t.id}
+                    className="rounded-md border border-yellow-200 bg-background p-3 text-sm space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="font-medium">{t.title}</p>
+                      {t.reagendamento_at && (
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {format(new Date(t.reagendamento_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Responsável: {responsavel?.full_name ?? 'Sem responsável'}
+                    </p>
+                    {t.reagendamento_observacao && (
+                      <p className="text-sm">{t.reagendamento_observacao}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
