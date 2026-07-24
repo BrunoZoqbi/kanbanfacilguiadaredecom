@@ -51,7 +51,7 @@ const Calendar: React.FC = () => {
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedAssigneeId, setSelectedAssigneeId] = useState('');
 
   // Admin/Gestor Técnico: veem todos + filtro opcional por responsável.
